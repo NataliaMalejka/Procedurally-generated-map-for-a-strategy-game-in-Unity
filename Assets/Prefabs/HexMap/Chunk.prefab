@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1400616458958150504
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6525888856375751950}
+  - component: {fileID: 4259961913410535322}
+  m_Layer: 0
+  m_Name: Chunk
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6525888856375751950
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1400616458958150504}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6570815903188128788}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4259961913410535322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1400616458958150504}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31df78e8846b6ad43b5ab0eaa88f685b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Chunk
+  cellPrefab: {fileID: 1788320759516535580, guid: 100d3877bbd1db0458a6511af9dffef0, type: 3}
+  chunkMesh: {fileID: 3894564383335295127}
+--- !u!1001 &6520685879012824373
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 6525888856375751950}
+    m_Modifications:
+    - target: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1989249952710716510, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: m_Name
+      value: ChunkMesh
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+--- !u!114 &3894564383335295127 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -1408952758540583518, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+  m_PrefabInstance: {fileID: 6520685879012824373}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6b86210fa4187d4187d821f742d1072, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChunkMesh
+--- !u!4 &6570815903188128788 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 94042339042066721, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+  m_PrefabInstance: {fileID: 6520685879012824373}
+  m_PrefabAsset: {fileID: 0}
