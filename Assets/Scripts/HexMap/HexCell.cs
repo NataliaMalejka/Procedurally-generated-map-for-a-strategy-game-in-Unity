@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class HexCell : MonoBehaviour
 {
+    private HexCoordinates coordinates;
     private Chunk hexChunk;
 
     public void SetHexChunk(Chunk chunk)

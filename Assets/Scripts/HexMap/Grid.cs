@@ -14,15 +14,10 @@ public class Grid : MonoBehaviour
 
     [SerializeField] private Chunk chunkPrefab;
     private Chunk[] chunks;
-    private int xChunkCount = 1;
-    private int zChunkCount = 1;
+    private int xChunkCount;
+    private int zChunkCount;
 
     private HexCell[] cells;
-
-    private void Awake()
-    {
-        
-    }
 
     private void Start()
     {
@@ -34,15 +29,16 @@ public class Grid : MonoBehaviour
         return size switch
         {
             MapSize.Small => (5, 3),
-            MapSize.Medium => (8, 5),
-            MapSize.Large => (12, 10),
-            _ => (8, 5)
+            MapSize.Medium => (10, 6),
+            MapSize.Large => (15, 9),
+            _ => (10, 6)
         };
     }
 
     private void CreateChunks()
     {
         (xChunkCount, zChunkCount) = SetChunkCounts(mapSize);
+
         chunks = new Chunk[xChunkCount * zChunkCount];
         cells = new HexCell[xChunkCount * zChunkCount * chunkPrefab.GetXCellCount() * chunkPrefab.GetZCellCount()];
 
@@ -55,14 +51,17 @@ public class Grid : MonoBehaviour
                 Chunk chunk = Instantiate(chunkPrefab);
                 chunk.transform.SetParent(transform);
                 chunks[index] = chunk;
-                SetChunkPosition(chunk, index);               
+                SetChunkPosition(chunk, index);
+
+                chunk.GetChunkMesh().Clear();
                 AddCells(chunk, index);
                 chunk.GetChunkMesh().Apply();
+
                 index++;
             }
         }
     }
-
+    
     private void SetChunkPosition(Chunk chunk, int index)
     {
         Vector3 position;
@@ -82,8 +81,9 @@ public class Grid : MonoBehaviour
         {
             for (int j = 0; j < chunk.GetZCellCount(); j++)
             {
-                HexCell cell = chunk.CreateCells(cellIndex);
+                HexCell cell = chunk.CreateCell(cellIndex, index / xChunkCount);
                 cells[cellIndex + index * chunk.GetZCellCount() * chunk.GetXCellCount()] = cell;
+
                 cellIndex++;
             }
         }
