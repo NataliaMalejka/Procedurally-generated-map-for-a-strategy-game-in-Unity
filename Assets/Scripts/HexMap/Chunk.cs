@@ -5,19 +5,25 @@ public class Chunk : MonoBehaviour
 {
     [SerializeField] private HexCell cellPrefab;
     private HexCell[] cells;
-    private int xCellCount = 6;
-    private int zCellCount = 6;
+    private int xCells;
+    private int zCells;
 
     [SerializeField] private ChunkMesh chunkMesh;
 
     public int GetXCellCount()
     {
-        return xCellCount;
+        return xCells;
     }
 
     public int GetZCellCount()
     {
-        return zCellCount;
+        return zCells;
+    }
+
+    private void OnEnable()
+    {
+        xCells = MapManager.Instance.xCellCount;
+        zCells = MapManager.Instance.zCellCount;
     }
 
     public ChunkMesh GetChunkMesh()
@@ -25,17 +31,20 @@ public class Chunk : MonoBehaviour
         return chunkMesh;
     }
 
-    public HexCell CreateCell(int index, int zChunkIndex)
+    public HexCell CreateCell(int cellGlobalIndex, int chunkIndex, Color color)
     {
-        HexCell[] cells = new HexCell[xCellCount * zCellCount];
+        HexCell[] cells = new HexCell[xCells * zCells];
+
+        int localCellIndex = cellGlobalIndex - (chunkIndex * xCells * zCells);
 
         HexCell cell = Instantiate<HexCell>(cellPrefab);
         cell.transform.SetParent(transform);
-        cells[index] = cell;
 
-        cell.SetHexChunk(this);
+        cells[localCellIndex] = cell;
+        cell.HexChunk = this;
 
-        SetCellPosition(cell, index, zChunkIndex);
+        SetCellPosition(cell, localCellIndex, chunkIndex / MapManager.Instance.xChunkCount);
+        cell.CellColor = color;
         CreateCellMesh(cell);
 
         return cell;
@@ -45,12 +54,12 @@ public class Chunk : MonoBehaviour
     {
         Vector3 position;
 
-        position.x = (index % xCellCount) * HexData.distanceToEdge * 2f;
+        position.x = (index % xCells) * HexData.distanceToEdge * 2f;
         position.y = 0f;
-        position.z = (index / xCellCount) * HexData.distanceToCorner * 1.5f;
+        position.z = (index / xCells) * HexData.distanceToCorner * 1.5f;
 
-        int rowIndex = (index / xCellCount) % 2;
-        int offset= (zCellCount % 2 == 0) ? 1 : 1 - (zChunkIndex % 2);
+        int rowIndex = (index / xCells) % 2;
+        int offset= (zCells % 2 == 0) ? 1 : 1 - (zChunkIndex % 2);
 
         if (rowIndex == offset)
         {
@@ -69,7 +78,9 @@ public class Chunk : MonoBehaviour
             chunkMesh.CreateTriangle(
                 centre,
                 centre + HexData.corners[i],
-                centre + HexData.corners[(i + 1) % 6]
+                centre + HexData.corners[(i + 1) % 6],
+
+                cell.CellColor
             );
         }
     }

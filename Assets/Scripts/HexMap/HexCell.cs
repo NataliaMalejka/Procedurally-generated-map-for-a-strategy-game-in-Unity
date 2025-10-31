@@ -1,12 +1,46 @@
+using TMPro;
 using UnityEngine;
 
 public class HexCell : MonoBehaviour
 {
-    private HexCoordinates coordinates;
-    private Chunk hexChunk;
+    [SerializeField] private TextMeshPro coordinateText;
 
-    public void SetHexChunk(Chunk chunk)
+    private Chunk hexChunk;
+    public Chunk HexChunk
     {
-        hexChunk = chunk;
+        get { return hexChunk; }
+        set { hexChunk = value; }
+    }
+
+    private HexCoordinates coordinates;
+    public HexCoordinates Coordinates
+    {
+        get { return coordinates; }
+        set { coordinates = value; }
+    }
+
+    private Color cellColor;
+    public Color CellColor
+    {
+        get { return cellColor; }
+        set { cellColor = value; }
+    }
+
+    private HexCell[] neighbors;
+
+    public HexCell GetNeighbor(HexDirection direction)
+    {
+        return neighbors[(int)direction];
+    }
+
+    public void SetNeighbor(HexDirection direction, HexCell cell)
+    {
+        neighbors[(int)direction] = cell;
+        cell.neighbors[(int)direction.Opposite()] = this;
+    }
+
+    public void SetCoordinateText()
+    {
+        coordinateText.text = coordinates.GlobalX.ToString() + ", " + coordinates.GlobalZ.ToString();
     }
 }
