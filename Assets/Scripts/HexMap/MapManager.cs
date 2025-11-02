@@ -16,7 +16,6 @@ public class MapManager : MonoBehaviour
 
     [SerializeField] private MapSize mapSize;
     [SerializeField] private int seed;
-    [SerializeField] private int continentsCount;
 
     public int xChunkCount { get; private set; }
     public int zChunkCount { get; private set; }
@@ -31,6 +30,7 @@ public class MapManager : MonoBehaviour
 
     private int regionsCount;
 
+    private int continentsCount;
     private int[] continentsCentres;
 
     public int[] GetContinentsCentres()
@@ -42,15 +42,13 @@ public class MapManager : MonoBehaviour
     {
         Instance = this;
 
-        (xChunkCount, zChunkCount) = SetChunkCounts(mapSize);
-
         UnityEngine.Random.InitState(seed);
+
+        (xChunkCount, zChunkCount) = SetChunkCounts(mapSize);
 
         continentsCount = SetContinentsCount(mapSize);
 
         SetMaxMargin();
-
-        //SetContinentsCentres();
     }
 
     private (int x, int z) SetChunkCounts(MapSize size)
@@ -82,62 +80,54 @@ public class MapManager : MonoBehaviour
 
         regionsCount = continentsCount / 2 + continentsCount % 2;
         if(regionsCount < 2) regionsCount = 2;
-        Debug.Log("regions " + regionsCount);
 
         continentsCentres = new int[continentsCount];
 
-        Debug.Log("contonents count " + continentsCount);
-
         int localXMin = minXMargin;
         int localXMax = xChunkCount * xCellCount / regionsCount - 3;
+
+        int localZMin = minZMargin;
+        int localZMax = zChunkCount * zCellCount / 2 - 2;
 
         int regionIndex = 2;
 
         for (int i = 0; i <continentsCount; i++)
         {
-            Debug.Log("continent " + i);
-
-            if (i !=0 && (i % 2==0 || continentsCount==2))
+            if (i != 0) 
             {
-                localXMin = localXMax + 6;
-                localXMax = xChunkCount * xCellCount / regionsCount * regionIndex - 3;
+                if (i % 2 == 1)
+                {
+                    localZMin = localZMax + 4;
+                    localZMax = maxZMargin;
+                }
+                if(i % 2 == 0 || continentsCount == 2)
+                {
+                    localZMin = minZMargin;
+                    localZMax = zChunkCount * zCellCount / 2 - 2;
 
-                regionIndex++;
+                    localXMin = localXMax + 6;
+                    localXMax = xChunkCount * xCellCount / regionsCount * regionIndex - 3;
 
-                Debug.Log("localXMax recalculated to " + localXMax);
+                    regionIndex++;
 
-                if (localXMax > maxXMargin)
-                    localXMax = maxXMargin;
+                    if (localXMax > maxXMargin)
+                        localXMax = maxXMargin;
+                }
             }
 
-            Debug.Log("border " + localXMin + " " + localXMax);
-
-            SetContinentsCentres(localXMin, localXMax, i);
+            SetContinentsCentres(localXMin, localXMax, localZMin, localZMax, i);
         }
     }
 
-    private void SetContinentsCentres(int localXMin, int LocalXMax, int index)
+    private void SetContinentsCentres(int localXMin, int localXMax, int localZMin, int localZMax, int index)
     {
-        int xPos = UnityEngine.Random.Range(localXMin, LocalXMax);
-        int zPos = UnityEngine.Random.Range(minZMargin, maxZMargin);
-
-        Debug.Log("Pos " + xPos + " " + zPos);
+        int xPos = UnityEngine.Random.Range(localXMin, localXMax);
+        int zPos = UnityEngine.Random.Range(localZMin, localZMax);
 
         continentsCentres[index] = GetCellIndex(xPos, zPos);
     }
 
-    private void SetContinentsCentres()
-    {
-        for (int i = 0; i < continentsCentres.Length; i++)
-        {
-            int xPos = UnityEngine.Random.Range(minXMargin, maxXMargin);
-            int zPos = UnityEngine.Random.Range(minZMargin, maxZMargin);
-
-            continentsCentres[i] = GetCellIndex(xPos, zPos);
-        }
-    }
-
-    private int GetCellIndex(int xPos, int zPos)
+    public int GetCellIndex(int xPos, int zPos)
     {
         int chunkX = xPos / xCellCount;
         int chunkZ = zPos / zCellCount;

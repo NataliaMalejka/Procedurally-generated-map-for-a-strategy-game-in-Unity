@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 
@@ -63,32 +64,23 @@ public class GridHex : MonoBehaviour
             for (int z = 0; z < chunk.GetZCellCount(); z++)
             {
                 int cellGlobalIndex = cellIndex + index * chunk.GetZCellCount() * chunk.GetXCellCount();
-                Color color = SetCellColor(cellGlobalIndex);
             
-                HexCell cell = chunk.CreateCell(cellGlobalIndex, index, color);
+                HexCell cell = chunk.CreateCell(cellGlobalIndex, index);
                 cells[cellGlobalIndex] = cell;
 
                 SetCellCoordinates(cell, x, z, index, chunk);
-                SetCellNeighbors(cell);
+                SetCellNeighbors(cellGlobalIndex, cell);
+
+                SetCellColor(cellGlobalIndex, cell);
+
+                if(cell.CellColor == Color.red)
+                    Debug.Log(cell.CellColor);
+
+                chunk.AddCellColor(cell);
 
                 cellIndex++;
             }
         }
-    }
-
-    private Color SetCellColor(int cellGlobalIndex)
-    {
-        Color color = Color.turquoise;
-
-        foreach (int centre in MapManager.Instance.GetContinentsCentres())
-        {
-            if (cellGlobalIndex == centre)
-            {
-                color = Color.green;
-            }
-        }
-
-        return color;
     }
 
     private void SetCellCoordinates(HexCell cell, int x, int z, int index, Chunk chunk)
@@ -101,8 +93,35 @@ public class GridHex : MonoBehaviour
         cell.SetCoordinateText();
     }
 
-    private void SetCellNeighbors(HexCell cell)
+    private void SetCellNeighbors(int index, HexCell cell)
     {
-        
+        foreach (HexDirection dir in Enum.GetValues(typeof(HexDirection))) 
+        {
+            Vector3Int neighborCoordinates = cell.Coordinates.Neighbor(dir);
+            int nq = neighborCoordinates[0];
+            int nr = neighborCoordinates[1];
+            int ns = neighborCoordinates[2];
+
+            int indexZ = nr;
+            int indexX = nq + indexZ / 2;
+
+            int neighborIndex = MapManager.Instance.GetCellIndex(indexX, indexZ);
+
+            if (neighborIndex >= 0 && neighborIndex<cells.Count() && cells[neighborIndex] != null) 
+            {
+               cell.SetNeighbor(dir, cells[neighborIndex]);
+            }
+        }     
+    }
+
+    private void SetCellColor(int cellGlobalIndex, HexCell cell)
+    {
+        foreach (int centre in MapManager.Instance.GetContinentsCentres())
+        {
+            if (cellGlobalIndex == centre)
+            {
+                cell.CellColor = Color.green;
+            }
+        }
     }
 }

@@ -19,17 +19,10 @@ public struct HexCoordinates
         r = globalZ;
         s = -q - r;
     }
-
-    public void SetLocalCoordinates(int x, int z)
+    public Vector3Int Neighbor(HexDirection direction)
     {
-        localX = x;
-        localZ = z;
-    }
-
-    public void SetGlobalCoordinates(int x, int z)
-    {
-        globalX = x;
-        globalZ = z;
+        var (dq, dr, ds) = FindHexDirection.hexDirections[(int)direction];
+        return new Vector3Int(q + dq, r + dr, s + ds);
     }
 
     public int LocalX
@@ -66,4 +59,5 @@ public struct HexCoordinates
     {
         get { return s; }
     }
+
 }

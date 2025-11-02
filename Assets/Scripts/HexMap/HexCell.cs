@@ -19,14 +19,14 @@ public class HexCell : MonoBehaviour
         set { coordinates = value; }
     }
 
-    private Color cellColor;
+    private Color cellColor = Color.turquoise;
     public Color CellColor
     {
         get { return cellColor; }
         set { cellColor = value; }
     }
 
-    private HexCell[] neighbors;
+    private HexCell[] neighbors = new HexCell[6];
 
     public HexCell GetNeighbor(HexDirection direction)
     {
@@ -41,6 +41,11 @@ public class HexCell : MonoBehaviour
 
     public void SetCoordinateText()
     {
-        coordinateText.text = coordinates.GlobalX.ToString() + ", " + coordinates.GlobalZ.ToString();
+        coordinateText.text = coordinates.Q.ToString() + "\n" + coordinates.R.ToString() + "\n" + coordinates.S.ToString();
+    }
+
+    public void SetGlobalCoordinateText()
+    {
+        coordinateText.text = coordinates.GlobalX.ToString() + "\n" + coordinates.GlobalZ.ToString();
     }
 }

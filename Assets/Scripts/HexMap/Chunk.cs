@@ -31,7 +31,7 @@ public class Chunk : MonoBehaviour
         return chunkMesh;
     }
 
-    public HexCell CreateCell(int cellGlobalIndex, int chunkIndex, Color color)
+    public HexCell CreateCell(int cellGlobalIndex, int chunkIndex)
     {
         HexCell[] cells = new HexCell[xCells * zCells];
 
@@ -44,7 +44,6 @@ public class Chunk : MonoBehaviour
         cell.HexChunk = this;
 
         SetCellPosition(cell, localCellIndex, chunkIndex % MapManager.Instance.zChunkCount);
-        cell.CellColor = color;
         CreateCellMesh(cell);
 
         return cell;
@@ -78,10 +77,13 @@ public class Chunk : MonoBehaviour
             chunkMesh.CreateTriangle(
                 centre,
                 centre + HexData.corners[i],
-                centre + HexData.corners[(i + 1) % 6],
-
-                cell.CellColor
+                centre + HexData.corners[(i + 1) % 6]
             );
         }
+    }
+
+    public void AddCellColor(HexCell cell)
+    {
+        chunkMesh.AddColor(cell.CellColor);
     }
 }

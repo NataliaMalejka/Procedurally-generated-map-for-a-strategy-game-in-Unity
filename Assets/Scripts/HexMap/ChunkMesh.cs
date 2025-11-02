@@ -22,7 +22,7 @@ public class ChunkMesh : MonoBehaviour
         triangles.Clear();
     }
 
-    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3, Color color)
+    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3/*, Color color*/)
     {
         int index = vertices.Count;
 
@@ -34,15 +34,15 @@ public class ChunkMesh : MonoBehaviour
         triangles.Add(index + 1);
         triangles.Add(index + 2);
 
-        for (int i = 0; i < 3; i++) 
-        {
-            colors.Add(color);
-        }
+        //for (int i = 0; i < 3; i++) 
+        //{
+        //    colors.Add(color);
+        //}
     }
 
     public void AddColor(Color color)
     {
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 18; i++)
         {
             colors.Add(color);
         }
