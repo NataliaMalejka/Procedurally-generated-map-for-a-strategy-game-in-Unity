@@ -47,9 +47,9 @@ public class GridHex : MonoBehaviour
     {
         Vector3 position;
 
-        position.x = (index % xChunks) * HexData.distanceToEdge * 2 * chunk.GetXCellCount();
+        position.x = (index / zChunks) * HexData.distanceToEdge * 2 * chunk.GetXCellCount();
         position.y = 0f;
-        position.z = (index / xChunks) * HexData.distanceToCorner * 1.5f * chunk.GetZCellCount();
+        position.z = (index % zChunks) * HexData.distanceToCorner * 1.5f * chunk.GetZCellCount();
 
         chunk.transform.position = position;
     }
@@ -93,12 +93,9 @@ public class GridHex : MonoBehaviour
 
     private void SetCellCoordinates(HexCell cell, int x, int z, int index, Chunk chunk)
     {
-        int globalX = (index % xChunks) * chunk.GetZCellCount() + z;
-        int globalZ = (index / xChunks) * chunk.GetXCellCount() + x;
-
         cell.Coordinates = new HexCoordinates(x, z,
-            globalX,
-            globalZ
+            (index / zChunks) * chunk.GetXCellCount() + x,
+            (index % zChunks) * chunk.GetZCellCount() + z
         );
 
         cell.SetCoordinateText();

@@ -40,6 +40,14 @@ public class ChunkMesh : MonoBehaviour
         }
     }
 
+    public void AddColor(Color color)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            colors.Add(color);
+        }
+    }
+
     public void Apply()
     {
         mesh.vertices = vertices.ToArray();

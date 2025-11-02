@@ -44,5 +44,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdfe38f13e4b4694b8aeb60fa2bc128f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Grid
-  mapSize: 0
   chunkPrefab: {fileID: 4259961913410535322, guid: cc7ba5314e6163f4b9b0c7f4191ed4dd, type: 3}

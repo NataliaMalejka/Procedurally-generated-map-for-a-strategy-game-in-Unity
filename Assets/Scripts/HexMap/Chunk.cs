@@ -43,7 +43,7 @@ public class Chunk : MonoBehaviour
         cells[localCellIndex] = cell;
         cell.HexChunk = this;
 
-        SetCellPosition(cell, localCellIndex, chunkIndex / MapManager.Instance.xChunkCount);
+        SetCellPosition(cell, localCellIndex, chunkIndex % MapManager.Instance.zChunkCount);
         cell.CellColor = color;
         CreateCellMesh(cell);
 
@@ -54,12 +54,12 @@ public class Chunk : MonoBehaviour
     {
         Vector3 position;
 
-        position.x = (index % xCells) * HexData.distanceToEdge * 2f;
+        position.x = (index / zCells) * HexData.distanceToEdge * 2f;
         position.y = 0f;
-        position.z = (index / xCells) * HexData.distanceToCorner * 1.5f;
+        position.z = (index % zCells) * HexData.distanceToCorner * 1.5f;
 
-        int rowIndex = (index / xCells) % 2;
-        int offset= (zCells % 2 == 0) ? 1 : 1 - (zChunkIndex % 2);
+        int rowIndex = (index % zCells) % 2;
+        int offset = (zCells % 2 == 0) ? 1 : 1 - (zChunkIndex % 2);
 
         if (rowIndex == offset)
         {

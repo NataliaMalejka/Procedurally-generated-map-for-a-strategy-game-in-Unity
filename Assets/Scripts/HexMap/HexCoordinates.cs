@@ -4,7 +4,9 @@ public struct HexCoordinates
 {
     private int localX, localZ;
 
-    private int globalX, globalZ;
+    public int globalX, globalZ;
+
+    private int q, r, s;
 
     public HexCoordinates(int localX, int localZ, int globalX, int globalZ)
     {
@@ -12,6 +14,10 @@ public struct HexCoordinates
         this.localZ = localZ;
         this.globalX = globalX;
         this.globalZ = globalZ;
+
+        q = globalX - globalZ / 2;
+        r = globalZ;
+        s = -q - r;
     }
 
     public void SetLocalCoordinates(int x, int z)
@@ -44,5 +50,20 @@ public struct HexCoordinates
     public int GlobalZ
     {
         get { return globalZ; }
+    }
+
+    public int Q
+    {
+        get { return q; }
+    }
+
+    public int R
+    {
+        get { return r; }
+    }
+
+    public int S
+    {
+        get { return s; }
     }
 }

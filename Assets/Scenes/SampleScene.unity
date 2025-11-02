@@ -412,9 +412,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9729f0f9cee5d1d4da1f351f8f0b1df9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
-  mapSize: 0
-  seed: 1234
-  continentsCount: 4
+  mapSize: 1
+  seed: 0
+  continentsCount: 0
 --- !u!4 &571916395
 Transform:
   m_ObjectHideFlags: 0
@@ -530,10 +530,6 @@ PrefabInstance:
     - target: {fileID: 1411070170631839620, guid: e30fa6a37e27798428284e262cb07688, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4758430666767086246, guid: e30fa6a37e27798428284e262cb07688, type: 3}
-      propertyPath: seed
-      value: 1234
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
