@@ -8,6 +8,8 @@ public struct HexCoordinates
 
     private int q, r, s;
 
+    private int indexInGrid;
+
     public HexCoordinates(int localX, int localZ, int globalX, int globalZ)
     {
         this.localX = localX;
@@ -18,11 +20,19 @@ public struct HexCoordinates
         q = globalX - globalZ / 2;
         r = globalZ;
         s = -q - r;
+
+        indexInGrid = MapManager.Instance.GetCellIndex(globalX, globalZ);
     }
+
     public Vector3Int Neighbor(HexDirection direction)
     {
         var (dq, dr, ds) = FindHexDirection.hexDirections[(int)direction];
         return new Vector3Int(q + dq, r + dr, s + ds);
+    }
+
+    public int IndexInGrid
+    {
+        get { return indexInGrid; }
     }
 
     public int LocalX

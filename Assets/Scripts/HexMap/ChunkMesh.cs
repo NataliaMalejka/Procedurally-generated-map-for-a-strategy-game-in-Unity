@@ -20,6 +20,7 @@ public class ChunkMesh : MonoBehaviour
         mesh.Clear();
         vertices.Clear();
         triangles.Clear();
+        colors.Clear();
     }
 
     public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3/*, Color color*/)
@@ -46,6 +47,11 @@ public class ChunkMesh : MonoBehaviour
         {
             colors.Add(color);
         }
+    }
+
+    public void AddNoise(Vector3 v)
+    {
+        
     }
 
     public void Apply()

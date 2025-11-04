@@ -412,8 +412,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9729f0f9cee5d1d4da1f351f8f0b1df9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
-  mapSize: 0
+  mapSize: 2
   seed: 1
+  perlinScale: 0.15
+  perlinThreshold: 0.33
 --- !u!4 &571916395
 Transform:
   m_ObjectHideFlags: 0

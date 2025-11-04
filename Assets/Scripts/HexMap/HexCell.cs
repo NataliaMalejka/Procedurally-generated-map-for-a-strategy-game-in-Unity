@@ -28,15 +28,43 @@ public class HexCell : MonoBehaviour
 
     private HexCell[] neighbors = new HexCell[6];
 
+    private int continentIndex = -1;
+    public int ContinentIndex
+    {
+        get { return continentIndex; }
+        set { continentIndex = value; }
+    }
+
+    private int terreinLevel = -1; //water
+    public int TerreinLevel
+    {
+        get { return terreinLevel; }
+        set { terreinLevel = value; }
+    }
+
+    private int[] edges = new int[6];
+
     public HexCell GetNeighbor(HexDirection direction)
     {
         return neighbors[(int)direction];
+    }
+
+    public HexCell[] GetNeighbors()
+    {
+        return neighbors;
     }
 
     public void SetNeighbor(HexDirection direction, HexCell cell)
     {
         neighbors[(int)direction] = cell;
         cell.neighbors[(int)direction.Opposite()] = this;
+    }
+
+    public void SetContinent(int index)
+    {
+        cellColor = Color.green;
+        terreinLevel = 0;
+        continentIndex = index;
     }
 
     public void SetCoordinateText()
@@ -46,6 +74,6 @@ public class HexCell : MonoBehaviour
 
     public void SetGlobalCoordinateText()
     {
-        coordinateText.text = coordinates.GlobalX.ToString() + "\n" + coordinates.GlobalZ.ToString();
+        coordinateText.text = coordinates.GlobalX.ToString() + "\n" + coordinates.GlobalZ.ToString() + "\n" + coordinates.IndexInGrid;
     }
 }

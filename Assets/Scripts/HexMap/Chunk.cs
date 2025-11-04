@@ -8,6 +8,10 @@ public class Chunk : MonoBehaviour
     private int xCells;
     private int zCells;
 
+    private int posX;
+    private int posZ;
+    private int indexInGrid;
+
     [SerializeField] private ChunkMesh chunkMesh;
 
     public int GetXCellCount()
@@ -20,10 +24,24 @@ public class Chunk : MonoBehaviour
         return zCells;
     }
 
+    public int GetIndexInGrid()
+    {
+        return indexInGrid;
+    }
+
+    public void SetGridCoords(int x, int z, int index)
+    {
+        posX = x;
+        posZ = z;
+        indexInGrid = index;
+    }
+
     private void OnEnable()
     {
         xCells = MapManager.Instance.xCellCount;
         zCells = MapManager.Instance.zCellCount;
+
+        cells = new HexCell[xCells * zCells];
     }
 
     public ChunkMesh GetChunkMesh()
@@ -33,8 +51,6 @@ public class Chunk : MonoBehaviour
 
     public HexCell CreateCell(int cellGlobalIndex, int chunkIndex)
     {
-        HexCell[] cells = new HexCell[xCells * zCells];
-
         int localCellIndex = cellGlobalIndex - (chunkIndex * xCells * zCells);
 
         HexCell cell = Instantiate<HexCell>(cellPrefab);
@@ -85,5 +101,18 @@ public class Chunk : MonoBehaviour
     public void AddCellColor(HexCell cell)
     {
         chunkMesh.AddColor(cell.CellColor);
+    }
+
+    public void RefreshChunk()
+    {
+        chunkMesh.Clear();
+
+        foreach (var cell in cells)
+        {
+            CreateCellMesh(cell);
+            AddCellColor(cell);
+        }
+
+        chunkMesh.Apply();
     }
 }

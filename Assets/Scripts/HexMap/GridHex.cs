@@ -10,7 +10,7 @@ public class GridHex : MonoBehaviour
     private int xChunks;
     private int zChunks;
 
-    private HexCell[] cells;
+    public HexCell[] cells { get; private set; }
 
     private void Start()
     {
@@ -34,6 +34,7 @@ public class GridHex : MonoBehaviour
                 chunk.transform.SetParent(transform);
                 chunks[index] = chunk;
                 SetChunkPosition(chunk, index);
+                chunk.SetGridCoords(x, z, index);
 
                 chunk.GetChunkMesh().Clear();
                 AddCells(chunk, index);
@@ -42,8 +43,15 @@ public class GridHex : MonoBehaviour
                 index++;
             }
         }
+
+        MapManager.Instance.GenerateContinents(cells);
+
+        foreach (int chunkIndex in MapManager.Instance.GetChunksToRefresh())
+        {
+            chunks[chunkIndex].RefreshChunk();
+        }
     }
-    
+
     private void SetChunkPosition(Chunk chunk, int index)
     {
         Vector3 position;
@@ -71,11 +79,6 @@ public class GridHex : MonoBehaviour
                 SetCellCoordinates(cell, x, z, index, chunk);
                 SetCellNeighbors(cellGlobalIndex, cell);
 
-                SetCellColor(cellGlobalIndex, cell);
-
-                if(cell.CellColor == Color.red)
-                    Debug.Log(cell.CellColor);
-
                 chunk.AddCellColor(cell);
 
                 cellIndex++;
@@ -90,7 +93,8 @@ public class GridHex : MonoBehaviour
             (index % zChunks) * chunk.GetZCellCount() + z
         );
 
-        cell.SetCoordinateText();
+        //cell.SetCoordinateText();
+        //cell.SetGlobalCoordinateText();
     }
 
     private void SetCellNeighbors(int index, HexCell cell)
@@ -112,16 +116,5 @@ public class GridHex : MonoBehaviour
                cell.SetNeighbor(dir, cells[neighborIndex]);
             }
         }     
-    }
-
-    private void SetCellColor(int cellGlobalIndex, HexCell cell)
-    {
-        foreach (int centre in MapManager.Instance.GetContinentsCentres())
-        {
-            if (cellGlobalIndex == centre)
-            {
-                cell.CellColor = Color.green;
-            }
-        }
     }
 }
