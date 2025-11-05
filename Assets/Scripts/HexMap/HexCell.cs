@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -65,6 +66,13 @@ public class HexCell : MonoBehaviour
         cellColor = Color.green;
         terreinLevel = 0;
         continentIndex = index;
+    }
+
+    public void SetOcean()
+    {
+        cellColor = Color.turquoise;
+        terreinLevel = -1;
+        continentIndex = -1;
     }
 
     public void SetCoordinateText()

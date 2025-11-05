@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 enum MapSize
@@ -34,8 +35,17 @@ public class MapManager : MonoBehaviour
 
     private int[] continentsCellsAmound;
 
+    private Vector2[] continentDir;
+
     public float perlinScale = 0.15f;
-    public float perlinThreshold = 0.3f;
+    //public float perlinThreshold = 0.33f;
+
+    public float distWeight = 0.3f;
+    public float perlinWeight = 0.5f;
+    public float dirWeight = 0.3f;
+    public float minScore = 0.7f;
+    public float minCoastNoise = 0.8f;
+    public float maxCoastNoise = 1.2f;
 
     private List<int> chunksToRefresh = new List<int>();
 
@@ -112,6 +122,7 @@ public class MapManager : MonoBehaviour
         if(regionsCount < 2) regionsCount = 2;
 
         continentsCentres = new int[continentsCount];
+        continentDir = new Vector2[continentsCount];
     }
 
     private void SetContinentsInRegions()
@@ -124,30 +135,40 @@ public class MapManager : MonoBehaviour
 
         int regionIndex = 2;
 
+        int dirX = 0;
+        int dirZ = 0;
+
         for (int i = 0; i < continentsCount; i++)
         {
+            dirX = 1;
+            dirZ = 1;
+
             if (i != 0)
             {
                 if (i % 2 == 1)
                 {
                     localZMin = localZMax + 4;
                     localZMax = maxZMargin;
+                    dirZ = -1;
+
                 }
                 if (i % 2 == 0 || continentsCount == 2)
                 {
                     localZMin = minZMargin;
                     localZMax = zChunkCount * zCellCount / 2 - 2;
+                    dirZ = 1;
 
                     localXMin = localXMax + 6;
                     localXMax = xChunkCount * xCellCount / regionsCount * regionIndex - 3;
 
-                    regionIndex++;
+                    if (localXMax == maxXMargin) dirX = -1; 
+                    else dirX = 0; 
 
-                    if (localXMax > maxXMargin)
-                        localXMax = maxXMargin;
+                    regionIndex++;
                 }
             }
 
+            continentDir[i] = new Vector2(dirX, dirZ);
             SetContinentsCentres(localXMin, localXMax, localZMin, localZMax, i);
         }
     }
@@ -175,7 +196,7 @@ public class MapManager : MonoBehaviour
         return chunkIndex * (xCellCount * zCellCount) + localCellIndex;
     }
 
-    public void GenerateContinents(HexCell[] gridCells)
+    public void GenerateContinents(HexCell[] gridCells) 
     {
         chunksToRefresh.Clear();
 
@@ -189,6 +210,8 @@ public class MapManager : MonoBehaviour
 
             SetContinentPart(centreCell, i, cellsToCheck);
             cellsCreated++;
+
+            cellsCreated += AddCloseNeighborCells(centreCell, i, cellsToCheck);
 
             while (cellsToCheck.Count > 0 && cellsCreated < continentsCellsAmound[Array.IndexOf(continentsCentres, centreIndex)])
             {
@@ -206,7 +229,7 @@ public class MapManager : MonoBehaviour
 
                     if (AdjacentToOtherContinent(neighborCell, i)) continue;
 
-                    if (CheckNoise(neighborCell)) continue;
+                    if (CheckNoise(neighborCell, centreCell, i)) continue;
 
                     SetContinentPart(neighborCell, i, cellsToCheck);
                     cellsCreated++;
@@ -226,6 +249,24 @@ public class MapManager : MonoBehaviour
             chunksToRefresh.Add(chunkIndex);
     }
 
+    private int AddCloseNeighborCells(HexCell centreCell, int continentIndex, Queue<HexCell> cellsToCheck)
+    {
+        int addedCells = 0;
+
+        for (int i = 0; i < 6; i++)
+        {
+            HexCell closeNeighborCell = centreCell.GetNeighbor((HexDirection)i);
+
+            if (closeNeighborCell != null && !IsBehindBorders(closeNeighborCell))
+            {
+                SetContinentPart(closeNeighborCell, continentIndex, cellsToCheck);
+                addedCells++;
+            }
+        }
+
+        return addedCells;
+    }
+
     private bool IsBehindBorders(HexCell cell)
     {
         if (cell.Coordinates.globalX < minXMargin || cell.Coordinates.globalX >= maxXMargin ||
@@ -240,9 +281,9 @@ public class MapManager : MonoBehaviour
     private bool AdjacentToOtherContinent(HexCell neighborCell, int currentContinentIndex)
     {
         bool adjacentToOtherContinent = false;
-        for (int k = 0; k < 6; k++)
+        for (int i = 0; i < 6; i++)
         {
-            HexCell adjacentCell = neighborCell.GetNeighbor((HexDirection)k);
+            HexCell adjacentCell = neighborCell.GetNeighbor((HexDirection)i);
 
             if (adjacentCell == null) continue;
 
@@ -256,13 +297,26 @@ public class MapManager : MonoBehaviour
         return adjacentToOtherContinent;
     }
 
-    private bool CheckNoise(HexCell neighborCell)
+    private bool CheckNoise(HexCell neighborCell, HexCell centreCell, int index)
     {
-        float noise = Mathf.PerlinNoise(
+        float dist = Vector2.Distance(neighborCell.Coordinates.GetCellPos(), centreCell.Coordinates.GetCellPos());
+        float distFactor = Mathf.Clamp01(1f - dist / (zCellCount* zChunkCount / 2));
+
+        float noiseFactor = Mathf.PerlinNoise(
         neighborCell.Coordinates.globalX * perlinScale,
         neighborCell.Coordinates.globalZ * perlinScale
         );
 
-        return noise < perlinThreshold;
+        Vector2 toHex = (neighborCell.Coordinates.GetCellPos() - centreCell.Coordinates.GetCellPos()).normalized;
+        float dirFactor = Vector2.Dot(toHex, continentDir[index].normalized) * 0.5f + 0.5f; 
+     
+        float coastNoise = UnityEngine.Random.Range(minCoastNoise, maxCoastNoise);
+
+        float score =
+            distFactor * distWeight +
+            noiseFactor * perlinWeight +
+            dirFactor * dirWeight;
+
+        return score * coastNoise < minScore;
     }
 }

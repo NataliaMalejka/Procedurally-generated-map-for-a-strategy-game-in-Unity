@@ -413,9 +413,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
   mapSize: 2
-  seed: 1
+  seed: 6
   perlinScale: 0.15
-  perlinThreshold: 0.33
+  distWeight: 0.38
+  perlinWeight: 0.5
+  dirWeight: 0.3
+  minScore: 0.7
+  minCoastNoise: 0.8
+  maxCoastNoise: 1.2
 --- !u!4 &571916395
 Transform:
   m_ObjectHideFlags: 0

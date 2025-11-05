@@ -30,6 +30,11 @@ public struct HexCoordinates
         return new Vector3Int(q + dq, r + dr, s + ds);
     }
 
+    public Vector2 GetCellPos()
+    {
+        return new Vector2(globalX, globalZ);
+    }
+
     public int IndexInGrid
     {
         get { return indexInGrid; }
