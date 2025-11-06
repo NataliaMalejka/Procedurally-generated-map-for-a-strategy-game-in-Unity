@@ -23,7 +23,7 @@ public class ChunkMesh : MonoBehaviour
         colors.Clear();
     }
 
-    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3/*, Color color*/)
+    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3, Color color)
     {
         int index = vertices.Count;
 
@@ -35,15 +35,29 @@ public class ChunkMesh : MonoBehaviour
         triangles.Add(index + 1);
         triangles.Add(index + 2);
 
-        //for (int i = 0; i < 3; i++) 
-        //{
-        //    colors.Add(color);
-        //}
+        AddColor(color);
+
     }
 
-    public void AddColor(Color color)
+    public void CreateRectangularCellsConnection(Vector3 v1, Vector3 v2, int index, Color color)
     {
-        for (int i = 0; i < 18; i++)
+        Vector3 distance = HexData.GetDistanceBetweenEdges(index);
+
+        CreateTriangle(v1, v1 + distance, v2, color);
+        CreateTriangle(v1 + distance, v2 + distance, v2, color);
+    }
+
+    public void CreateTriangleCellsConnection(Vector3 v1, int index, Color color)
+    {
+        Vector3 distance1 = HexData.GetDistanceBetweenEdges(index);
+        Vector3 distance2 = HexData.GetDistanceBetweenEdges(index+1);
+
+        CreateTriangle(v1, v1 + distance1, v1 + distance2, color);
+    }
+
+    private void AddColor(Color color)
+    {
+        for (int i = 0; i < 3; i++)
         {
             colors.Add(color);
         }

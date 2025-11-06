@@ -36,12 +36,14 @@ public class GridHex : MonoBehaviour
                 SetChunkPosition(chunk, index);
                 chunk.SetGridCoords(x, z, index);
 
-                chunk.GetChunkMesh().Clear();
                 AddCells(chunk, index);
-                chunk.GetChunkMesh().Apply();
-
                 index++;
             }
+        }
+
+        foreach (Chunk chunk in chunks)
+        {
+            chunk.RefreshChunk();
         }
 
         MapManager.Instance.GenerateContinents(cells);
@@ -79,8 +81,6 @@ public class GridHex : MonoBehaviour
                 SetCellCoordinates(cell, x, z, index, chunk);
                 SetCellNeighbors(cellGlobalIndex, cell);
 
-                chunk.AddCellColor(cell);
-
                 cellIndex++;
             }
         }
@@ -111,7 +111,7 @@ public class GridHex : MonoBehaviour
 
             int neighborIndex = MapManager.Instance.GetCellIndex(indexX, indexZ);
 
-            if (neighborIndex >= 0 && neighborIndex<cells.Count() && cells[neighborIndex] != null) 
+            if (neighborIndex >= 0 && neighborIndex<cells.Count() && cells[neighborIndex] != null && indexX >= 0 && indexZ >= 0) 
             {
                cell.SetNeighbor(dir, cells[neighborIndex]);
             }

@@ -27,7 +27,7 @@ public class HexCell : MonoBehaviour
         set { cellColor = value; }
     }
 
-    private HexCell[] neighbors = new HexCell[6];
+    public HexCell[] neighbors = new HexCell[6];
 
     private int continentIndex = -1;
     public int ContinentIndex

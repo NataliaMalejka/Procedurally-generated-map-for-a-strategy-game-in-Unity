@@ -60,7 +60,6 @@ public class Chunk : MonoBehaviour
         cell.HexChunk = this;
 
         SetCellPosition(cell, localCellIndex, chunkIndex % MapManager.Instance.zChunkCount);
-        CreateCellMesh(cell);
 
         return cell;
     }
@@ -70,7 +69,7 @@ public class Chunk : MonoBehaviour
         Vector3 position;
 
         position.x = (index / zCells) * HexData.distanceToEdge * 2f;
-        position.y = 0f;
+        position.y = cell.TerreinLevel;
         position.z = (index % zCells) * HexData.distanceToCorner * 1.5f;
 
         int rowIndex = (index % zCells) % 2;
@@ -86,22 +85,31 @@ public class Chunk : MonoBehaviour
 
     private void CreateCellMesh(HexCell cell)
     {
-        Vector3 centre = cell.transform.localPosition;
+        Vector3 centre = new Vector3(
+            cell.transform.localPosition.x,
+            cell.TerreinLevel,
+            cell.transform.localPosition.z
+        );
+
+        Color color = cell.CellColor;
 
         for (int i = 0; i < 6; i++)
         {
-            chunkMesh.CreateTriangle(
-                centre,
-                centre + HexData.corners[i],
-                centre + HexData.corners[(i + 1) % 6]
-            );
+            Vector3 v1 = centre + HexData.GetSolidCorner(i);
+            Vector3 v2 = centre + HexData.GetSolidCorner((i + 1) % 6);
+
+            chunkMesh.CreateTriangle(centre, v1, v2, color);
+
+            if (i < 3 && cell.GetNeighbor((HexDirection)i) != null)
+            {
+                chunkMesh.CreateRectangularCellsConnection(v1, v2, i, color);                
+
+                if (i < 2 && cell.GetNeighbor((HexDirection)i + 1) != null) 
+                    chunkMesh.CreateTriangleCellsConnection(v2, i, color);
+            }
         }
     }
 
-    public void AddCellColor(HexCell cell)
-    {
-        chunkMesh.AddColor(cell.CellColor);
-    }
 
     public void RefreshChunk()
     {
@@ -110,7 +118,6 @@ public class Chunk : MonoBehaviour
         foreach (var cell in cells)
         {
             CreateCellMesh(cell);
-            AddCellColor(cell);
         }
 
         chunkMesh.Apply();

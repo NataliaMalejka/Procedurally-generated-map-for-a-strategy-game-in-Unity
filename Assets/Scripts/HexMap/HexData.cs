@@ -5,6 +5,9 @@ public static class HexData
     public static float distanceToCorner = 10f;                             // a
     public static float distanceToEdge= distanceToCorner * 0.8660254038f;   // a * sqrt(3) / 2
 
+    public static float solidPart = 0.75f;
+    public static float distanceBetweenEdgesScaler = 1 - solidPart;
+
     public static Vector3[] corners =
     {
         new Vector3(0f, 0f, distanceToCorner),                      //upper
@@ -14,4 +17,19 @@ public static class HexData
         new Vector3(-distanceToEdge, 0f, -0.5f * distanceToCorner), //left lower
         new Vector3(-distanceToEdge, 0f, 0.5f * distanceToCorner)   //right lower
     };
+
+    public static Vector3 GetCorner(int index)
+    {
+        return corners[index];
+    }
+
+    public static Vector3 GetSolidCorner(int index)
+    {
+        return corners[index] * solidPart;
+    }
+
+    public static Vector3 GetDistanceBetweenEdges(int index)
+    {
+        return (corners[index] + corners[(index + 1) % 6]) * distanceBetweenEdgesScaler;
+    }
 }
