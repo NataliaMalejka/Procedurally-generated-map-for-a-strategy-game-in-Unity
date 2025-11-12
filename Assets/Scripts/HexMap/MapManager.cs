@@ -245,6 +245,33 @@ public class MapManager : MonoBehaviour
 
         int chunkIndex = cell.HexChunk.GetIndexInGrid();
 
+        AddChunkToRefreshList(chunkIndex);
+        ChcekNeighbourChunks(cell, chunkIndex);
+    }
+
+    private void ChcekNeighbourChunks(HexCell cell, int chunkIndex)
+    {
+        if (cell.Coordinates.LocalX == 0 && cell.Coordinates.GlobalX != 0)
+        {
+            AddChunkToRefreshList(chunkIndex - zChunkCount);
+        }
+        else if (cell.Coordinates.LocalX == xCellCount - 1 && cell.Coordinates.globalX < xChunkCount * xCellCount - 1)
+        {
+            AddChunkToRefreshList(chunkIndex + zChunkCount);
+        }
+
+        if (cell.Coordinates.LocalZ == 0 && cell.Coordinates.globalZ != 0)
+        {
+            AddChunkToRefreshList(chunkIndex - 1);
+        }
+        else if (cell.Coordinates.LocalZ == zCellCount - 1 && cell.Coordinates.globalZ < zChunkCount * zCellCount - 1)
+        {
+            AddChunkToRefreshList(chunkIndex + 1);
+        }
+    }
+
+    private void AddChunkToRefreshList(int chunkIndex)
+    {
         if (!chunksToRefresh.Contains(chunkIndex))
             chunksToRefresh.Add(chunkIndex);
     }
