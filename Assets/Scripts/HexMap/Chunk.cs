@@ -14,6 +14,11 @@ public class Chunk : MonoBehaviour
 
     [SerializeField] private ChunkMesh chunkMesh;
 
+    public HexCell[] GetCells()
+    {
+       return cells;
+    }
+
     public int GetXCellCount()
     {
         return xCells;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.Search;
 using UnityEngine;
 
 enum MapSize
@@ -23,38 +24,44 @@ public class MapManager : MonoBehaviour
     public int xCellCount { get; private set; } = 6;
     public int zCellCount { get; private set; } = 6;
 
-    public int minXMargin { get; private set; } = 3;
-    public int minZMargin { get; private set; } = 2;
+    public int minXMargin { get; private set; } = 5;
+    public int minZMargin { get; private set; } = 4;
     public int maxXMargin { get; private set; }
     public int maxZMargin { get; private set; }
 
     private int regionsCount;
 
+    private Continent[] continents;
     private int continentsCount;
-    private int[] continentsCentres;
 
-    private int[] continentsCellsAmound;
+    private int[] continentsCentres;
+    private int contonentCentreMargin = 7;
+
+    private int[] maxContinentsCellsAmound;
 
     private Vector2[] continentDir;
 
-    public float perlinScale = 0.15f;
-    //public float perlinThreshold = 0.33f;
+    [Header("Continent Shape")]
+    [SerializeField] private float perlinScale = 0.15f;
+    [SerializeField] private float distWeight = 0.3f;
+    [SerializeField] private float perlinWeight = 0.5f;
+    [SerializeField] private float dirWeight = 0.3f;
+    [SerializeField] private float minScore = 0.7f;
+    [SerializeField] private float minCoastNoise = 0.8f;
+    [SerializeField] private float maxCoastNoise = 1.2f;
+    [SerializeField] private float growthBonusFactor = 2.5f;
 
-    public float distWeight = 0.3f;
-    public float perlinWeight = 0.5f;
-    public float dirWeight = 0.3f;
-    public float minScore = 0.7f;
-    public float minCoastNoise = 0.8f;
-    public float maxCoastNoise = 1.2f;
+    [Header("Terrain Level")]
+    [SerializeField] private float perlinTerrainScale = 0.05f;
 
-    private List<int> chunksToRefresh = new List<int>();
+    private List<Chunk> chunksToRefresh = new List<Chunk>();
 
     public int[] GetContinentsCentres()
     {
         return continentsCentres;
     }
 
-    public List<int> GetChunksToRefresh()
+    public List<Chunk> GetChunksToRefresh()
     {
         return chunksToRefresh;
     }
@@ -69,6 +76,8 @@ public class MapManager : MonoBehaviour
 
         continentsCount = SetContinentsCount(mapSize);
 
+        continents = new Continent[continentsCount];
+
         SetMaxMargin();
 
         SetContinentCellsAmound();
@@ -76,14 +85,14 @@ public class MapManager : MonoBehaviour
         SetContinentsInRegions();
     }
 
-    private (int x, int z) SetChunkCounts(MapSize size)
+    private (int x, int z) SetChunkCounts(MapSize size)//1,3 przelicznik
     {
         return size switch
         {
-            MapSize.Small => (5, 3),
-            MapSize.Medium => (10, 6),
-            MapSize.Large => (15, 9),
-            _ => (10, 6)
+            MapSize.Small => (15, 10),//10 6     //5 3
+            MapSize.Medium => (21, 14),//15 9     //10 6
+            MapSize.Large => (27, 18),//20 12       //15 9
+            _ => (21, 14)
         };
     }
 
@@ -98,25 +107,13 @@ public class MapManager : MonoBehaviour
         };
     }
 
-    private void SetContinentCellsAmound()
-    {
-        continentsCellsAmound = new int[continentsCount];
-
-        int actualCellsX = xCellCount * xChunkCount - minXMargin * 2;
-        int actualCellsZ = zCellCount * zChunkCount - minZMargin * 2;
-
-        int actualCells = actualCellsX * actualCellsZ;
-
-        for (int i = 0; i < continentsCount; i++)
-        {
-            continentsCellsAmound[i] = UnityEngine.Random.Range((actualCells / 100 * 30) / continentsCount, (actualCells / 100 * 40) / continentsCount); 
-        }
-    }
-
     private void SetMaxMargin()
     {
-        maxXMargin = xCellCount * xChunkCount - 3;
-        maxZMargin = zCellCount * zChunkCount - 2;
+        minXMargin *= (int)mapSize + 1;
+        minZMargin *= (int)mapSize + 1;
+
+        maxXMargin = xCellCount * xChunkCount - minXMargin;
+        maxZMargin = zCellCount * zChunkCount - minZMargin;
 
         regionsCount = continentsCount / 2 + continentsCount % 2;
         if(regionsCount < 2) regionsCount = 2;
@@ -125,13 +122,28 @@ public class MapManager : MonoBehaviour
         continentDir = new Vector2[continentsCount];
     }
 
+    private void SetContinentCellsAmound()
+    {
+        maxContinentsCellsAmound = new int[continentsCount];
+
+        int actualCellsX = xCellCount * xChunkCount - minXMargin * 2;
+        int actualCellsZ = zCellCount * zChunkCount - minZMargin * 2;
+
+        int actualCells = actualCellsX * actualCellsZ;
+
+        for (int i = 0; i < continentsCount; i++)
+        {
+            maxContinentsCellsAmound[i] = UnityEngine.Random.Range((actualCells / 100 * 50) / continentsCount, (actualCells / 100 * 60) / continentsCount);
+        }
+    }
+
     private void SetContinentsInRegions()
     {
-        int localXMin = minXMargin;
-        int localXMax = xChunkCount * xCellCount / regionsCount - 3;
+        int localXMin = minXMargin + contonentCentreMargin;
+        int localXMax = xChunkCount * xCellCount / regionsCount - minXMargin - contonentCentreMargin;
 
         int localZMin = minZMargin;
-        int localZMax = zChunkCount * zCellCount / 2 - 2;
+        int localZMax = zChunkCount * zCellCount / 2 - minZMargin;
 
         int regionIndex = 2;
 
@@ -147,26 +159,27 @@ public class MapManager : MonoBehaviour
             {
                 if (i % 2 == 1)
                 {
-                    localZMin = localZMax + 4;
-                    localZMax = maxZMargin;
+                    localZMin = localZMax + minZMargin * 2 + contonentCentreMargin;
+                    localZMax = maxZMargin - contonentCentreMargin;
                     dirZ = -1;
 
                 }
                 if (i % 2 == 0 || continentsCount == 2)
                 {
-                    localZMin = minZMargin;
-                    localZMax = zChunkCount * zCellCount / 2 - 2;
+                    localZMin = minZMargin + contonentCentreMargin;
+                    localZMax = zChunkCount * zCellCount / 2 - minZMargin - contonentCentreMargin;
                     dirZ = 1;
 
-                    localXMin = localXMax + 6;
-                    localXMax = xChunkCount * xCellCount / regionsCount * regionIndex - 3;
+                    localXMin = localXMax + minXMargin * 2 + contonentCentreMargin;
+                    localXMax = xChunkCount * xCellCount / regionsCount * regionIndex - minXMargin - contonentCentreMargin;
 
-                    if (localXMax == maxXMargin) dirX = -1; 
+                    if (localXMax == maxXMargin - contonentCentreMargin) dirX = -1; 
                     else dirX = 0; 
 
                     regionIndex++;
                 }
             }
+            //usunac dir na prawo/lewo
 
             continentDir[i] = new Vector2(dirX, dirZ);
             SetContinentsCentres(localXMin, localXMax, localZMin, localZMax, i);
@@ -202,18 +215,22 @@ public class MapManager : MonoBehaviour
 
         for (int i = 0; i < continentsCentres.Length; i++) 
         {
+            continents[i] = new Continent();
+            continents[i].ContinetIndex = i;
+
             int cellsCreated = 0;
             int centreIndex = continentsCentres[i];
 
             HexCell centreCell = gridCells[centreIndex];
             Queue<HexCell> cellsToCheck = new Queue<HexCell>();
 
-            SetContinentPart(centreCell, i, cellsToCheck);
+            SetContinentPart(centreCell, i);
+            cellsToCheck.Enqueue(centreCell);
             cellsCreated++;
 
             cellsCreated += AddCloseNeighborCells(centreCell, i, cellsToCheck);
 
-            while (cellsToCheck.Count > 0 && cellsCreated < continentsCellsAmound[Array.IndexOf(continentsCentres, centreIndex)])
+            while (cellsToCheck.Count > 0 && cellsCreated < maxContinentsCellsAmound[Array.IndexOf(continentsCentres, centreIndex)])
             {
                 HexCell currentCell = cellsToCheck.Dequeue();
 
@@ -231,49 +248,63 @@ public class MapManager : MonoBehaviour
 
                     if (CheckNoise(neighborCell, centreCell, i)) continue;
 
-                    SetContinentPart(neighborCell, i, cellsToCheck);
+                    SetContinentPart(neighborCell, i);
+                    cellsToCheck.Enqueue(neighborCell);
+
                     cellsCreated++;
                 }
-            }
+            }           
+        }
+
+        SetOceans(gridCells);
+
+        for (int i = 0; i < continentsCount; i++)
+        {
+            RemoveLakes(i);
         }
     }
 
-    private void SetContinentPart(HexCell cell, int continentIndex, Queue<HexCell> cellsToCheck)
+    private void SetContinentPart(HexCell cell, int continentIndex)
     {
+        CalculateTerrainLevel(cell);
+
         cell.SetContinent(continentIndex);
-        cellsToCheck.Enqueue(cell);
+        continents[continentIndex].AddCell(cell);
+        //cellsToCheck.Enqueue(cell);
 
-        int chunkIndex = cell.HexChunk.GetIndexInGrid();
+        Chunk chunk = cell.HexChunk;
+        //int chunkIndex = cell.HexChunk.GetIndexInGrid();
 
-        AddChunkToRefreshList(chunkIndex);
-        ChcekNeighbourChunks(cell, chunkIndex);
+        AddChunkToRefreshList(chunk);
+        continents[continentIndex].AddChunk(cell.HexChunk);
+        //ChcekNeighbourChunks(cell, chunkIndex);
     }
 
-    private void ChcekNeighbourChunks(HexCell cell, int chunkIndex)
-    {
-        if (cell.Coordinates.LocalX == 0 && cell.Coordinates.GlobalX != 0)
-        {
-            AddChunkToRefreshList(chunkIndex - zChunkCount);
-        }
-        else if (cell.Coordinates.LocalX == xCellCount - 1 && cell.Coordinates.globalX < xChunkCount * xCellCount - 1)
-        {
-            AddChunkToRefreshList(chunkIndex + zChunkCount);
-        }
+    //private void ChcekNeighbourChunks(HexCell cell, int chunkIndex)
+    //{
+    //    if (cell.Coordinates.LocalX == 0 && cell.Coordinates.GlobalX != 0)
+    //    {
+    //        AddChunkToRefreshList(chunkIndex - zChunkCount);
+    //    }
+    //    else if (cell.Coordinates.LocalX == xCellCount - 1 && cell.Coordinates.globalX < xChunkCount * xCellCount - 1)
+    //    {
+    //        AddChunkToRefreshList(chunkIndex + zChunkCount);
+    //    }
 
-        if (cell.Coordinates.LocalZ == 0 && cell.Coordinates.globalZ != 0)
-        {
-            AddChunkToRefreshList(chunkIndex - 1);
-        }
-        else if (cell.Coordinates.LocalZ == zCellCount - 1 && cell.Coordinates.globalZ < zChunkCount * zCellCount - 1)
-        {
-            AddChunkToRefreshList(chunkIndex + 1);
-        }
-    }
+    //    if (cell.Coordinates.LocalZ == 0 && cell.Coordinates.globalZ != 0)
+    //    {
+    //        AddChunkToRefreshList(chunkIndex - 1);
+    //    }
+    //    else if (cell.Coordinates.LocalZ == zCellCount - 1 && cell.Coordinates.globalZ < zChunkCount * zCellCount - 1)
+    //    {
+    //        AddChunkToRefreshList(chunkIndex + 1);
+    //    }
+    //}
 
-    private void AddChunkToRefreshList(int chunkIndex)
+    private void AddChunkToRefreshList(Chunk chunk)
     {
-        if (!chunksToRefresh.Contains(chunkIndex))
-            chunksToRefresh.Add(chunkIndex);
+        if (!chunksToRefresh.Contains(chunk))
+            chunksToRefresh.Add(chunk);
     }
 
     private int AddCloseNeighborCells(HexCell centreCell, int continentIndex, Queue<HexCell> cellsToCheck)
@@ -286,7 +317,9 @@ public class MapManager : MonoBehaviour
 
             if (closeNeighborCell != null && !IsBehindBorders(closeNeighborCell))
             {
-                SetContinentPart(closeNeighborCell, continentIndex, cellsToCheck);
+                SetContinentPart(closeNeighborCell, continentIndex);
+                cellsToCheck.Enqueue(closeNeighborCell);
+
                 addedCells++;
             }
         }
@@ -339,11 +372,65 @@ public class MapManager : MonoBehaviour
      
         float coastNoise = UnityEngine.Random.Range(minCoastNoise, maxCoastNoise);
 
+        float cellsFill = (float)continents[index].GetContinentCells().Count / maxContinentsCellsAmound[index];
+        float growthBonus = 1f + growthBonusFactor * (1f - cellsFill * cellsFill);
+
         float score =
             distFactor * distWeight +
             noiseFactor * perlinWeight +
             dirFactor * dirWeight;
 
-        return score * coastNoise < minScore;
+        return score * coastNoise * growthBonus < minScore;
+    }
+
+    private void CalculateTerrainLevel(HexCell neighborCell)
+    {
+        float noiseFactor = Mathf.PerlinNoise(
+        neighborCell.Coordinates.globalX * perlinTerrainScale,
+        neighborCell.Coordinates.globalZ * perlinTerrainScale
+        );
+
+        neighborCell.TerreinLevel = (int)Mathf.Lerp(0, 5, noiseFactor);
+    }
+
+    private void SetOceans(HexCell[] gridCells)
+    {
+        var cellsToCheck = new Queue<HexCell>();
+
+        HexCell startCell = gridCells[0];
+        startCell.isOcean = true; 
+        cellsToCheck.Enqueue(startCell);
+
+        while (cellsToCheck.Count > 0)
+        {
+            HexCell currentCell = cellsToCheck.Dequeue();
+
+            for (int j = 0; j < 6; j++)
+            {
+                HexCell neighborCell = currentCell.GetNeighbor((HexDirection)j);
+                if (neighborCell == null) continue;
+
+                if (neighborCell.ContinentIndex != -1) continue;
+
+                if (neighborCell.isOcean) continue;
+
+                neighborCell.isOcean = true; 
+                cellsToCheck.Enqueue(neighborCell);
+            }
+        }
+    }
+
+    private void RemoveLakes(int continentIndex)
+    {
+        var chunkList = continents[continentIndex].GetContinentChunks();
+
+        foreach (var chunk in chunkList)
+        {
+            foreach (var cell in chunk.GetCells())
+            {
+                if(cell.TerreinLevel ==-1 && !cell.isOcean)
+                    SetContinentPart(cell, continentIndex);
+            }
+        }
     }
 }

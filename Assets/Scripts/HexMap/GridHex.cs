@@ -41,17 +41,17 @@ public class GridHex : MonoBehaviour
             }
         }
 
+        MapManager.Instance.GenerateContinents(cells);
+
         foreach (Chunk chunk in chunks)
         {
             chunk.RefreshChunk();
         }
 
-        MapManager.Instance.GenerateContinents(cells);
-
-        foreach (int chunkIndex in MapManager.Instance.GetChunksToRefresh())
-        {
-            chunks[chunkIndex].RefreshChunk();
-        }
+        //foreach (int chunkIndex in MapManager.Instance.GetChunksToRefresh())
+        //{
+        //    chunks[chunkIndex].RefreshChunk();
+        //}
     }
 
     private void SetChunkPosition(Chunk chunk, int index)

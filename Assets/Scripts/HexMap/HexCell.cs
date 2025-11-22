@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using UnityEditor.Rendering;
 using UnityEngine;
 
 public class HexCell : MonoBehaviour
@@ -20,6 +21,8 @@ public class HexCell : MonoBehaviour
         set { coordinates = value; }
     }
 
+    private Color[] colors = new Color[] { Color.white, Color.yellow, Color.orange, Color.red, Color.purple, Color.magenta };
+
     private Color cellColor = Color.turquoise;
     public Color CellColor
     {
@@ -28,6 +31,13 @@ public class HexCell : MonoBehaviour
     }
 
     public HexCell[] neighbors = new HexCell[6];
+
+    private bool ocean = false;
+    public bool isOcean
+    {
+        get { return ocean; }
+        set { ocean = value; }
+    }
 
     private int continentIndex = -1;
     public int ContinentIndex
@@ -63,16 +73,10 @@ public class HexCell : MonoBehaviour
 
     public void SetContinent(int index)
     {
-        cellColor = Color.green;
-        terreinLevel = 0;
+        //cellColor = Color.green;
+        //terreinLevel = 0;
+        cellColor = colors[terreinLevel];
         continentIndex = index;
-    }
-
-    public void SetOcean()
-    {
-        cellColor = Color.turquoise;
-        terreinLevel = -1;
-        continentIndex = -1;
     }
 
     public void SetCoordinateText()
