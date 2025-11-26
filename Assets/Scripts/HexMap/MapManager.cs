@@ -65,6 +65,8 @@ public class MapManager : MonoBehaviour
     [SerializeField] private float hillsNoiseMargin = 0.6f;
     [SerializeField] private float mountainsNoiseMargin = 0.8f;
 
+    [Header("Hex Noise")]
+    public Texture2D hexMeshNoise;
 
     private List<Chunk> chunksToRefresh = new List<Chunk>();
 

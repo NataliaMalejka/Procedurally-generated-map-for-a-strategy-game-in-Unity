@@ -8,6 +8,8 @@ public static class HexData
     public static float solidPart = 0.75f;
     public static float distanceBetweenEdgesScaler = 1 - solidPart;
 
+    public static float hexMeshNoiseStrength = 5f;
+
     public static int oceanDistanceLevelStep = 2;
     public static int levelStepHeight = 2;
 

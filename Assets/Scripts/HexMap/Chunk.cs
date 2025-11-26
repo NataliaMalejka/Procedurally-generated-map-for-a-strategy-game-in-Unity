@@ -103,14 +103,19 @@ public class Chunk : MonoBehaviour
             Vector3 v1 = centre + HexData.GetSolidCorner(i);
             Vector3 v2 = centre + HexData.GetSolidCorner((i + 1) % 6);
 
-            chunkMesh.CreateTriangleWithColor(centre, v1, v2, color);
+            Vector3 middle1 = Vector3.Lerp(v1, v2, 1f / 3f);
+            Vector3 middle2 = Vector3.Lerp(v1, v2, 2f / 3f);
+
+            chunkMesh.CreateTriangleWithColor(centre, v1, middle1, color);
+            chunkMesh.CreateTriangleWithColor(centre, middle1, middle2, color);
+            chunkMesh.CreateTriangleWithColor(centre, middle2, v2, color);
 
             if (i < 3)
             {
                 HexCell neighborCell = cell.GetNeighbor((HexDirection)i);
                 if (neighborCell!= null)
                 {
-                    chunkMesh.CreateRectangularCellsConnection(v1, v2, i, color, neighborCell);
+                    chunkMesh.CreateRectangularCellsConnection(v1, v2, i, color, neighborCell, middle1, middle2);
                    
                     if (i < 2 && cell.GetNeighbor((HexDirection)i + 1) != null)
                     {

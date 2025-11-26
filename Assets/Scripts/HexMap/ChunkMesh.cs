@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -28,53 +27,56 @@ public class ChunkMesh : MonoBehaviour
     {
         int index = vertices.Count;
 
-        vertices.Add(v1);
-        vertices.Add(v2);
-        vertices.Add(v3);
+        vertices.Add(AddNoise(v1));
+        vertices.Add(AddNoise(v2));
+        vertices.Add(AddNoise(v3));
 
         triangles.Add(index);
         triangles.Add(index + 1);
         triangles.Add(index + 2);
 
-        for (int i = 0; i < 3; i++)
-        {
-            colors.Add(color);
-        }
-
+        AddColor(color, color, color);
     }
 
     public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
     {
         int index = vertices.Count;
 
-        vertices.Add(v1);
-        vertices.Add(v2);
-        vertices.Add(v3);
+        vertices.Add(AddNoise(v1));
+        vertices.Add(AddNoise(v2));
+        vertices.Add(AddNoise(v3));
 
         triangles.Add(index);
         triangles.Add(index + 1);
         triangles.Add(index + 2);
-
     }
 
-    public void CreateRectangularCellsConnection(Vector3 v1, Vector3 v2, int index, Color color, HexCell neighbourCell)
+    public void CreateRectangularCellsConnection(Vector3 v1, Vector3 v2, int index, Color color, HexCell neighbourCell, Vector3 m1, Vector3 m2)
     {
         Vector3 distance = HexData.GetDistanceBetweenEdges(index);
 
         Vector3 v1d = v1 + distance;
-        Vector3 v2d = v2 + distance;
         v1d.y = neighbourCell.TerreinLevel;
+        Vector3 v2d = v2 + distance;
         v2d.y = neighbourCell.TerreinLevel;
 
+        Vector3 m1d = m1 + distance;
+        m1d.y = neighbourCell.TerreinLevel;
+        Vector3 m2d = m2 + distance;
+        m2d.y = neighbourCell.TerreinLevel;
+
+        CreateRectangle(color, neighbourCell.CellColor, v1, v1d, m1, m1d);
+        CreateRectangle(color, neighbourCell.CellColor, m1, m1d, m2, m2d);
+        CreateRectangle(color, neighbourCell.CellColor, m2, m2d, v2, v2d);
+    }
+
+    private void CreateRectangle(Color cellColor, Color neighbourColor, Vector3 v1, Vector3 v1d, Vector3 v2, Vector3 v2d)
+    {
         CreateTriangle(v1, v1d, v2);
-        colors.Add(color);
-        colors.Add(neighbourCell.CellColor);
-        colors.Add(color);
+        AddColor(cellColor, neighbourColor, cellColor);
 
         CreateTriangle(v1d, v2d, v2);
-        colors.Add(neighbourCell.CellColor);
-        colors.Add(neighbourCell.CellColor);
-        colors.Add(color);
+        AddColor(neighbourColor, neighbourColor, cellColor);
     }
 
     public void CreateTriangleCellsConnection(Vector3 v1, int index, Color color, HexCell neighbourCell, HexCell nextNeighbourCell)
@@ -88,22 +90,26 @@ public class ChunkMesh : MonoBehaviour
         v1d2.y = nextNeighbourCell.TerreinLevel;
 
         CreateTriangle(v1, v1d1, v1d2);
-        colors.Add(color);
-        colors.Add(neighbourCell.CellColor);
-        colors.Add(nextNeighbourCell.CellColor);
+        AddColor(color, neighbourCell.CellColor, nextNeighbourCell.CellColor);
     }
 
-    private void AddColor(Color color)
+    private void AddColor(Color c1, Color c2, Color c3)
     {
-        for (int i = 0; i < 3; i++)
-        {
-            colors.Add(color);
-        }
+        colors.Add(c1);
+        colors.Add(c2);
+        colors.Add(c3);
     }
 
-    public void AddNoise(Vector3 v)
+    private Vector3 AddNoise(Vector3 v)
     {
-        
+        Vector3 chunkPos = this.GetComponentInParent<Transform>().position;
+
+        Vector4 noise = MapManager.Instance.hexMeshNoise.GetPixelBilinear(v.x + chunkPos.x, v.z + chunkPos.z);
+
+        v.x += noise.x * HexData.hexMeshNoiseStrength;
+        v.z += noise.z * HexData.hexMeshNoiseStrength;
+
+        return v;
     }
 
     public void Apply()

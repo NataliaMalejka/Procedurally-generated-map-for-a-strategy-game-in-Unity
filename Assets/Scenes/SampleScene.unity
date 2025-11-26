@@ -431,6 +431,7 @@ MonoBehaviour:
   mountainsNoiseTerrainAmp: 10
   hillsNoiseMargin: 0.6
   mountainsNoiseMargin: 0.8
+  hexMeshNoise: {fileID: 2800000, guid: 5004222ab684ce641adfe8d397c274bf, type: 3}
 --- !u!4 &571916395
 Transform:
   m_ObjectHideFlags: 0
