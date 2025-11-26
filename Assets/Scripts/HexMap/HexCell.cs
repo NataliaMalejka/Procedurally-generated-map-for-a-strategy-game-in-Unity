@@ -21,7 +21,7 @@ public class HexCell : MonoBehaviour
         set { coordinates = value; }
     }
 
-    private Color[] colors = new Color[] { Color.white, Color.yellow, Color.orange, Color.red, Color.purple, Color.magenta };
+    private Color[] colors = new Color[] { Color.white, Color.yellow, Color.orange, Color.orangeRed, Color.red, Color.hotPink, Color.magenta, Color.darkBlue, Color.gray7, Color.black };
 
     private Color cellColor = Color.turquoise;
     public Color CellColor
@@ -39,6 +39,13 @@ public class HexCell : MonoBehaviour
         set { ocean = value; }
     }
 
+    private int distanceFromOcean = -1;
+    public int DistanceFromOcean
+    {
+        get { return distanceFromOcean; }
+        set { distanceFromOcean = value; }
+    }
+
     private int continentIndex = -1;
     public int ContinentIndex
     {
@@ -46,11 +53,18 @@ public class HexCell : MonoBehaviour
         set { continentIndex = value; }
     }
 
-    private int terreinLevel = -1; //water
+    private int terreinLevel = -1; 
     public int TerreinLevel
     {
         get { return terreinLevel; }
         set { terreinLevel = value; }
+    }
+
+    private bool isMountain = false;
+    public bool IsMountain
+    {
+        get { return isMountain; }
+        set { isMountain = value; }
     }
 
     private int[] edges = new int[6];
@@ -73,10 +87,28 @@ public class HexCell : MonoBehaviour
 
     public void SetContinent(int index)
     {
-        //cellColor = Color.green;
-        //terreinLevel = 0;
-        cellColor = colors[terreinLevel];
         continentIndex = index;
+    }
+
+    public void SetTerrainLevel(int level)
+    {
+        if (level >= colors.Length)
+        {
+           level = colors.Length - 1;
+        }
+
+        if(level < 0)
+        {
+            level = 0;
+        }
+
+        if(level > 7)
+        {
+            IsMountain = true;
+        }
+
+        cellColor = colors[level];
+        terreinLevel = level * HexData.levelStepHeight;
     }
 
     public void SetCoordinateText()

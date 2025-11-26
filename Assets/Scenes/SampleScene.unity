@@ -422,7 +422,15 @@ MonoBehaviour:
   minCoastNoise: 0.8
   maxCoastNoise: 1.2
   growthBonusFactor: 0.2
-  perlinTerrainScale: 0.25
+  distanceWeight: 0.3
+  perlinLargeTerrainScale: 0.1
+  perlinMediumTerrainScale: 0.3
+  perlinSmallTerrainScale: 0.28
+  distanceNoiseTerrainAmp: 1
+  hillsNoiseTerrainAmp: 2
+  mountainsNoiseTerrainAmp: 10
+  hillsNoiseMargin: 0.6
+  mountainsNoiseMargin: 0.8
 --- !u!4 &571916395
 Transform:
   m_ObjectHideFlags: 0

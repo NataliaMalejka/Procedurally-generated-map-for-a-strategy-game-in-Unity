@@ -52,7 +52,19 @@ public class MapManager : MonoBehaviour
     [SerializeField] private float growthBonusFactor = 2.5f;
 
     [Header("Terrain Level")]
-    [SerializeField] private float perlinTerrainScale = 0.05f;
+    [SerializeField] private float distanceWeight = 0.3f;
+
+    [SerializeField] private float perlinLargeTerrainScale = 0.1f;
+    [SerializeField] private float perlinMediumTerrainScale = 0.3f;
+    [SerializeField] private float perlinSmallTerrainScale = 0.28f;
+
+    [SerializeField] private float distanceNoiseTerrainAmp = 1f;
+    [SerializeField] private float hillsNoiseTerrainAmp = 2f;
+    [SerializeField] private float mountainsNoiseTerrainAmp = 10f;
+
+    [SerializeField] private float hillsNoiseMargin = 0.6f;
+    [SerializeField] private float mountainsNoiseMargin = 0.8f;
+
 
     private List<Chunk> chunksToRefresh = new List<Chunk>();
 
@@ -262,11 +274,15 @@ public class MapManager : MonoBehaviour
         {
             RemoveLakes(i);
         }
+
+        CalculateDistancToOcean(gridCells);
+
+        CalculateTerrainLevel(gridCells);
     }
 
     private void SetContinentPart(HexCell cell, int continentIndex)
     {
-        CalculateTerrainLevel(cell);
+        //CalculateTerrainLevel(cell);
 
         cell.SetContinent(continentIndex);
         continents[continentIndex].AddCell(cell);
@@ -383,15 +399,15 @@ public class MapManager : MonoBehaviour
         return score * coastNoise * growthBonus < minScore;
     }
 
-    private void CalculateTerrainLevel(HexCell neighborCell)
-    {
-        float noiseFactor = Mathf.PerlinNoise(
-        neighborCell.Coordinates.globalX * perlinTerrainScale,
-        neighborCell.Coordinates.globalZ * perlinTerrainScale
-        );
+    //private void CalculateTerrainLevel(HexCell neighborCell)
+    //{
+    //    float noiseFactor = Mathf.PerlinNoise(
+    //    neighborCell.Coordinates.globalX * perlinMediumTerrainScale,
+    //    neighborCell.Coordinates.globalZ * perlinMediumTerrainScale
+    //    );
 
-        neighborCell.TerreinLevel = (int)Mathf.Lerp(0, 5, noiseFactor);
-    }
+    //    neighborCell.TerreinLevel = (int)Mathf.Lerp(0, 5, noiseFactor);
+    //}
 
     private void SetOceans(HexCell[] gridCells)
     {
@@ -414,7 +430,9 @@ public class MapManager : MonoBehaviour
 
                 if (neighborCell.isOcean) continue;
 
-                neighborCell.isOcean = true; 
+                neighborCell.isOcean = true;
+                neighborCell.DistanceFromOcean = 0;
+
                 cellsToCheck.Enqueue(neighborCell);
             }
         }
@@ -432,5 +450,113 @@ public class MapManager : MonoBehaviour
                     SetContinentPart(cell, continentIndex);
             }
         }
+    }
+
+    private void CalculateDistancToOcean(HexCell[] gridCells)
+    {
+        Queue<HexCell> queue = new Queue<HexCell>();
+
+        for (int i = 0; i < gridCells.Length; i++)
+        {
+            HexCell cell = gridCells[i];
+
+            if (cell.isOcean)
+                queue.Enqueue(cell);  
+        }
+
+        while (queue.Count > 0)
+        {
+            HexCell current = queue.Dequeue();
+            int currentDist = current.DistanceFromOcean;
+
+            for (int i = 0; i < 6; i++)
+            {
+                HexCell neighbor = current.GetNeighbor((HexDirection)i);
+                if (neighbor == null)
+                    continue;
+
+                if (neighbor.DistanceFromOcean == -1)
+                {
+                    neighbor.DistanceFromOcean = currentDist + 1;
+                    queue.Enqueue(neighbor);
+                }
+            }
+        }
+    }
+
+    private void CalculateTerrainLevel(HexCell[] gridCells)
+    {
+        foreach(var cell in gridCells)
+        {
+            if (!cell.isOcean)
+            {
+                int heightDistanceToOcean = CalculateDictanceToOceanHeight(cell) * HexData.oceanDistanceLevelStep;
+
+                int distanceNoiseHeight = SetDistanceNoise(cell);
+                int terrainLevel = distanceNoiseHeight + heightDistanceToOcean;
+
+                if (terrainLevel > 5)
+                    terrainLevel = 5;
+
+                if (cell.DistanceFromOcean == 1)
+                {
+                    if(terrainLevel > 0)
+                        terrainLevel -= 1;
+                }
+                else
+                {
+                    int hillHeight = SetHillNoise(cell);
+                    terrainLevel += hillHeight;
+                }
+
+                int mountainsNoise = SetMountains(cell);
+                terrainLevel += mountainsNoise;
+
+                cell.SetTerrainLevel(terrainLevel);
+            }
+        }
+    }
+
+    private int CalculateDictanceToOceanHeight(HexCell cell)
+    {
+        return (int)(cell.DistanceFromOcean * distanceWeight);
+    }
+
+    private int SetDistanceNoise(HexCell cell)
+    {
+        float distanceNoise = Mathf.PerlinNoise(
+            cell.Coordinates.globalX * perlinLargeTerrainScale + 1000f,
+            cell.Coordinates.globalZ * perlinLargeTerrainScale + 1000f
+        );
+
+        distanceNoise *= distanceNoiseTerrainAmp * HexData.oceanDistanceLevelStep;
+
+        return (int)(distanceNoise);
+    }
+
+    private int SetHillNoise(HexCell cell)
+    {
+        float hillsNoise = Mathf.PerlinNoise(
+            cell.Coordinates.globalX * perlinMediumTerrainScale + 2000f,
+            cell.Coordinates.globalZ * perlinMediumTerrainScale + 2000f
+        );
+
+        if (hillsNoise < hillsNoiseMargin) hillsNoise = 0;
+        hillsNoise *= hillsNoiseTerrainAmp;
+
+        return (int)(hillsNoise);
+    }
+
+    private int SetMountains(HexCell cell)
+    {
+        float mountainsNoise = Mathf.PerlinNoise(
+             cell.Coordinates.globalX * perlinSmallTerrainScale + 3000f,
+             cell.Coordinates.globalZ * perlinSmallTerrainScale + 3000f
+         );
+
+        if (mountainsNoise < mountainsNoiseMargin) mountainsNoise = 0;
+        mountainsNoise *= mountainsNoiseTerrainAmp;
+
+        return (int)mountainsNoise;
     }
 }
