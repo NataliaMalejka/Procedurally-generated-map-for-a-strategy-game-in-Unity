@@ -60,6 +60,13 @@ public class HexCell : MonoBehaviour
         set { terreinLevel = value; }
     }
 
+    private int terrainLevelIndex = -1;
+    public int TerrainLevelIndex
+    {
+        get { return terrainLevelIndex; }
+        set { terrainLevelIndex = value; }
+    }
+
     private bool isMountain = false;
     public bool IsMountain
     {
@@ -107,8 +114,9 @@ public class HexCell : MonoBehaviour
             IsMountain = true;
         }
 
-        cellColor = colors[level];
-        terreinLevel = level * HexData.levelStepHeight;
+        terrainLevelIndex = level;
+        cellColor = colors[terrainLevelIndex];
+        terreinLevel = terrainLevelIndex * HexData.levelStepHeight;
     }
 
     public void SetCoordinateText()

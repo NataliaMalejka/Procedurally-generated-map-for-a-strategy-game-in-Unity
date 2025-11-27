@@ -47,11 +47,6 @@ public class GridHex : MonoBehaviour
         {
             chunk.RefreshChunk();
         }
-
-        //foreach (int chunkIndex in MapManager.Instance.GetChunksToRefresh())
-        //{
-        //    chunks[chunkIndex].RefreshChunk();
-        //}
     }
 
     private void SetChunkPosition(Chunk chunk, int index)
