@@ -31,6 +31,7 @@ public class HexCell : MonoBehaviour
     }
 
     public HexCell[] neighbors = new HexCell[6];
+    private Edge[] edges = new Edge[6];
 
     private bool ocean = false;
     public bool isOcean
@@ -74,7 +75,11 @@ public class HexCell : MonoBehaviour
         set { isMountain = value; }
     }
 
-    private int[] edges = new int[6];
+    public void AddEdge(EdgeType edgeType, HexDirection direction)
+    {
+        Edge edge = new Edge(edgeType, direction, terreinLevel, transform.localPosition);
+        edges[(int)direction] = edge;
+    }
 
     public HexCell GetNeighbor(HexDirection direction)
     {

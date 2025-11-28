@@ -1,8 +1,10 @@
+using NUnit.Framework.Internal;
 using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditor.Search;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 enum MapSize
 {
@@ -280,6 +282,8 @@ public class MapManager : MonoBehaviour
         CalculateDistancToOcean(gridCells);
 
         CalculateTerrainLevel(gridCells);
+
+        DetectEdgeType(gridCells);
     }
 
     private void SetContinentPart(HexCell cell, int continentIndex)
@@ -560,5 +564,39 @@ public class MapManager : MonoBehaviour
         mountainsNoise *= mountainsNoiseTerrainAmp;
 
         return (int)mountainsNoise;
+    }
+
+    private void DetectEdgeType(HexCell[] gridCells)
+    {
+        for (int i = 0; i < gridCells.Length; i++) 
+        {
+            HexCell cell = gridCells[i];
+
+            for (int j = 0; j < 3; j++) 
+            {
+                HexCell neighbourCell = cell.GetNeighbor((HexDirection)j);
+
+                if (neighbourCell !=null && !cell.IsMountain)
+                {
+                    int terrainLevelDiff = Mathf.Abs(cell.TerrainLevelIndex - neighbourCell.TerrainLevelIndex);
+
+                    if (terrainLevelDiff == 0) 
+                    {
+                        cell.AddEdge(EdgeType.Flat, (HexDirection)j);
+                        neighbourCell.AddEdge(EdgeType.Flat, ((HexDirection)j).Opposite());
+                    }
+                    else if (terrainLevelDiff == 1) 
+                    {
+                        cell.AddEdge(EdgeType.Smooth, (HexDirection)j);
+                        neighbourCell.AddEdge(EdgeType.Smooth, ((HexDirection)j).Opposite());
+                    }
+                    else if (terrainLevelDiff > 1) 
+                    {
+                        cell.AddEdge(EdgeType.Cliff, (HexDirection)j);
+                        neighbourCell.AddEdge(EdgeType.Cliff, ((HexDirection)j).Opposite());
+                    }
+                }
+            }
+        }
     }
 }
