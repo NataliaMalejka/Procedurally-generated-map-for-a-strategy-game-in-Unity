@@ -1,10 +1,6 @@
-using NUnit.Framework.Internal;
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor.Search;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 enum MapSize
 {
@@ -72,6 +68,9 @@ public class MapManager : MonoBehaviour
 
     private List<Chunk> chunksToRefresh = new List<Chunk>();
 
+    List<Edge> allSmoothEdges = new List<Edge>();
+    List<List<Edge>> groupsSmoothEdges = new List<List<Edge>>();
+
     public int[] GetContinentsCentres()
     {
         return continentsCentres;
@@ -117,7 +116,7 @@ public class MapManager : MonoBehaviour
         return size switch
         {
             MapSize.Small => (UnityEngine.Random.Range(2, 4)),
-            MapSize.Medium => (UnityEngine.Random.Range(3,6)),
+            MapSize.Medium => (UnityEngine.Random.Range(3, 6)),
             MapSize.Large => (UnityEngine.Random.Range(4, 7)),
             _ => (UnityEngine.Random.Range(2, 4))
         };
@@ -132,7 +131,7 @@ public class MapManager : MonoBehaviour
         maxZMargin = zCellCount * zChunkCount - minZMargin;
 
         regionsCount = continentsCount / 2 + continentsCount % 2;
-        if(regionsCount < 2) regionsCount = 2;
+        if (regionsCount < 2) regionsCount = 2;
 
         continentsCentres = new int[continentsCount];
         continentDir = new Vector2[continentsCount];
@@ -189,8 +188,8 @@ public class MapManager : MonoBehaviour
                     localXMin = localXMax + minXMargin * 2 + contonentCentreMargin;
                     localXMax = xChunkCount * xCellCount / regionsCount * regionIndex - minXMargin - contonentCentreMargin;
 
-                    if (localXMax == maxXMargin - contonentCentreMargin) dirX = -1; 
-                    else dirX = 0; 
+                    if (localXMax == maxXMargin - contonentCentreMargin) dirX = -1;
+                    else dirX = 0;
 
                     regionIndex++;
                 }
@@ -225,11 +224,11 @@ public class MapManager : MonoBehaviour
         return chunkIndex * (xCellCount * zCellCount) + localCellIndex;
     }
 
-    public void GenerateContinents(HexCell[] gridCells) 
+    public void GenerateContinents(HexCell[] gridCells)
     {
         chunksToRefresh.Clear();
 
-        for (int i = 0; i < continentsCentres.Length; i++) 
+        for (int i = 0; i < continentsCentres.Length; i++)
         {
             continents[i] = new Continent();
             continents[i].ContinetIndex = i;
@@ -254,7 +253,7 @@ public class MapManager : MonoBehaviour
                 {
                     HexCell neighborCell = currentCell.GetNeighbor((HexDirection)j);
 
-                    if(neighborCell == null) continue;
+                    if (neighborCell == null) continue;
 
                     if (neighborCell.ContinentIndex != -1) continue;
 
@@ -269,7 +268,7 @@ public class MapManager : MonoBehaviour
 
                     cellsCreated++;
                 }
-            }           
+            }
         }
 
         SetOceans(gridCells);
@@ -382,7 +381,7 @@ public class MapManager : MonoBehaviour
     private bool CheckNoise(HexCell neighborCell, HexCell centreCell, int index)
     {
         float dist = Vector2.Distance(neighborCell.Coordinates.GetCellPos(), centreCell.Coordinates.GetCellPos());
-        float distFactor = Mathf.Clamp01(1f - dist / (zCellCount* zChunkCount / 2));
+        float distFactor = Mathf.Clamp01(1f - dist / (zCellCount * zChunkCount / 2));
 
         float noiseFactor = Mathf.PerlinNoise(
         neighborCell.Coordinates.globalX * perlinScale,
@@ -390,8 +389,8 @@ public class MapManager : MonoBehaviour
         );
 
         Vector2 toHex = (neighborCell.Coordinates.GetCellPos() - centreCell.Coordinates.GetCellPos()).normalized;
-        float dirFactor = Vector2.Dot(toHex, continentDir[index].normalized) * 0.5f + 0.5f; 
-     
+        float dirFactor = Vector2.Dot(toHex, continentDir[index].normalized) * 0.5f + 0.5f;
+
         float coastNoise = UnityEngine.Random.Range(minCoastNoise, maxCoastNoise);
 
         float cellsFill = (float)continents[index].GetContinentCells().Count / maxContinentsCellsAmound[index];
@@ -420,7 +419,7 @@ public class MapManager : MonoBehaviour
         var cellsToCheck = new Queue<HexCell>();
 
         HexCell startCell = gridCells[0];
-        startCell.isOcean = true; 
+        startCell.isOcean = true;
         cellsToCheck.Enqueue(startCell);
 
         while (cellsToCheck.Count > 0)
@@ -452,7 +451,7 @@ public class MapManager : MonoBehaviour
         {
             foreach (var cell in chunk.GetCells())
             {
-                if(cell.TerreinLevel ==-1 && !cell.isOcean)
+                if (cell.TerreinLevel == -1 && !cell.isOcean)
                     SetContinentPart(cell, continentIndex);
             }
         }
@@ -467,7 +466,7 @@ public class MapManager : MonoBehaviour
             HexCell cell = gridCells[i];
 
             if (cell.isOcean)
-                queue.Enqueue(cell);  
+                queue.Enqueue(cell);
         }
 
         while (queue.Count > 0)
@@ -492,7 +491,7 @@ public class MapManager : MonoBehaviour
 
     private void CalculateTerrainLevel(HexCell[] gridCells)
     {
-        foreach(var cell in gridCells)
+        foreach (var cell in gridCells)
         {
             if (!cell.isOcean)
             {
@@ -506,7 +505,7 @@ public class MapManager : MonoBehaviour
 
                 if (cell.DistanceFromOcean == 1)
                 {
-                    if(terrainLevel > 0)
+                    if (terrainLevel > 0)
                         terrainLevel -= 1;
                 }
                 else
@@ -568,34 +567,191 @@ public class MapManager : MonoBehaviour
 
     private void DetectEdgeType(HexCell[] gridCells)
     {
-        for (int i = 0; i < gridCells.Length; i++) 
+        for (int i = 0; i < gridCells.Length; i++)
         {
             HexCell cell = gridCells[i];
 
-            for (int j = 0; j < 3; j++) 
+            for (int j = 0; j < 3; j++)
             {
                 HexCell neighbourCell = cell.GetNeighbor((HexDirection)j);
 
-                if (neighbourCell !=null && !cell.IsMountain)
+                if (neighbourCell != null)
                 {
                     int terrainLevelDiff = Mathf.Abs(cell.TerrainLevelIndex - neighbourCell.TerrainLevelIndex);
 
-                    if (terrainLevelDiff == 0) 
+                    if (terrainLevelDiff == 0)
                     {
                         cell.AddEdge(EdgeType.Flat, (HexDirection)j);
                         neighbourCell.AddEdge(EdgeType.Flat, ((HexDirection)j).Opposite());
                     }
-                    else if (terrainLevelDiff == 1) 
+                    else if (terrainLevelDiff == 1)
                     {
                         cell.AddEdge(EdgeType.Smooth, (HexDirection)j);
                         neighbourCell.AddEdge(EdgeType.Smooth, ((HexDirection)j).Opposite());
+
+                        allSmoothEdges.Add(cell.GetEdge(j));
+
+                        int k;
+                        if(j<3)
+                            k = (j + 3);
+                        else
+                            k = (j - 3);
+
+                        allSmoothEdges.Add(neighbourCell.GetEdge(k));
                     }
-                    else if (terrainLevelDiff > 1) 
+                    else if (terrainLevelDiff > 1)
                     {
                         cell.AddEdge(EdgeType.Cliff, (HexDirection)j);
                         neighbourCell.AddEdge(EdgeType.Cliff, ((HexDirection)j).Opposite());
                     }
                 }
+            }
+        }
+
+        GroupSmoothEdges();
+    }
+
+    //zaczynamy od jakiejs k v1 i v2 end =k, start=k
+    //sprawdzamy end = k.v2
+    //jesli v2 == inna v1 to end = inna.v1 dodoaj inna na koniec listy
+    //jesli v2 == inna v2 to end = inna.v2 dodoaj inna na koniec listy
+    //sprawdzamy start = k.v1
+    //jesli v1 == inna v1 to start = inna.v1 dodaj inna na poczatek listy
+    //jesli v1 == inna v2 to start = inna.v2 dodaj inna na poczatek listy
+
+    private void GroupSmoothEdges()
+    {
+        HashSet<Edge> used = new HashSet<Edge>();
+
+        foreach (var e in allSmoothEdges)
+        {
+            if (used.Contains(e))
+                continue;
+
+            List<Edge> chain = new List<Edge>();
+            chain.Add(e);
+            used.Add(e);
+
+            Vector3 end = e.GetFullV2();
+            bool extended = true;
+            while (extended)
+            {
+                extended = false;
+                foreach (var other in allSmoothEdges)
+                {
+                    if (used.Contains(other)) continue;
+
+                    if (SamePoint(end, other.GetFullV1()))
+                    {
+                        chain.Add(other);
+                        used.Add(other);
+                        end = other.GetFullV2();
+                        extended = true;
+                        break;
+                    }
+                    else if (SamePoint(end, other.GetFullV2()))
+                    {
+                        chain.Add(other);
+                        used.Add(other);
+                        end = other.GetFullV1();
+                        extended = true;
+                        break;
+                    }
+                }
+            }
+
+            Vector3 start = e.GetFullV1();
+            extended = true;
+            while (extended)
+            {
+                extended = false;
+                foreach (var other in allSmoothEdges)
+                {
+                    if (used.Contains(other)) continue;
+
+                    if (SamePoint(start, other.GetFullV2()))
+                    {
+                        chain.Insert(0, other);
+                        used.Add(other);
+                        start = other.GetFullV1();
+                        extended = true;
+                        break;
+                    }
+                    else if (SamePoint(start, other.GetFullV1()))
+                    {
+                        chain.Insert(0, other);
+                        used.Add(other);
+                        start = other.GetFullV2();
+                        extended = true;
+                        break;
+                    }
+                }
+            }
+
+            groupsSmoothEdges.Add(chain);
+        }
+
+        CreateSmoothEdges();
+    }
+
+    private bool SamePoint(Vector3 a, Vector3 b)
+    {
+        return (a - b).sqrMagnitude < 0.0001f;
+    }
+
+    private void CreateSmoothEdges()
+    {
+
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (groupsSmoothEdges == null || groupsSmoothEdges.Count == 0)
+            return;
+
+        // stabilna paleta do ³añcuchów – powtarza siê po 12 kolorach
+        Color[] palette = new Color[]
+        {
+        Color.red,
+        Color.green,
+        Color.blue,
+        Color.yellow,
+        Color.cyan,
+        Color.magenta,
+        new Color(1f, 0.5f, 0f),   // orange
+        new Color(0.5f, 0f, 1f),   // purple
+        new Color(0f, 0.5f, 1f),   // azure
+        new Color(0.4f, 1f, 0.2f), // lime
+        new Color(1f, 0.2f, 0.6f), // pink
+        new Color(0.6f, 0.6f, 0.6f), // grey
+        };
+
+        int pCount = palette.Length;
+
+        // Przesuniêcie w górê aby kulki nie by³y zas³oniête meshem
+        Vector3 offset = Vector3.up * 0.05f;
+
+        for (int i = 0; i < groupsSmoothEdges.Count; i++)
+        {
+            List<Edge> chain = groupsSmoothEdges[i];
+            if (chain == null || chain.Count == 0)
+                continue;
+
+            Color c = palette[i % pCount];
+            Gizmos.color = c;
+
+            float sphereSize = 0.08f;
+
+            foreach (var edge in chain)
+            {
+                Vector3 p1 = edge.GetGlobalV1();
+                Vector3 p2 = edge.GetGlobalV2();
+
+                Gizmos.DrawSphere(p1, sphereSize);
+                Gizmos.DrawSphere(p2, sphereSize);
+
+                // Opcjonalnie linie miêdzy nimi — ³atwiej wizualnie przeœledziæ ³añcuch
+                Gizmos.DrawLine(p1, p2);
             }
         }
     }

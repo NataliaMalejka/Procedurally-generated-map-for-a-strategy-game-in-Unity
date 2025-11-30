@@ -77,8 +77,13 @@ public class HexCell : MonoBehaviour
 
     public void AddEdge(EdgeType edgeType, HexDirection direction)
     {
-        Edge edge = new Edge(edgeType, direction, terreinLevel, transform.localPosition);
+        Edge edge = new Edge(edgeType, direction, terreinLevel, transform.localPosition, hexChunk.transform.position);
         edges[(int)direction] = edge;
+    }
+
+    public Edge GetEdge(int index)
+    {
+        return edges[index];
     }
 
     public HexCell GetNeighbor(HexDirection direction)

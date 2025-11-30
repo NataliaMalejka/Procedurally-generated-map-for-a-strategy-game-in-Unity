@@ -100,8 +100,11 @@ public class Chunk : MonoBehaviour
 
         for (int i = 0; i < 6; i++)
         {
-            Vector3 v1 = centre + HexData.GetSolidCorner(i);
-            Vector3 v2 = centre + HexData.GetSolidCorner((i + 1) % 6);
+            //Vector3 v1 = centre + HexData.GetSolidCorner(i);
+            //Vector3 v2 = centre + HexData.GetSolidCorner((i + 1) % 6);
+
+            Vector3 v1 = cell.GetEdge(i).GetLocalV1();
+            Vector3 v2 = cell.GetEdge(i).GetLocalV2();
 
             Vector3 middle1 = Vector3.Lerp(v1, v2, 1f / 3f);
             Vector3 middle2 = Vector3.Lerp(v1, v2, 2f / 3f);
