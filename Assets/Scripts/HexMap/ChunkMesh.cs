@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,6 +12,8 @@ public class ChunkMesh : MonoBehaviour
     private List<Color> colors = new List<Color>();
 
     private int iterations = 3;
+    private float noiseStrengthNormal = 3f;
+    private float noiseStrengthSmooth = 0.3f;
 
     private void Awake()
     {
@@ -25,19 +28,45 @@ public class ChunkMesh : MonoBehaviour
         colors.Clear();
     }
 
-    public void CreateTriangleWithColor(Vector3 v1, Vector3 v2, Vector3 v3, Color color)
+    public void CreateTriangleWithColor(Vector3 c, Vector3 v1, Vector3 v2, Color color, HexCell cell, int index)
     {
-        CreateTriangle(AddNoise(v1), AddNoise(v2), AddNoise(v3));
+        Vector3 m1 = cell.GetEdge(index).GetMiddle1();
+        Vector3 m2 = cell.GetEdge(index).GetMiddle2();
+
+        if ((cell.GetEdge((index + 5) % 6).GetEdgeType() != EdgeType.Smooth))
+        {
+            v1 = AddNoise(v1, noiseStrengthNormal);
+        }
+        else
+        {
+            //v1 = cell.GetEdge((index + 5) % 6).GetLocalV2();
+        }
+
+        if ((cell.GetEdge((index + 1) % 6).GetEdgeType() != EdgeType.Smooth))
+        {
+            v2 = AddNoise(v2, noiseStrengthNormal);
+        }
+        else
+        {
+            //v2 = cell.GetEdge((index + 1) % 6).GetLocalV1();
+        }
+
+        CreateTriangle(AddNoise(c, noiseStrengthNormal), v1, AddNoise(m1, noiseStrengthNormal));
         AddColor(color, color, color);
+        CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal));
+        AddColor(color, color, color);
+        CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), v2);
+        AddColor(color, color, color);
+
     }
 
     public void CreateSmoothTriangleWithColor(Vector3 c, Vector3 v1, Vector3 v2, Vector3 m1, Vector3 m2, Color color)
     {
-        c = AddNoise(c);
+        c = AddNoise(c, noiseStrengthNormal);
 
         List<Vector3> verticles = new List<Vector3>()
         {
-            AddNoise(v1), AddNoise(m1), AddNoise(m2), AddNoise(v2)
+            (v1), AddNoise(m1,  noiseStrengthSmooth), AddNoise(m2, noiseStrengthSmooth), (v2)
         };
 
         verticles = ChaikinSmooth(verticles);
@@ -62,37 +91,75 @@ public class ChunkMesh : MonoBehaviour
         triangles.Add(index + 2);
     }
 
-    public void CreateRectangularCellsConnection(Vector3 v1, Vector3 v2, int index, Color color, HexCell neighbourCell, Vector3 m1, Vector3 m2)
+    public void CreateRectangularCellsConnection(Vector3 v1, Vector3 v2, int index, Color color, HexCell neighbourCell, Vector3 m1, Vector3 m2, HexCell cell)
     {
-        Vector3 distance = HexData.GetDistanceBetweenEdges(index);
+        //Vector3 distance = HexData.GetDistanceBetweenEdges(index);
 
-        Vector3 v1d = new Vector3(v1.x + distance.x, neighbourCell.TerreinLevel, v1.z + distance.z);
-        Vector3 v2d = new Vector3(v2.x + distance.x, neighbourCell.TerreinLevel, v2.z + distance.z);
-        Vector3 m1d = new Vector3(m1.x + distance.x, neighbourCell.TerreinLevel, m1.z + distance.z);
-        Vector3 m2d = new Vector3(m2.x + distance.x, neighbourCell.TerreinLevel, m2.z + distance.z);
+        //Vector3 v1d = new Vector3(v1.x + distance.x, neighbourCell.TerreinLevel, v1.z + distance.z);
+        //Vector3 v2d = new Vector3(v2.x + distance.x, neighbourCell.TerreinLevel, v2.z + distance.z);
+        //Vector3 m1d = new Vector3(m1.x + distance.x, neighbourCell.TerreinLevel, m1.z + distance.z);
+        //Vector3 m2d = new Vector3(m2.x + distance.x, neighbourCell.TerreinLevel, m2.z + distance.z);
 
-        CreateRectangle(color, neighbourCell.CellColor, AddNoise(v1), AddNoise(v1d), AddNoise(m1), AddNoise(m1d));
-        CreateRectangle(color, neighbourCell.CellColor, AddNoise(m1), AddNoise(m1d), AddNoise(m2), AddNoise(m2d));
-        CreateRectangle(color, neighbourCell.CellColor, AddNoise(m2), AddNoise(m2d), AddNoise(v2), AddNoise(v2d));
+        Vector3 v1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV2());
+        Vector3 v2d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV1());
+        Vector3 m1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetMiddle2());
+        Vector3 m2d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetMiddle1());
+
+        v1d = transform.InverseTransformPoint(v1d);
+        v2d = transform.InverseTransformPoint(v2d);
+        m1d = transform.InverseTransformPoint(m1d);
+        m2d = transform.InverseTransformPoint(m2d);
+
+        if ((cell.GetEdge((index + 5) % 6).GetEdgeType() != EdgeType.Smooth))
+        {
+            v1 = AddNoise(v1, noiseStrengthNormal);
+        }
+        if ((cell.GetEdge((index + 1) % 6).GetEdgeType() != EdgeType.Smooth))
+        {
+            v2 = AddNoise(v2, noiseStrengthNormal);
+        }
+
+        if ((neighbourCell.GetEdge((index + 3) % 6).GetEdgeType() != EdgeType.Smooth))
+        {
+            if ((neighbourCell.GetEdge((index + 4) % 6).GetEdgeType() != EdgeType.Smooth))
+                v1d = AddNoise(v1d, noiseStrengthNormal);
+
+            if ((neighbourCell.GetEdge((index + 2) % 6).GetEdgeType() != EdgeType.Smooth))
+                v2d = AddNoise(v2d, noiseStrengthNormal);
+        }
+
+        CreateRectangle(color, neighbourCell.CellColor, v1, v1d, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal));
+        CreateRectangle(color, neighbourCell.CellColor, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal));
+        CreateRectangle(color, neighbourCell.CellColor, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), v2, v2d);
     }
 
     public void CreateSmoothConnection(Vector3 v1, Vector3 v2, int index, Color color, HexCell neighbourCell, Vector3 m1, Vector3 m2)
     {
-        Vector3 distance = HexData.GetDistanceBetweenEdges(index);
+        //Vector3 distance = HexData.GetDistanceBetweenEdges(index);
 
-        Vector3 v1d = new Vector3(v1.x + distance.x, neighbourCell.TerreinLevel, v1.z + distance.z);
-        Vector3 v2d = new Vector3(v2.x + distance.x, neighbourCell.TerreinLevel, v2.z + distance.z);
-        Vector3 m1d = new Vector3(m1.x + distance.x, neighbourCell.TerreinLevel, m1.z + distance.z);
-        Vector3 m2d = new Vector3(m2.x + distance.x, neighbourCell.TerreinLevel, m2.z + distance.z);
+        //Vector3 v1d = new Vector3(v1.x + distance.x, neighbourCell.TerreinLevel, v1.z + distance.z);
+        //Vector3 v2d = new Vector3(v2.x + distance.x, neighbourCell.TerreinLevel, v2.z + distance.z);
+        //Vector3 m1d = new Vector3(m1.x + distance.x, neighbourCell.TerreinLevel, m1.z + distance.z);
+        //Vector3 m2d = new Vector3(m2.x + distance.x, neighbourCell.TerreinLevel, m2.z + distance.z);
+
+        Vector3 v1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV2());
+        Vector3 v2d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV1());
+        Vector3 m1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetMiddle2());
+        Vector3 m2d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetMiddle1());
+
+        v1d = transform.InverseTransformPoint(v1d);
+        v2d = transform.InverseTransformPoint(v2d);
+        m1d = transform.InverseTransformPoint(m1d);
+        m2d = transform.InverseTransformPoint(m2d);
 
         List<Vector3> verticles = new List<Vector3>()
         {
-            AddNoise(v1), AddNoise(m1), AddNoise(m2), AddNoise(v2)
+            (v1), AddNoise(m1, noiseStrengthSmooth), AddNoise(m2, noiseStrengthSmooth), (v2)
         };
 
         List<Vector3> verticlesD = new List<Vector3>()
         {
-            AddNoise(v1d), AddNoise(m1d), AddNoise(m2d), AddNoise(v2d)
+            (v1d), AddNoise(m1d, noiseStrengthSmooth), AddNoise(m2d, noiseStrengthSmooth), (v2d)
         };
 
         verticles = ChaikinSmooth(verticles);
@@ -113,17 +180,73 @@ public class ChunkMesh : MonoBehaviour
         AddColor(neighbourColor, neighbourColor, cellColor);
     }
 
-    public void CreateTriangleCellsConnection(Vector3 v1, int index, Color color, HexCell neighbourCell, HexCell nextNeighbourCell)
+    public void CreateTriangleCellsConnection(Vector3 v1, int index, Color color, HexCell cell ,HexCell neighbourCell, HexCell nextNeighbourCell)
     {
-        Vector3 distance1 = HexData.GetDistanceBetweenEdges(index);
-        Vector3 distance2 = HexData.GetDistanceBetweenEdges(index +1);
+        if ((cell.GetEdge((index) % 6).GetEdgeType() != EdgeType.Smooth) && (cell.GetEdge((index + 1) % 6).GetEdgeType() != EdgeType.Smooth))
+        {
+            v1 = AddNoise(v1, noiseStrengthNormal);
+        }
 
-        Vector3 v1d1 = v1 + distance1;
-        Vector3 v1d2 = v1 + distance2;
-        v1d1.y = neighbourCell.TerreinLevel;
-        v1d2.y = nextNeighbourCell.TerreinLevel;
+        Vector3 v1d1;
+        Vector3 v1d2;
 
-        CreateTriangle(AddNoise(v1), AddNoise(v1d1), AddNoise(v1d2));
+        if (index == 0) 
+        {
+            v1d1 = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge(3).GetLocalV1());
+            v1d2 = nextNeighbourCell.HexChunk.transform.TransformPoint(nextNeighbourCell.GetEdge(5).GetLocalV1());
+
+            v1d1 = transform.InverseTransformPoint(v1d1);
+            v1d2 = transform.InverseTransformPoint(v1d2);
+
+            if ((neighbourCell.GetEdge(2).GetEdgeType() != EdgeType.Smooth) && (neighbourCell.GetEdge(3).GetEdgeType() != EdgeType.Smooth))
+            {
+                v1d1 = AddNoise(v1d1, noiseStrengthNormal);
+            }
+
+            if ((nextNeighbourCell.GetEdge(4).GetEdgeType() != EdgeType.Smooth) && (nextNeighbourCell.GetEdge(5).GetEdgeType() != EdgeType.Smooth))
+            {
+                v1d2 = AddNoise(v1d2, noiseStrengthNormal);
+            }
+
+            // 2 i 3
+            // 4 i 5
+        }
+        else 
+        {
+            v1d1 = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge(3).GetLocalV2());
+            v1d2 = nextNeighbourCell.HexChunk.transform.TransformPoint(nextNeighbourCell.GetEdge(5).GetLocalV2());
+
+            v1d1 = transform.InverseTransformPoint(v1d1);
+            v1d2 = transform.InverseTransformPoint(v1d2);
+
+            if ((neighbourCell.GetEdge(3).GetEdgeType() != EdgeType.Smooth) && (neighbourCell.GetEdge(4).GetEdgeType() != EdgeType.Smooth))
+            {
+                v1d1 = AddNoise(v1d1, noiseStrengthNormal);
+            }
+
+            if ((nextNeighbourCell.GetEdge(5).GetEdgeType() != EdgeType.Smooth) && (nextNeighbourCell.GetEdge(0).GetEdgeType() != EdgeType.Smooth))
+            {
+                v1d2 = AddNoise(v1d2, noiseStrengthNormal);
+            }
+
+
+            // 3 i 4
+            // 5 i 0
+        }
+
+
+
+            //Vector3 distance1 = HexData.GetDistanceBetweenEdges(index);
+            //Vector3 distance2 = HexData.GetDistanceBetweenEdges(index +1);
+
+            //Vector3 v1d1 = v1 + v1d1;
+            //Vector3 v1d2 = v1 + distance2;
+            //v1d1.y = neighbourCell.TerreinLevel;
+            //v1d2.y = nextNeighbourCell.TerreinLevel;
+
+            //Vector3 newV2 = neighbourCell.GetEdge(2).GetLocalV2();
+
+        CreateTriangle((v1), (v1d1), (v1d2));
         AddColor(color, neighbourCell.CellColor, nextNeighbourCell.CellColor);
     }
 
@@ -162,14 +285,14 @@ public class ChunkMesh : MonoBehaviour
         colors.Add(c3);
     }
 
-    private Vector3 AddNoise(Vector3 v)
+    private Vector3 AddNoise(Vector3 v, float noiseStrength)
     {
         Vector3 chunkPos = this.GetComponentInParent<Transform>().position;
 
         Vector4 noise = MapManager.Instance.hexMeshNoise.GetPixelBilinear(v.x + chunkPos.x, v.z + chunkPos.z);
 
-        v.x += noise.x * HexData.hexMeshNoiseStrength;
-        v.z += noise.z * HexData.hexMeshNoiseStrength;
+        v.x += noise.x * noiseStrength;
+        v.z += noise.z * noiseStrength;
 
         return v;
     }

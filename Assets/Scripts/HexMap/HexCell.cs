@@ -6,6 +6,7 @@ using UnityEngine;
 public class HexCell : MonoBehaviour
 {
     [SerializeField] private TextMeshPro coordinateText;
+    [SerializeField] private Edge edgePrefab;
 
     private Chunk hexChunk;
     public Chunk HexChunk
@@ -30,7 +31,7 @@ public class HexCell : MonoBehaviour
         set { cellColor = value; }
     }
 
-    public HexCell[] neighbors = new HexCell[6];
+    private HexCell[] neighbors = new HexCell[6];
     private Edge[] edges = new Edge[6];
 
     private bool ocean = false;
@@ -77,8 +78,10 @@ public class HexCell : MonoBehaviour
 
     public void AddEdge(EdgeType edgeType, HexDirection direction)
     {
-        Edge edge = new Edge(edgeType, direction, terreinLevel, transform.localPosition, hexChunk.transform.position);
+        Edge edge = Instantiate<Edge>(edgePrefab);
+        edge.SetData(edgeType, direction, terreinLevel, transform.localPosition, hexChunk.transform.position, this);
         edges[(int)direction] = edge;
+        edge.transform.SetParent(transform);
     }
 
     public Edge GetEdge(int index)

@@ -225,3 +225,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HexCell
   coordinateText: {fileID: 4815521588246714065}
+  edgePrefab: {fileID: 3300831516210440272, guid: 79d16dc459cfccb4a8a1e18b8e255373, type: 3}

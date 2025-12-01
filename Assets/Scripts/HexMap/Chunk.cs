@@ -100,26 +100,22 @@ public class Chunk : MonoBehaviour
 
         for (int i = 0; i < 6; i++)
         {
-            //Vector3 v1 = centre + HexData.GetSolidCorner(i);
-            //Vector3 v2 = centre + HexData.GetSolidCorner((i + 1) % 6);
 
             Vector3 v1 = cell.GetEdge(i).GetLocalV1();
             Vector3 v2 = cell.GetEdge(i).GetLocalV2();
 
-            Vector3 middle1 = Vector3.Lerp(v1, v2, 1f / 3f);
-            Vector3 middle2 = Vector3.Lerp(v1, v2, 2f / 3f);
+            Vector3 middle1 = cell.GetEdge(i).GetMiddle1();
+            Vector3 middle2 = cell.GetEdge(i).GetMiddle2();
 
             HexCell neighborCell = cell.GetNeighbor((HexDirection)i);
 
-            if(neighborCell != null && Mathf.Abs(cell.TerrainLevelIndex - neighborCell.TerrainLevelIndex) == 1)
+            if (neighborCell != null && Mathf.Abs(cell.TerrainLevelIndex - neighborCell.TerrainLevelIndex) == 1)
             {
                 chunkMesh.CreateSmoothTriangleWithColor(centre, v1, v2, middle1, middle2, color);
             }
             else
             {
-                chunkMesh.CreateTriangleWithColor(centre, v1, middle1, color);
-                chunkMesh.CreateTriangleWithColor(centre, middle1, middle2, color);
-                chunkMesh.CreateTriangleWithColor(centre, middle2, v2, color);
+                chunkMesh.CreateTriangleWithColor(centre, v1, v2, color, cell, i);
             }
 
             if (i < 3)
@@ -127,12 +123,12 @@ public class Chunk : MonoBehaviour
                 
                 if (neighborCell!= null)
                 {
-                    if (Mathf.Abs(cell.TerrainLevelIndex - neighborCell.TerrainLevelIndex) == 1) 
+                    if (Mathf.Abs(cell.TerrainLevelIndex - neighborCell.TerrainLevelIndex) == 1)
                     {
                         chunkMesh.CreateSmoothConnection(v1, v2, i, color, neighborCell, middle1, middle2);
                     }
                     else
-                        chunkMesh.CreateRectangularCellsConnection(v1, v2, i, color, neighborCell, middle1, middle2);
+                        chunkMesh.CreateRectangularCellsConnection(v1, v2, i, color, neighborCell, middle1, middle2, cell);
                    
                     if (i < 2 && cell.GetNeighbor((HexDirection)i + 1) != null)
                     {
@@ -140,7 +136,7 @@ public class Chunk : MonoBehaviour
 
                         if (nextNeighborCell!=null)
                         {
-                            chunkMesh.CreateTriangleCellsConnection(v2, i, color, neighborCell, nextNeighborCell);
+                            chunkMesh.CreateTriangleCellsConnection(v2, i, color, cell ,neighborCell, nextNeighborCell);
                         }                      
                     }
                 }              

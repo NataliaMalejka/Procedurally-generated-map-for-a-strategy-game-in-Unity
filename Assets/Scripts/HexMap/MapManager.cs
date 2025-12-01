@@ -571,7 +571,7 @@ public class MapManager : MonoBehaviour
         {
             HexCell cell = gridCells[i];
 
-            for (int j = 0; j < 3; j++)
+            for (int j = 0; j < 6; j++)
             {
                 HexCell neighbourCell = cell.GetNeighbor((HexDirection)j);
 
@@ -582,28 +582,21 @@ public class MapManager : MonoBehaviour
                     if (terrainLevelDiff == 0)
                     {
                         cell.AddEdge(EdgeType.Flat, (HexDirection)j);
-                        neighbourCell.AddEdge(EdgeType.Flat, ((HexDirection)j).Opposite());
                     }
                     else if (terrainLevelDiff == 1)
                     {
                         cell.AddEdge(EdgeType.Smooth, (HexDirection)j);
-                        neighbourCell.AddEdge(EdgeType.Smooth, ((HexDirection)j).Opposite());
 
                         allSmoothEdges.Add(cell.GetEdge(j));
-
-                        int k;
-                        if(j<3)
-                            k = (j + 3);
-                        else
-                            k = (j - 3);
-
-                        allSmoothEdges.Add(neighbourCell.GetEdge(k));
                     }
                     else if (terrainLevelDiff > 1)
                     {
                         cell.AddEdge(EdgeType.Cliff, (HexDirection)j);
-                        neighbourCell.AddEdge(EdgeType.Cliff, ((HexDirection)j).Opposite());
                     }
+                }
+                else
+                {
+                    cell.AddEdge(EdgeType.None, (HexDirection)j);
                 }
             }
         }
@@ -691,7 +684,7 @@ public class MapManager : MonoBehaviour
             groupsSmoothEdges.Add(chain);
         }
 
-        CreateSmoothEdges();
+        SmoothEdges();
     }
 
     private bool SamePoint(Vector3 a, Vector3 b)
@@ -699,60 +692,402 @@ public class MapManager : MonoBehaviour
         return (a - b).sqrMagnitude < 0.0001f;
     }
 
-    private void CreateSmoothEdges()
+    //private void FindStartChain()
+    //{
+    //    for (int i = 0; i < groupsSmoothEdges.Count; i++) 
+    //    {
+    //        var group = groupsSmoothEdges[i];
+
+    //        Edge e0 = group[0];
+    //        Edge e1 = group[1];
+
+    //        List<Vector3> v = new List<Vector3>();
+
+    //        if (SamePoint(e0.GetFullV2(), e1.GetFullV1()))
+    //        {
+    //            for (int j = 0; j < group.Count; j++) 
+    //            {
+    //                v.Add(group[j].GetGlobalV1());
+    //                v.Add(group[j].GetGlobalV2());
+    //            }
+
+    //            bool isLoop = IsLoop(v);
+    //        }
+    //        else
+    //        {
+    //            for(int j = group.Count - 1; j >= 0; j--)
+    //            {
+    //                v.Add(group[j].GetGlobalV1());
+    //                v.Add(group[j].GetGlobalV2());
+    //            }
+
+    //            bool isLoop = IsLoop(v);
+    //        }
+    //    }
+    //}
+
+    //List<Vector3> RemoveDuplicates(List<Vector3> pts)
+    //{
+    //    List<Vector3> unique = new List<Vector3>();
+    //    if (pts.Count == 0) return unique;
+
+    //    unique.Add(pts[0]);
+
+    //    for (int i = 1; i < pts.Count; i++)
+    //    {
+    //        if ((pts[i] - pts[i - 1]).sqrMagnitude > 0.000001f)
+    //            unique.Add(pts[i]);
+    //    }
+
+    //    return unique;
+    //}
+
+    //bool IsLoop(List<Vector3> pts)
+    //{
+    //    return SamePoint(pts[0], pts[pts.Count - 1]);
+    //}
+
+    //List<Vector3> ChaikinSmoothSameCount(List<Vector3> baseVerticles, bool isLoop)
+    //{
+    //    baseVerticles = RemoveDuplicates(baseVerticles);
+
+    //    int N = baseVerticles.Count;
+    //    if (N < 3)
+    //        return new List<Vector3>(baseVerticles);
+
+    //    List<Vector3> smooth = new List<Vector3>(baseVerticles);
+
+    //    for (int i = 0; i < 4; i++) 
+    //    {
+    //        List<Vector3> next = new List<Vector3>();
+
+    //        int count = smooth.Count;
+
+    //        if (!isLoop)
+    //            next.Add(smooth[0]); 
+
+    //        for (int j = 0; j < count - 1; j++)
+    //        {
+    //            Vector3 p = smooth[j];
+    //            Vector3 q = smooth[(j + 1)];
+
+    //            Vector3 Q = 0.75f * p + 0.25f * q;
+    //            Vector3 R = 0.25f * p + 0.75f * q;
+
+    //            next.Add(Q);
+    //            next.Add(R);
+    //        }
+
+    //        if (!isLoop)
+    //            next.Add(smooth[count - 1]); 
+    //        else
+    //        {
+    //            Vector3 p = smooth[count - 1];
+    //            Vector3 q = smooth[0];
+
+    //            Vector3 Q = 0.75f * p + 0.25f * q;
+    //            Vector3 R = 0.25f * p + 0.75f * q;
+
+    //            next.Add(Q);
+    //            next.Add(R);
+    //        }
+
+    //        smooth = next;
+    //    }
+
+
+    //    List<Vector3> result = new List<Vector3>();
+    //    float step = (smooth.Count - 1) / (float)(N - 1);
+
+    //    for (int i = 0; i < N; i++)
+    //    {
+    //        float fIndex = step * i;
+    //        int a = Mathf.FloorToInt(fIndex);
+    //        int b = Mathf.Min(a + 1, smooth.Count - 1);
+    //        float t = fIndex - a;
+
+    //        Vector3 v = Vector3.Lerp(smooth[a], smooth[b], t);
+    //        result.Add(v);
+    //    }
+
+    //    if (!isLoop)
+    //    {
+    //        result[0] = baseVerticles[0];
+    //        result[result.Count - 1] = baseVerticles[baseVerticles.Count - 1];
+    //    }
+
+    //    return result;
+    //}
+
+
+    //private void OnDrawGizmos()
+    //{
+    //    if (groupsSmoothEdges == null || groupsSmoothEdges.Count == 0)
+    //        return;
+
+    //    Color[] palette = new Color[]
+    //    {
+    //    Color.red,
+    //    Color.green,
+    //    Color.blue,
+    //    Color.yellow,
+    //    Color.cyan,
+    //    Color.magenta,
+    //    new Color(1f, 0.5f, 0f),      // orange
+    //    new Color(0.5f, 0f, 1f),      // purple
+    //    new Color(0f, 0.5f, 1f),      // azure
+    //    new Color(0.4f, 1f, 0.2f),    // lime
+    //    new Color(1f, 0.2f, 0.6f),    // pink
+    //    new Color(0.6f, 0.6f, 0.6f),  // grey
+    //    };
+
+    //    int pCount = palette.Length;
+    //    Vector3 offset = Vector3.up * 0.05f;
+
+    //    for (int i = 0; i < groupsSmoothEdges.Count; i++)
+    //    {
+    //        List<Edge> chain = groupsSmoothEdges[i];
+    //        if (chain == null || chain.Count == 0)
+    //            continue;
+
+    //        Color c = palette[i % pCount];
+    //        Gizmos.color = c;
+
+    //        float sphereSize = 0.08f;
+
+    //        foreach (var edge in chain)
+    //        {
+    //            Vector3 p1 = edge.GetGlobalV1() + offset;
+    //            Vector3 p2 = edge.GetGlobalV2() + offset;
+
+    //            Gizmos.DrawSphere(p1, sphereSize);
+    //            Gizmos.DrawSphere(p2, sphereSize);
+    //            Gizmos.DrawLine(p1, p2);
+    //        }
+
+    //        Gizmos.color = Color.green;
+    //        float bigSize = 3.5f;
+
+    //        Vector3 startPoint = chain[0].GetGlobalV1() + offset;
+    //        Gizmos.DrawSphere(startPoint, bigSize);
+
+    //        Gizmos.color = Color.red;
+
+    //        Vector3 endPoint = chain[chain.Count - 1].GetGlobalV2() + offset;
+    //        Gizmos.DrawSphere(endPoint, bigSize);
+    //    }
+    //}
+
+    private void SmoothEdges()
     {
-
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (groupsSmoothEdges == null || groupsSmoothEdges.Count == 0)
-            return;
-
-        // stabilna paleta do ³añcuchów – powtarza siê po 12 kolorach
-        Color[] palette = new Color[]
-        {
-        Color.red,
-        Color.green,
-        Color.blue,
-        Color.yellow,
-        Color.cyan,
-        Color.magenta,
-        new Color(1f, 0.5f, 0f),   // orange
-        new Color(0.5f, 0f, 1f),   // purple
-        new Color(0f, 0.5f, 1f),   // azure
-        new Color(0.4f, 1f, 0.2f), // lime
-        new Color(1f, 0.2f, 0.6f), // pink
-        new Color(0.6f, 0.6f, 0.6f), // grey
-        };
-
-        int pCount = palette.Length;
-
-        // Przesuniêcie w górê aby kulki nie by³y zas³oniête meshem
-        Vector3 offset = Vector3.up * 0.05f;
-
         for (int i = 0; i < groupsSmoothEdges.Count; i++)
         {
-            List<Edge> chain = groupsSmoothEdges[i];
-            if (chain == null || chain.Count == 0)
-                continue;
+            var group = groupsSmoothEdges[i];
 
-            Color c = palette[i % pCount];
-            Gizmos.color = c;
+            if (group.Count <= 1) continue;
 
-            float sphereSize = 0.08f;
+            List<Vector3> verticles = FindChainStart(group);
 
-            foreach (var edge in chain)
+            bool isLoop = IsLoop(verticles);
+
+            List<int> map;
+            List<Vector3> unique = RemoveDuplicates(verticles, out map);
+
+            List<Vector3> smoothUnique = ChaikinSmoothSameCount(unique, isLoop);
+
+            List<Vector3> result = ReapplyDuplicates(smoothUnique, map);
+
+            WriteBackToEdges(group, result);
+        }
+    }
+
+    private List<Vector3> FindChainStart(List<Edge> group)
+    {
+        if (group.Count <= 1)
+            return new List<Vector3>();
+
+        Edge e0 = group[0];
+        Edge e1 = group[1];
+
+        bool forward = SamePoint(e0.GetFullV2(), e1.GetFullV1());
+
+        List<Vector3> v = new List<Vector3>();
+
+        if (forward)
+        {
+            for (int j = 0; j < group.Count; j++)
             {
-                Vector3 p1 = edge.GetGlobalV1();
-                Vector3 p2 = edge.GetGlobalV2();
-
-                Gizmos.DrawSphere(p1, sphereSize);
-                Gizmos.DrawSphere(p2, sphereSize);
-
-                // Opcjonalnie linie miêdzy nimi — ³atwiej wizualnie przeœledziæ ³añcuch
-                Gizmos.DrawLine(p1, p2);
+                v.Add(group[j].GetGlobalV1());
+                v.Add(group[j].GetGlobalV2());
             }
+        }
+        else
+        {
+            for (int j = group.Count - 1; j >= 0; j--)
+            {
+                v.Add(group[j].GetGlobalV1());
+                v.Add(group[j].GetGlobalV2());
+            }
+        }
+
+        return v;
+    }
+
+    private bool IsLoop(List<Vector3> v)
+    {
+        return SamePoint(v[0], v[v.Count - 1]);
+    }
+
+    private List<Vector3> RemoveDuplicates(List<Vector3> baseVerticles, out List<int> mapToUnique)
+    {
+        mapToUnique = new List<int>();
+        List<Vector3> unique = new List<Vector3>();
+
+        for (int i = 0; i < baseVerticles.Count; i++)
+        {
+            bool found = false;
+            for (int j = 0; j < unique.Count; j++)
+            {
+                if (SamePoint(baseVerticles[i], unique[j]))
+                {
+                    mapToUnique.Add(j);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                mapToUnique.Add(unique.Count);
+                unique.Add(baseVerticles[i]);
+            }
+        }
+
+        return unique;
+    }
+
+    private List<Vector3> ChaikinSmoothSameCount(List<Vector3> pts, bool loop, int iterations = 3)
+    {
+        if (pts.Count < 3)
+            return new List<Vector3>(pts);
+
+        List<Vector3> current = new List<Vector3>(pts);
+
+        for (int it = 0; it < iterations; it++)
+        {
+            List<Vector3> subdiv = new List<Vector3>();
+
+            int count = current.Count;
+
+            for (int i = 0; i < count - 1; i++)
+            {
+                Vector3 p0 = current[i];
+                Vector3 p1 = current[i + 1];
+
+                Vector3 Q = p0 * 0.75f + p1 * 0.25f; // bli¿ej p0
+                Vector3 R = p0 * 0.25f + p1 * 0.75f; // bli¿ej p1
+
+                subdiv.Add(Q);
+                subdiv.Add(R);
+            }
+
+            if (loop)
+            {
+                Vector3 p0 = current[count - 1];
+                Vector3 p1 = current[0];
+
+                Vector3 Q = p0 * 0.75f + p1 * 0.25f;
+                Vector3 R = p0 * 0.25f + p1 * 0.75f;
+
+                subdiv.Add(Q);
+                subdiv.Add(R);
+            }
+
+            // nadpisz listê
+            current = Resample(subdiv, pts.Count, loop: loop);
+        }
+
+        return current;
+    }
+
+    private List<Vector3> Resample(List<Vector3> subdiv, int targetCount, bool loop)
+    {
+        int m = subdiv.Count;
+
+        List<float> cumulative = new List<float>(m);
+        cumulative.Add(0f);
+
+        float totalLength = 0f;
+
+        for (int i = 1; i < m; i++)
+        {
+            float seg = Vector3.Distance(subdiv[i - 1], subdiv[i]);
+            totalLength += seg;
+            cumulative.Add(totalLength);
+        }
+
+        float loopLength = 0f;
+        if (loop)
+        {
+            loopLength = Vector3.Distance(subdiv[m - 1], subdiv[0]);
+            totalLength += loopLength;
+        }
+
+        List<Vector3> result = new List<Vector3>(targetCount);
+
+        for (int i = 0; i < targetCount; i++)
+        {
+            float t = (totalLength * i) / (targetCount - (loop ? 0 : 1));
+  
+            if (loop && t > cumulative[m - 1])
+            {
+                float localT = t - cumulative[m - 1]; 
+                float lerp = localT / loopLength;
+                result.Add(Vector3.Lerp(subdiv[m - 1], subdiv[0], lerp));
+                continue;
+            }
+
+            int k = 1;
+            while (k < m && cumulative[k] < t)
+                k++;
+
+            if (k == m)
+            {
+                result.Add(subdiv[m - 1]);
+                continue;
+            }
+
+            float segStart = cumulative[k - 1];
+            float segEnd = cumulative[k];
+            float alpha = (t - segStart) / (segEnd - segStart);
+
+            Vector3 p = Vector3.Lerp(subdiv[k - 1], subdiv[k], alpha);
+            result.Add(p);
+        }
+
+        return result;
+    }
+
+    private List<Vector3> ReapplyDuplicates(List<Vector3> uniqueSmoothed, List<int> mapToUnique)
+    {
+        List<Vector3> result = new List<Vector3>(mapToUnique.Count);
+
+        for (int i = 0; i < mapToUnique.Count; i++)
+        {
+            int u = mapToUnique[i];
+            result.Add(uniqueSmoothed[u]);
+        }
+
+        return result;
+    }
+
+    private void WriteBackToEdges(List<Edge> edges, List<Vector3> newPts)
+    {
+        int p = 0;
+
+        for (int i = 0; i < edges.Count; i++)
+        {
+            edges[i].SetGlobalV1(newPts[p++]);
+            edges[i].SetGlobalV2(newPts[p++]);
         }
     }
 }
