@@ -76,6 +76,13 @@ public class HexCell : MonoBehaviour
         set { isMountain = value; }
     }
 
+    private float temperature;
+    public float Temperature
+    {
+        get { return temperature; }
+        set { temperature = value; }
+    }
+
     public void AddEdge(EdgeType edgeType, HexDirection direction)
     {
         Edge edge = Instantiate<Edge>(edgePrefab);
@@ -113,19 +120,13 @@ public class HexCell : MonoBehaviour
     public void SetTerrainLevel(int level)
     {
         if (level >= colors.Length)
-        {
            level = colors.Length - 1;
-        }
 
         if(level < 0)
-        {
             level = 0;
-        }
 
         if(level > 7)
-        {
             IsMountain = true;
-        }
 
         terrainLevelIndex = level;
         cellColor = colors[terrainLevelIndex];

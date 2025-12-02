@@ -63,22 +63,17 @@ public class MapManager : MonoBehaviour
     [SerializeField] private float hillsNoiseMargin = 0.6f;
     [SerializeField] private float mountainsNoiseMargin = 0.8f;
 
+    [Header("Temperature")]
+    [SerializeField] private float coldMax = 0.4f;    
+    [SerializeField] private float moderateMax = 0.7f;    
+    [SerializeField] private float temperatureTerrainScale = 20f;    
+
     [Header("Hex Noise")]
     public Texture2D hexMeshNoise;
-
-    private List<Chunk> chunksToRefresh = new List<Chunk>();
-
-    List<Edge> allSmoothEdges = new List<Edge>();
-    List<List<Edge>> groupsSmoothEdges = new List<List<Edge>>();
 
     public int[] GetContinentsCentres()
     {
         return continentsCentres;
-    }
-
-    public List<Chunk> GetChunksToRefresh()
-    {
-        return chunksToRefresh;
     }
 
     private void Awake()
@@ -194,7 +189,6 @@ public class MapManager : MonoBehaviour
                     regionIndex++;
                 }
             }
-            //usunac dir na prawo/lewo
 
             continentDir[i] = new Vector2(dirX, dirZ);
             SetContinentsCentres(localXMin, localXMax, localZMin, localZMax, i);
@@ -224,10 +218,28 @@ public class MapManager : MonoBehaviour
         return chunkIndex * (xCellCount * zCellCount) + localCellIndex;
     }
 
+    public void GenerateMap(HexCell[] gridCells)
+    {
+        GenerateContinents(gridCells);
+
+        SetOceans(gridCells);
+
+        for (int i = 0; i < continentsCount; i++)
+        {
+            RemoveLakes(i);
+        }
+
+        CalculateDistancToOcean(gridCells);
+
+        CalculateTerrainLevel(gridCells);
+
+        DetectEdgeType(gridCells);
+
+        SetTemperature(gridCells);
+    }
+
     public void GenerateContinents(HexCell[] gridCells)
     {
-        chunksToRefresh.Clear();
-
         for (int i = 0; i < continentsCentres.Length; i++)
         {
             continents[i] = new Continent();
@@ -270,63 +282,18 @@ public class MapManager : MonoBehaviour
                 }
             }
         }
-
-        SetOceans(gridCells);
-
-        for (int i = 0; i < continentsCount; i++)
-        {
-            RemoveLakes(i);
-        }
-
-        CalculateDistancToOcean(gridCells);
-
-        CalculateTerrainLevel(gridCells);
-
-        DetectEdgeType(gridCells);
     }
 
     private void SetContinentPart(HexCell cell, int continentIndex)
     {
-        //CalculateTerrainLevel(cell);
-
         cell.SetContinent(continentIndex);
         continents[continentIndex].AddCell(cell);
-        //cellsToCheck.Enqueue(cell);
 
         Chunk chunk = cell.HexChunk;
-        //int chunkIndex = cell.HexChunk.GetIndexInGrid();
 
-        AddChunkToRefreshList(chunk);
         continents[continentIndex].AddChunk(cell.HexChunk);
-        //ChcekNeighbourChunks(cell, chunkIndex);
     }
 
-    //private void ChcekNeighbourChunks(HexCell cell, int chunkIndex)
-    //{
-    //    if (cell.Coordinates.LocalX == 0 && cell.Coordinates.GlobalX != 0)
-    //    {
-    //        AddChunkToRefreshList(chunkIndex - zChunkCount);
-    //    }
-    //    else if (cell.Coordinates.LocalX == xCellCount - 1 && cell.Coordinates.globalX < xChunkCount * xCellCount - 1)
-    //    {
-    //        AddChunkToRefreshList(chunkIndex + zChunkCount);
-    //    }
-
-    //    if (cell.Coordinates.LocalZ == 0 && cell.Coordinates.globalZ != 0)
-    //    {
-    //        AddChunkToRefreshList(chunkIndex - 1);
-    //    }
-    //    else if (cell.Coordinates.LocalZ == zCellCount - 1 && cell.Coordinates.globalZ < zChunkCount * zCellCount - 1)
-    //    {
-    //        AddChunkToRefreshList(chunkIndex + 1);
-    //    }
-    //}
-
-    private void AddChunkToRefreshList(Chunk chunk)
-    {
-        if (!chunksToRefresh.Contains(chunk))
-            chunksToRefresh.Add(chunk);
-    }
 
     private int AddCloseNeighborCells(HexCell centreCell, int continentIndex, Queue<HexCell> cellsToCheck)
     {
@@ -403,16 +370,6 @@ public class MapManager : MonoBehaviour
 
         return score * coastNoise * growthBonus < minScore;
     }
-
-    //private void CalculateTerrainLevel(HexCell neighborCell)
-    //{
-    //    float noiseFactor = Mathf.PerlinNoise(
-    //    neighborCell.Coordinates.globalX * perlinMediumTerrainScale,
-    //    neighborCell.Coordinates.globalZ * perlinMediumTerrainScale
-    //    );
-
-    //    neighborCell.TerreinLevel = (int)Mathf.Lerp(0, 5, noiseFactor);
-    //}
 
     private void SetOceans(HexCell[] gridCells)
     {
@@ -567,6 +524,8 @@ public class MapManager : MonoBehaviour
 
     private void DetectEdgeType(HexCell[] gridCells)
     {
+        List<Edge> allSmoothEdges = new List<Edge>();
+
         for (int i = 0; i < gridCells.Length; i++)
         {
             HexCell cell = gridCells[i];
@@ -601,19 +560,12 @@ public class MapManager : MonoBehaviour
             }
         }
 
-        GroupSmoothEdges();
+        GroupSmoothEdges(allSmoothEdges);
     }
 
-    //zaczynamy od jakiejs k v1 i v2 end =k, start=k
-    //sprawdzamy end = k.v2
-    //jesli v2 == inna v1 to end = inna.v1 dodoaj inna na koniec listy
-    //jesli v2 == inna v2 to end = inna.v2 dodoaj inna na koniec listy
-    //sprawdzamy start = k.v1
-    //jesli v1 == inna v1 to start = inna.v1 dodaj inna na poczatek listy
-    //jesli v1 == inna v2 to start = inna.v2 dodaj inna na poczatek listy
-
-    private void GroupSmoothEdges()
+    private void GroupSmoothEdges(List<Edge> allSmoothEdges)
     {
+        List<List<Edge>> groupsSmoothEdges = new List<List<Edge>>();
         HashSet<Edge> used = new HashSet<Edge>();
 
         foreach (var e in allSmoothEdges)
@@ -684,7 +636,7 @@ public class MapManager : MonoBehaviour
             groupsSmoothEdges.Add(chain);
         }
 
-        SmoothEdges();
+        SmoothEdges(groupsSmoothEdges);
     }
 
     private bool SamePoint(Vector3 a, Vector3 b)
@@ -692,193 +644,7 @@ public class MapManager : MonoBehaviour
         return (a - b).sqrMagnitude < 0.0001f;
     }
 
-    //private void FindStartChain()
-    //{
-    //    for (int i = 0; i < groupsSmoothEdges.Count; i++) 
-    //    {
-    //        var group = groupsSmoothEdges[i];
-
-    //        Edge e0 = group[0];
-    //        Edge e1 = group[1];
-
-    //        List<Vector3> v = new List<Vector3>();
-
-    //        if (SamePoint(e0.GetFullV2(), e1.GetFullV1()))
-    //        {
-    //            for (int j = 0; j < group.Count; j++) 
-    //            {
-    //                v.Add(group[j].GetGlobalV1());
-    //                v.Add(group[j].GetGlobalV2());
-    //            }
-
-    //            bool isLoop = IsLoop(v);
-    //        }
-    //        else
-    //        {
-    //            for(int j = group.Count - 1; j >= 0; j--)
-    //            {
-    //                v.Add(group[j].GetGlobalV1());
-    //                v.Add(group[j].GetGlobalV2());
-    //            }
-
-    //            bool isLoop = IsLoop(v);
-    //        }
-    //    }
-    //}
-
-    //List<Vector3> RemoveDuplicates(List<Vector3> pts)
-    //{
-    //    List<Vector3> unique = new List<Vector3>();
-    //    if (pts.Count == 0) return unique;
-
-    //    unique.Add(pts[0]);
-
-    //    for (int i = 1; i < pts.Count; i++)
-    //    {
-    //        if ((pts[i] - pts[i - 1]).sqrMagnitude > 0.000001f)
-    //            unique.Add(pts[i]);
-    //    }
-
-    //    return unique;
-    //}
-
-    //bool IsLoop(List<Vector3> pts)
-    //{
-    //    return SamePoint(pts[0], pts[pts.Count - 1]);
-    //}
-
-    //List<Vector3> ChaikinSmoothSameCount(List<Vector3> baseVerticles, bool isLoop)
-    //{
-    //    baseVerticles = RemoveDuplicates(baseVerticles);
-
-    //    int N = baseVerticles.Count;
-    //    if (N < 3)
-    //        return new List<Vector3>(baseVerticles);
-
-    //    List<Vector3> smooth = new List<Vector3>(baseVerticles);
-
-    //    for (int i = 0; i < 4; i++) 
-    //    {
-    //        List<Vector3> next = new List<Vector3>();
-
-    //        int count = smooth.Count;
-
-    //        if (!isLoop)
-    //            next.Add(smooth[0]); 
-
-    //        for (int j = 0; j < count - 1; j++)
-    //        {
-    //            Vector3 p = smooth[j];
-    //            Vector3 q = smooth[(j + 1)];
-
-    //            Vector3 Q = 0.75f * p + 0.25f * q;
-    //            Vector3 R = 0.25f * p + 0.75f * q;
-
-    //            next.Add(Q);
-    //            next.Add(R);
-    //        }
-
-    //        if (!isLoop)
-    //            next.Add(smooth[count - 1]); 
-    //        else
-    //        {
-    //            Vector3 p = smooth[count - 1];
-    //            Vector3 q = smooth[0];
-
-    //            Vector3 Q = 0.75f * p + 0.25f * q;
-    //            Vector3 R = 0.25f * p + 0.75f * q;
-
-    //            next.Add(Q);
-    //            next.Add(R);
-    //        }
-
-    //        smooth = next;
-    //    }
-
-
-    //    List<Vector3> result = new List<Vector3>();
-    //    float step = (smooth.Count - 1) / (float)(N - 1);
-
-    //    for (int i = 0; i < N; i++)
-    //    {
-    //        float fIndex = step * i;
-    //        int a = Mathf.FloorToInt(fIndex);
-    //        int b = Mathf.Min(a + 1, smooth.Count - 1);
-    //        float t = fIndex - a;
-
-    //        Vector3 v = Vector3.Lerp(smooth[a], smooth[b], t);
-    //        result.Add(v);
-    //    }
-
-    //    if (!isLoop)
-    //    {
-    //        result[0] = baseVerticles[0];
-    //        result[result.Count - 1] = baseVerticles[baseVerticles.Count - 1];
-    //    }
-
-    //    return result;
-    //}
-
-
-    //private void OnDrawGizmos()
-    //{
-    //    if (groupsSmoothEdges == null || groupsSmoothEdges.Count == 0)
-    //        return;
-
-    //    Color[] palette = new Color[]
-    //    {
-    //    Color.red,
-    //    Color.green,
-    //    Color.blue,
-    //    Color.yellow,
-    //    Color.cyan,
-    //    Color.magenta,
-    //    new Color(1f, 0.5f, 0f),      // orange
-    //    new Color(0.5f, 0f, 1f),      // purple
-    //    new Color(0f, 0.5f, 1f),      // azure
-    //    new Color(0.4f, 1f, 0.2f),    // lime
-    //    new Color(1f, 0.2f, 0.6f),    // pink
-    //    new Color(0.6f, 0.6f, 0.6f),  // grey
-    //    };
-
-    //    int pCount = palette.Length;
-    //    Vector3 offset = Vector3.up * 0.05f;
-
-    //    for (int i = 0; i < groupsSmoothEdges.Count; i++)
-    //    {
-    //        List<Edge> chain = groupsSmoothEdges[i];
-    //        if (chain == null || chain.Count == 0)
-    //            continue;
-
-    //        Color c = palette[i % pCount];
-    //        Gizmos.color = c;
-
-    //        float sphereSize = 0.08f;
-
-    //        foreach (var edge in chain)
-    //        {
-    //            Vector3 p1 = edge.GetGlobalV1() + offset;
-    //            Vector3 p2 = edge.GetGlobalV2() + offset;
-
-    //            Gizmos.DrawSphere(p1, sphereSize);
-    //            Gizmos.DrawSphere(p2, sphereSize);
-    //            Gizmos.DrawLine(p1, p2);
-    //        }
-
-    //        Gizmos.color = Color.green;
-    //        float bigSize = 3.5f;
-
-    //        Vector3 startPoint = chain[0].GetGlobalV1() + offset;
-    //        Gizmos.DrawSphere(startPoint, bigSize);
-
-    //        Gizmos.color = Color.red;
-
-    //        Vector3 endPoint = chain[chain.Count - 1].GetGlobalV2() + offset;
-    //        Gizmos.DrawSphere(endPoint, bigSize);
-    //    }
-    //}
-
-    private void SmoothEdges()
+    private void SmoothEdges(List<List<Edge>> groupsSmoothEdges)
     {
         for (int i = 0; i < groupsSmoothEdges.Count; i++)
         {
@@ -983,8 +749,8 @@ public class MapManager : MonoBehaviour
                 Vector3 p0 = current[i];
                 Vector3 p1 = current[i + 1];
 
-                Vector3 Q = p0 * 0.75f + p1 * 0.25f; // bli¿ej p0
-                Vector3 R = p0 * 0.25f + p1 * 0.75f; // bli¿ej p1
+                Vector3 Q = p0 * 0.75f + p1 * 0.25f; 
+                Vector3 R = p0 * 0.25f + p1 * 0.75f; 
 
                 subdiv.Add(Q);
                 subdiv.Add(R);
@@ -1002,7 +768,6 @@ public class MapManager : MonoBehaviour
                 subdiv.Add(R);
             }
 
-            // nadpisz listê
             current = Resample(subdiv, pts.Count, loop: loop);
         }
 
@@ -1089,5 +854,66 @@ public class MapManager : MonoBehaviour
             edges[i].SetGlobalV1(newPts[p++]);
             edges[i].SetGlobalV2(newPts[p++]);
         }
+    }
+
+    private void SetTemperature(HexCell[] gridCells)
+    {
+        foreach (var cell in gridCells)
+        {
+            if (cell.isOcean) continue;
+
+            float temperature = DetermineTemperature(cell);
+
+            cell.Temperature = temperature;
+
+            if(temperature < coldMax)
+            {
+                cell.CellColor = Color.blue;
+            }
+            else if(temperature < moderateMax)
+            {
+                cell.CellColor = Color.green;
+            }
+            else
+            {
+                cell.CellColor = Color.red;
+            }
+
+            //cell.CellColor = new Color(temperature, temperature, temperature);
+        }
+    }
+
+    private float DetermineTemperature(HexCell cell)
+    {
+        float latitude = (float)cell.Coordinates.GlobalZ / (zCellCount * zChunkCount);
+
+        latitude *= 2f;
+        if (latitude > 1f)
+        {
+            latitude = 2f - latitude;
+        }
+
+        float exponent = 0.9f;
+        latitude = Mathf.Pow(latitude, exponent);
+
+        float temperature = Mathf.LerpUnclamped(0f, 1f, latitude);
+
+        temperature *= 1f - cell.TerrainLevelIndex / temperatureTerrainScale;
+
+        //float temperatureNoise = Mathf.PerlinNoise(
+        //    cell.Coordinates.globalX * perlinSmallTerrainScale + 4000f,
+        //    cell.Coordinates.globalZ * perlinSmallTerrainScale + 4000f
+        //);
+
+        //if (temperatureNoise < 0.55f)
+        //{
+        //    //temperature -= 0.05f;
+        //}
+        //else
+        //{
+        //    //temperature -= 013f;
+        //}
+
+        return Mathf.Clamp01(temperature);
     }
 }

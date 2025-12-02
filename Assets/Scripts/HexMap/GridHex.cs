@@ -41,7 +41,7 @@ public class GridHex : MonoBehaviour
             }
         }
 
-        MapManager.Instance.GenerateContinents(cells);
+        MapManager.Instance.GenerateMap(cells);
 
         foreach (Chunk chunk in chunks)
         {

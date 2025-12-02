@@ -12,8 +12,8 @@ public class ChunkMesh : MonoBehaviour
     private List<Color> colors = new List<Color>();
 
     private int iterations = 3;
-    private float noiseStrengthNormal = 3f;
-    private float noiseStrengthSmooth = 0.3f;
+    private float noiseStrengthNormal = 3f;//3
+    private float noiseStrengthSmooth = 0.3f;//0.3
 
     private void Awake()
     {
@@ -37,18 +37,10 @@ public class ChunkMesh : MonoBehaviour
         {
             v1 = AddNoise(v1, noiseStrengthNormal);
         }
-        else
-        {
-            //v1 = cell.GetEdge((index + 5) % 6).GetLocalV2();
-        }
 
         if ((cell.GetEdge((index + 1) % 6).GetEdgeType() != EdgeType.Smooth))
         {
             v2 = AddNoise(v2, noiseStrengthNormal);
-        }
-        else
-        {
-            //v2 = cell.GetEdge((index + 1) % 6).GetLocalV1();
         }
 
         CreateTriangle(AddNoise(c, noiseStrengthNormal), v1, AddNoise(m1, noiseStrengthNormal));
@@ -93,13 +85,6 @@ public class ChunkMesh : MonoBehaviour
 
     public void CreateRectangularCellsConnection(Vector3 v1, Vector3 v2, int index, Color color, HexCell neighbourCell, Vector3 m1, Vector3 m2, HexCell cell)
     {
-        //Vector3 distance = HexData.GetDistanceBetweenEdges(index);
-
-        //Vector3 v1d = new Vector3(v1.x + distance.x, neighbourCell.TerreinLevel, v1.z + distance.z);
-        //Vector3 v2d = new Vector3(v2.x + distance.x, neighbourCell.TerreinLevel, v2.z + distance.z);
-        //Vector3 m1d = new Vector3(m1.x + distance.x, neighbourCell.TerreinLevel, m1.z + distance.z);
-        //Vector3 m2d = new Vector3(m2.x + distance.x, neighbourCell.TerreinLevel, m2.z + distance.z);
-
         Vector3 v1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV2());
         Vector3 v2d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV1());
         Vector3 m1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetMiddle2());
@@ -135,13 +120,6 @@ public class ChunkMesh : MonoBehaviour
 
     public void CreateSmoothConnection(Vector3 v1, Vector3 v2, int index, Color color, HexCell neighbourCell, Vector3 m1, Vector3 m2)
     {
-        //Vector3 distance = HexData.GetDistanceBetweenEdges(index);
-
-        //Vector3 v1d = new Vector3(v1.x + distance.x, neighbourCell.TerreinLevel, v1.z + distance.z);
-        //Vector3 v2d = new Vector3(v2.x + distance.x, neighbourCell.TerreinLevel, v2.z + distance.z);
-        //Vector3 m1d = new Vector3(m1.x + distance.x, neighbourCell.TerreinLevel, m1.z + distance.z);
-        //Vector3 m2d = new Vector3(m2.x + distance.x, neighbourCell.TerreinLevel, m2.z + distance.z);
-
         Vector3 v1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV2());
         Vector3 v2d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV1());
         Vector3 m1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetMiddle2());
@@ -207,9 +185,6 @@ public class ChunkMesh : MonoBehaviour
             {
                 v1d2 = AddNoise(v1d2, noiseStrengthNormal);
             }
-
-            // 2 i 3
-            // 4 i 5
         }
         else 
         {
@@ -228,23 +203,7 @@ public class ChunkMesh : MonoBehaviour
             {
                 v1d2 = AddNoise(v1d2, noiseStrengthNormal);
             }
-
-
-            // 3 i 4
-            // 5 i 0
         }
-
-
-
-            //Vector3 distance1 = HexData.GetDistanceBetweenEdges(index);
-            //Vector3 distance2 = HexData.GetDistanceBetweenEdges(index +1);
-
-            //Vector3 v1d1 = v1 + v1d1;
-            //Vector3 v1d2 = v1 + distance2;
-            //v1d1.y = neighbourCell.TerreinLevel;
-            //v1d2.y = nextNeighbourCell.TerreinLevel;
-
-            //Vector3 newV2 = neighbourCell.GetEdge(2).GetLocalV2();
 
         CreateTriangle((v1), (v1d1), (v1d2));
         AddColor(color, neighbourCell.CellColor, nextNeighbourCell.CellColor);
