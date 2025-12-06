@@ -12,8 +12,8 @@ public class ChunkMesh : MonoBehaviour
     private List<Color> colors = new List<Color>();
 
     private int iterations = 3;
-    private float noiseStrengthNormal = 3f;//3
-    private float noiseStrengthSmooth = 0.3f;//0.3
+    private float noiseStrengthNormal = 3f;
+    private float noiseStrengthSmooth = 0.3f;
 
     private void Awake()
     {

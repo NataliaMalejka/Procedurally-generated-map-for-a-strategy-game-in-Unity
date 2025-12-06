@@ -74,7 +74,7 @@ public class Chunk : MonoBehaviour
         Vector3 position;
 
         position.x = (index / zCells) * HexData.distanceToEdge * 2f;
-        position.y = cell.TerreinLevel;
+        position.y = cell.TerrainLevel;
         position.z = (index % zCells) * HexData.distanceToCorner * 1.5f;
 
         int rowIndex = (index % zCells) % 2;
@@ -92,7 +92,7 @@ public class Chunk : MonoBehaviour
     {
         Vector3 centre = new Vector3(
             cell.transform.localPosition.x,
-            cell.TerreinLevel,
+            cell.TerrainLevel,
             cell.transform.localPosition.z
         );
 
@@ -143,7 +143,6 @@ public class Chunk : MonoBehaviour
             }
         }
     }
-
 
     public void RefreshChunk()
     {

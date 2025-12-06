@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-
 public class GridHex : MonoBehaviour
 {
     [SerializeField] private Chunk chunkPrefab;

@@ -55,11 +55,11 @@ public class HexCell : MonoBehaviour
         set { continentIndex = value; }
     }
 
-    private int terreinLevel = -1; 
-    public int TerreinLevel
+    private int terrainLevel = -1; 
+    public int TerrainLevel
     {
-        get { return terreinLevel; }
-        set { terreinLevel = value; }
+        get { return terrainLevel; }
+        set { terrainLevel = value; }
     }
 
     private int terrainLevelIndex = -1;
@@ -76,17 +76,24 @@ public class HexCell : MonoBehaviour
         set { isMountain = value; }
     }
 
-    private float temperature;
+    private float temperature = 0;
     public float Temperature
     {
         get { return temperature; }
         set { temperature = value; }
     }
 
+    private float moisture = 0;
+    public float Moisture
+    {
+        get { return moisture; }
+        set { moisture = value; }
+    }
+
     public void AddEdge(EdgeType edgeType, HexDirection direction)
     {
         Edge edge = Instantiate<Edge>(edgePrefab);
-        edge.SetData(edgeType, direction, terreinLevel, transform.localPosition, hexChunk.transform.position, this);
+        edge.SetData(edgeType, direction, terrainLevel, transform.localPosition, hexChunk.transform.position, this);
         edges[(int)direction] = edge;
         edge.transform.SetParent(transform);
     }
@@ -130,7 +137,7 @@ public class HexCell : MonoBehaviour
 
         terrainLevelIndex = level;
         cellColor = colors[terrainLevelIndex];
-        terreinLevel = terrainLevelIndex * HexData.levelStepHeight;
+        terrainLevel = terrainLevelIndex * HexData.levelStepHeight;
     }
 
     public void SetCoordinateText()

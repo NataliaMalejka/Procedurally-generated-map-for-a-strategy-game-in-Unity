@@ -1,6 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Search;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 enum MapSize
 {
@@ -39,6 +42,8 @@ public class MapManager : MonoBehaviour
 
     private Vector2[] continentDir;
 
+    private HexDirection windDirection;
+
     [Header("Continent Shape")]
     [SerializeField] private float perlinScale = 0.15f;
     [SerializeField] private float distWeight = 0.3f;
@@ -66,7 +71,14 @@ public class MapManager : MonoBehaviour
     [Header("Temperature")]
     [SerializeField] private float coldMax = 0.4f;    
     [SerializeField] private float moderateMax = 0.7f;    
-    [SerializeField] private float temperatureTerrainScale = 20f;    
+    [SerializeField] private float temperatureTerrainScale = 20f;
+
+    [Header("Moisture")]
+    [SerializeField] private int windStrength = 7;
+    [SerializeField] private float dryStrength = 0.2f;
+    [SerializeField] private int dryDistance = 4;
+    [SerializeField] private float rainStrength = 0.5f;
+    [SerializeField] private int rainDistance = 3;
 
     [Header("Hex Noise")]
     public Texture2D hexMeshNoise;
@@ -231,11 +243,11 @@ public class MapManager : MonoBehaviour
 
         CalculateDistancToOcean(gridCells);
 
-        CalculateTerrainLevel(gridCells);
+        CalculateTerrainLevelAndTemperature(gridCells);
+
+        CalculateMoisture(gridCells);
 
         DetectEdgeType(gridCells);
-
-        SetTemperature(gridCells);
     }
 
     public void GenerateContinents(HexCell[] gridCells)
@@ -408,7 +420,7 @@ public class MapManager : MonoBehaviour
         {
             foreach (var cell in chunk.GetCells())
             {
-                if (cell.TerreinLevel == -1 && !cell.isOcean)
+                if (cell.TerrainLevel == -1 && !cell.isOcean)
                     SetContinentPart(cell, continentIndex);
             }
         }
@@ -446,37 +458,81 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    private void CalculateTerrainLevel(HexCell[] gridCells)
+    private void CalculateTerrainLevelAndTemperature(HexCell[] gridCells)
     {
         foreach (var cell in gridCells)
         {
             if (!cell.isOcean)
             {
-                int heightDistanceToOcean = CalculateDictanceToOceanHeight(cell) * HexData.oceanDistanceLevelStep;
+                SetTerrainLevel(cell);
 
-                int distanceNoiseHeight = SetDistanceNoise(cell);
-                int terrainLevel = distanceNoiseHeight + heightDistanceToOcean;
-
-                if (terrainLevel > 5)
-                    terrainLevel = 5;
-
-                if (cell.DistanceFromOcean == 1)
-                {
-                    if (terrainLevel > 0)
-                        terrainLevel -= 1;
-                }
-                else
-                {
-                    int hillHeight = SetHillNoise(cell);
-                    terrainLevel += hillHeight;
-                }
-
-                int mountainsNoise = SetMountains(cell);
-                terrainLevel += mountainsNoise;
-
-                cell.SetTerrainLevel(terrainLevel);
+                SetTemperature(cell);
             }
         }
+    }
+
+    private void SetTerrainLevel(HexCell cell)
+    {
+        int heightDistanceToOcean = CalculateDictanceToOceanHeight(cell) * HexData.oceanDistanceLevelStep;
+
+        int distanceNoiseHeight = SetDistanceNoise(cell);
+        int terrainLevel = distanceNoiseHeight + heightDistanceToOcean;
+
+        if (terrainLevel > 5)
+            terrainLevel = 5;
+
+        if (cell.DistanceFromOcean == 1)
+        {
+            if (terrainLevel > 0)
+                terrainLevel -= 1;
+        }
+        else
+        {
+            int hillHeight = SetHillNoise(cell);
+            terrainLevel += hillHeight;
+        }
+
+        int mountainsNoise = SetMountains(cell);
+        terrainLevel += mountainsNoise;
+
+        cell.SetTerrainLevel(terrainLevel);
+    }
+
+    private void SetTemperature(HexCell cell)
+    {
+        float latitude = (float)cell.Coordinates.GlobalZ / (zCellCount * zChunkCount);
+
+        latitude *= 2f;
+        if (latitude > 1f)
+        {
+            latitude = 2f - latitude;
+        }
+
+        float exponent = 0.9f;
+        latitude = Mathf.Pow(latitude, exponent);
+
+        float temperature = Mathf.LerpUnclamped(0f, 1f, latitude);
+
+        temperature *= 1f - cell.TerrainLevelIndex / temperatureTerrainScale;
+
+        temperature = Mathf.Clamp01(temperature);
+
+        cell.Temperature = temperature;
+
+        //if (temperature < coldMax)
+        //{
+        //    cell.CellColor = Color.blue;
+        //}
+        //else if (temperature < moderateMax)
+        //{
+        //    cell.CellColor = Color.green;
+        //}
+        //else
+        //{
+        //    cell.CellColor = Color.red;
+        //}
+
+        //cell.CellColor = new Color(temperature, temperature, temperature);
     }
 
     private int CalculateDictanceToOceanHeight(HexCell cell)
@@ -514,13 +570,195 @@ public class MapManager : MonoBehaviour
         float mountainsNoise = Mathf.PerlinNoise(
              cell.Coordinates.globalX * perlinSmallTerrainScale + 3000f,
              cell.Coordinates.globalZ * perlinSmallTerrainScale + 3000f
-         );
+        );
 
         if (mountainsNoise < mountainsNoiseMargin) mountainsNoise = 0;
         mountainsNoise *= mountainsNoiseTerrainAmp;
 
         return (int)mountainsNoise;
     }
+
+    private void CalculateMoisture(HexCell[] gridCells)
+    {
+        SetWind();
+        ApplyOceanMoisture(gridCells);
+        ApplyWind(gridCells);
+        ApplyMountainsDry(gridCells);
+        ApplyMountainsRain(gridCells);
+
+        foreach (var cell in gridCells)
+        {
+            if (!cell.isOcean)
+            {
+                cell.CellColor = new Color(cell.Moisture, cell.Moisture, cell.Moisture);
+            }
+        }
+    }
+
+    private void SetWind()
+    {
+        windDirection = (HexDirection)UnityEngine.Random.Range(0, 6);
+    }
+
+    private void ApplyOceanMoisture(HexCell[] gridCells)
+    {
+        Queue<HexCell> queue = new Queue<HexCell>();
+
+        foreach (var cell in gridCells)
+        {
+            if (cell.isOcean)
+            {
+                cell.Moisture = 1f;
+                queue.Enqueue(cell);
+            }
+        }
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+
+            for (int i = 0; i < 6; i++)
+            {
+                HexCell neighbor = current.GetNeighbor((HexDirection)i);
+                if (neighbor == null)
+                    continue;
+
+                if (current.Moisture <= 0f)
+                    continue;
+
+                float nextMoisture = current.Moisture - 0.1f;
+
+                if (nextMoisture > neighbor.Moisture)
+                {
+                    neighbor.Moisture = nextMoisture;
+                    queue.Enqueue(neighbor);
+                }
+            }
+        }
+    }
+
+    private void ApplyWind(HexCell[] gridCells)
+    {
+        Dictionary<HexCell, float> newMoisture = new Dictionary<HexCell, float>();
+
+        foreach (var cell in gridCells)
+        {
+            HexCell source = FindMoistureSource(cell);
+
+            if (source == null)
+            {
+                newMoisture[cell] = cell.Moisture;
+                continue;
+            }
+            newMoisture[cell] = Mathf.Clamp01(source.Moisture);
+        }
+
+        foreach (var kv in newMoisture)
+            kv.Key.Moisture = kv.Value;
+    }
+
+    private HexCell FindMoistureSource(HexCell start)
+    {
+        Queue<(HexCell cell, int dist)> q = new Queue<(HexCell, int)>();
+        HashSet<HexCell> visited = new HashSet<HexCell>();
+
+        q.Enqueue((start, 0));
+        visited.Add(start);
+
+        HexCell result = start;
+
+        while (q.Count > 0)
+        {
+            var (current, dist) = q.Dequeue();
+
+            if (dist == windStrength)
+                continue;                   
+
+            HexCell n = current.GetNeighbor(windDirection.Opposite());
+            if (n == null || visited.Contains(n))
+                continue;
+
+            visited.Add(n);
+            q.Enqueue((n, dist + 1));
+            result = n;
+        }
+
+        return result;
+    }
+
+    private void ApplyMountainsDry(HexCell[] gridCells)
+    {
+        foreach (var cell in gridCells)
+        {
+            if (cell.TerrainLevel < 16)
+                continue;
+
+            Queue<(HexCell cell, int dist)> q = new Queue<(HexCell, int)>();
+            HashSet<HexCell> visited = new HashSet<HexCell>();
+
+            q.Enqueue((cell, 0));
+            visited.Add(cell);
+
+            while (q.Count > 0)
+            {
+                var (current, dist) = q.Dequeue();
+
+                if (dist > dryDistance)
+                    continue;
+
+                float factor = 1f - (dryStrength * (dist / (float)dryDistance));
+                factor = Mathf.Clamp01(factor);
+
+                if (dist > 0)
+                    current.Moisture *= factor;
+
+                HexCell n = current.GetNeighbor(windDirection);
+                if (n == null || visited.Contains(n))
+                    continue;
+
+                visited.Add(n);
+                q.Enqueue((n, dist + 1));
+            }
+        }
+    }
+
+    private void ApplyMountainsRain(HexCell[] gridCells)
+    {
+        foreach (var cell in gridCells)
+        {
+            if (cell.TerrainLevel < 16)
+                continue;
+
+            Queue<(HexCell c, int dist)> q = new Queue<(HexCell c, int dist)>();
+            HashSet<HexCell> visited = new HashSet<HexCell>();
+
+            q.Enqueue((cell, 0));
+            visited.Add(cell);
+
+            while (q.Count > 0)
+            {
+                var (current, dist) = q.Dequeue();
+
+                if (dist > rainDistance)
+                    continue;
+
+                if (dist > 0)
+                {
+                    float multiplier = 1f + rainStrength * (1f - dist / (float)rainDistance);
+                    current.Moisture *= multiplier;
+                    current.Moisture = Mathf.Clamp01(current.Moisture);
+                }
+
+                HexCell n = current.GetNeighbor(windDirection.Opposite());
+                if (n == null || visited.Contains(n))
+                    continue;
+
+                visited.Add(n);
+                q.Enqueue((n, dist + 1));
+            }
+        }
+    }
+
 
     private void DetectEdgeType(HexCell[] gridCells)
     {
@@ -545,7 +783,6 @@ public class MapManager : MonoBehaviour
                     else if (terrainLevelDiff == 1)
                     {
                         cell.AddEdge(EdgeType.Smooth, (HexDirection)j);
-
                         allSmoothEdges.Add(cell.GetEdge(j));
                     }
                     else if (terrainLevelDiff > 1)
@@ -854,66 +1091,5 @@ public class MapManager : MonoBehaviour
             edges[i].SetGlobalV1(newPts[p++]);
             edges[i].SetGlobalV2(newPts[p++]);
         }
-    }
-
-    private void SetTemperature(HexCell[] gridCells)
-    {
-        foreach (var cell in gridCells)
-        {
-            if (cell.isOcean) continue;
-
-            float temperature = DetermineTemperature(cell);
-
-            cell.Temperature = temperature;
-
-            if(temperature < coldMax)
-            {
-                cell.CellColor = Color.blue;
-            }
-            else if(temperature < moderateMax)
-            {
-                cell.CellColor = Color.green;
-            }
-            else
-            {
-                cell.CellColor = Color.red;
-            }
-
-            //cell.CellColor = new Color(temperature, temperature, temperature);
-        }
-    }
-
-    private float DetermineTemperature(HexCell cell)
-    {
-        float latitude = (float)cell.Coordinates.GlobalZ / (zCellCount * zChunkCount);
-
-        latitude *= 2f;
-        if (latitude > 1f)
-        {
-            latitude = 2f - latitude;
-        }
-
-        float exponent = 0.9f;
-        latitude = Mathf.Pow(latitude, exponent);
-
-        float temperature = Mathf.LerpUnclamped(0f, 1f, latitude);
-
-        temperature *= 1f - cell.TerrainLevelIndex / temperatureTerrainScale;
-
-        //float temperatureNoise = Mathf.PerlinNoise(
-        //    cell.Coordinates.globalX * perlinSmallTerrainScale + 4000f,
-        //    cell.Coordinates.globalZ * perlinSmallTerrainScale + 4000f
-        //);
-
-        //if (temperatureNoise < 0.55f)
-        //{
-        //    //temperature -= 0.05f;
-        //}
-        //else
-        //{
-        //    //temperature -= 013f;
-        //}
-
-        return Mathf.Clamp01(temperature);
     }
 }
