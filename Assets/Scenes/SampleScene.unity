@@ -432,8 +432,15 @@ MonoBehaviour:
   hillsNoiseMargin: 0.6
   mountainsNoiseMargin: 0.8
   coldMax: 0.4
-  moderateMax: 0.7
+  moderateTempMax: 0.75
   temperatureTerrainScale: 20
+  windStrength: 4
+  dryStrength: 0.2
+  dryDistance: 4
+  rainStrength: 0.5
+  rainDistance: 3
+  dryMax: 0.35
+  moderateMoistureMax: 0.75
   hexMeshNoise: {fileID: 2800000, guid: 5004222ab684ce641adfe8d397c274bf, type: 3}
 --- !u!4 &571916395
 Transform:

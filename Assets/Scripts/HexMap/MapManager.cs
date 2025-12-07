@@ -70,15 +70,17 @@ public class MapManager : MonoBehaviour
 
     [Header("Temperature")]
     [SerializeField] private float coldMax = 0.4f;    
-    [SerializeField] private float moderateMax = 0.7f;    
+    [SerializeField] private float moderateTempMax = 0.7f;    
     [SerializeField] private float temperatureTerrainScale = 20f;
 
     [Header("Moisture")]
-    [SerializeField] private int windStrength = 7;
+    [SerializeField] private int windStrength = 4;
     [SerializeField] private float dryStrength = 0.2f;
     [SerializeField] private int dryDistance = 4;
     [SerializeField] private float rainStrength = 0.5f;
     [SerializeField] private int rainDistance = 3;
+    [SerializeField] private float dryMax = 0.4f;
+    [SerializeField] private float moderateMoistureMax = 0.7f;
 
     [Header("Hex Noise")]
     public Texture2D hexMeshNoise;
@@ -247,6 +249,8 @@ public class MapManager : MonoBehaviour
 
         CalculateMoisture(gridCells);
 
+        SetBiomes(gridCells);
+
         DetectEdgeType(gridCells);
     }
 
@@ -389,6 +393,8 @@ public class MapManager : MonoBehaviour
 
         HexCell startCell = gridCells[0];
         startCell.isOcean = true;
+        startCell.DistanceFromOcean = 0;
+        startCell.Moisture = 1f;
         cellsToCheck.Enqueue(startCell);
 
         while (cellsToCheck.Count > 0)
@@ -406,6 +412,7 @@ public class MapManager : MonoBehaviour
 
                 neighborCell.isOcean = true;
                 neighborCell.DistanceFromOcean = 0;
+                neighborCell.Moisture = 1f;
 
                 cellsToCheck.Enqueue(neighborCell);
             }
@@ -465,7 +472,6 @@ public class MapManager : MonoBehaviour
             if (!cell.isOcean)
             {
                 SetTerrainLevel(cell);
-
                 SetTemperature(cell);
             }
         }
@@ -591,7 +597,22 @@ public class MapManager : MonoBehaviour
             if (!cell.isOcean)
             {
                 cell.CellColor = new Color(cell.Moisture, cell.Moisture, cell.Moisture);
+
+                //if (cell.Moisture < dryMax)
+                //{
+                //    cell.CellColor = Color.blue;
+                //}
+                //else if (cell.Moisture < moderateMoistureMax)
+                //{
+                //    cell.CellColor = Color.green;
+                //}
+                //else
+                //{
+                //    cell.CellColor = Color.red;
+                //}
             }
+
+
         }
     }
 
@@ -602,37 +623,11 @@ public class MapManager : MonoBehaviour
 
     private void ApplyOceanMoisture(HexCell[] gridCells)
     {
-        Queue<HexCell> queue = new Queue<HexCell>();
-
         foreach (var cell in gridCells)
         {
-            if (cell.isOcean)
+            if (!cell.isOcean)
             {
-                cell.Moisture = 1f;
-                queue.Enqueue(cell);
-            }
-        }
-
-        while (queue.Count > 0)
-        {
-            var current = queue.Dequeue();
-
-            for (int i = 0; i < 6; i++)
-            {
-                HexCell neighbor = current.GetNeighbor((HexDirection)i);
-                if (neighbor == null)
-                    continue;
-
-                if (current.Moisture <= 0f)
-                    continue;
-
-                float nextMoisture = current.Moisture - 0.1f;
-
-                if (nextMoisture > neighbor.Moisture)
-                {
-                    neighbor.Moisture = nextMoisture;
-                    queue.Enqueue(neighbor);
-                }
+                cell.Moisture = Mathf.Max(0f, 1f - 0.1f * cell.DistanceFromOcean);
             }
         }
     }
@@ -690,8 +685,15 @@ public class MapManager : MonoBehaviour
     {
         foreach (var cell in gridCells)
         {
-            if (cell.TerrainLevel < 16)
+            if (!cell.IsMountain)
                 continue;
+
+
+            HexDirection[] windDirs = new HexDirection[]
+            {
+                windDirection,
+                windDirection.Next(),
+            };
 
             Queue<(HexCell cell, int dist)> q = new Queue<(HexCell, int)>();
             HashSet<HexCell> visited = new HashSet<HexCell>();
@@ -712,22 +714,32 @@ public class MapManager : MonoBehaviour
                 if (dist > 0)
                     current.Moisture *= factor;
 
-                HexCell n = current.GetNeighbor(windDirection);
-                if (n == null || visited.Contains(n))
-                    continue;
+                foreach (var dir in windDirs)
+                {
+                    HexCell n = current.GetNeighbor(dir);
+                    if (n == null || visited.Contains(n))
+                        continue;
 
-                visited.Add(n);
-                q.Enqueue((n, dist + 1));
+                    visited.Add(n);
+                    q.Enqueue((n, dist + 1));
+                }
             }
         }
     }
+
 
     private void ApplyMountainsRain(HexCell[] gridCells)
     {
         foreach (var cell in gridCells)
         {
-            if (cell.TerrainLevel < 16)
+            if (!cell.IsMountain)
                 continue;
+
+            HexDirection[] windDirs = new HexDirection[]
+            {
+                windDirection.Opposite(),
+                windDirection.Opposite().Next(),
+            };
 
             Queue<(HexCell c, int dist)> q = new Queue<(HexCell c, int dist)>();
             HashSet<HexCell> visited = new HashSet<HexCell>();
@@ -749,16 +761,73 @@ public class MapManager : MonoBehaviour
                     current.Moisture = Mathf.Clamp01(current.Moisture);
                 }
 
-                HexCell n = current.GetNeighbor(windDirection.Opposite());
-                if (n == null || visited.Contains(n))
-                    continue;
+                foreach (var dir in windDirs)
+                {
+                    HexCell n = current.GetNeighbor(dir);
+                    if (n == null || visited.Contains(n))
+                        continue;
 
-                visited.Add(n);
-                q.Enqueue((n, dist + 1));
+                    visited.Add(n);
+                    q.Enqueue((n, dist + 1));
+                }
             }
         }
     }
 
+
+    private void SetBiomes(HexCell[] gridCells)
+    {
+        foreach (var cell in gridCells)
+        {
+            if (cell.isOcean)
+            {
+                cell.SetBiome(Biome.Ocean);
+                continue;
+            }
+            if (cell.IsMountain)
+            {
+                cell.SetBiome(Biome.Mountain);
+                continue;
+            }
+            if (cell.Temperature < coldMax)
+            {
+                cell.SetBiome(Biome.Tundra);
+                continue;
+            }
+            if (cell.Temperature < moderateTempMax)
+            {
+                if (cell.Moisture < dryMax)
+                {
+                    cell.SetBiome(Biome.Grassland);
+                }
+                else if (cell.Moisture < moderateMoistureMax)
+                {
+                    cell.SetBiome(Biome.ContinentalDry);
+                }
+                else
+                {
+                    cell.SetBiome(Biome.continentalWet);
+                }
+                continue;
+            }
+            else
+            {
+                if (cell.Moisture < dryMax)
+                {
+                    cell.SetBiome(Biome.Desert);
+                }
+                else if (cell.Moisture < moderateMoistureMax)
+                {
+                    cell.SetBiome(Biome.Savanna);
+                }
+                else
+                {
+                    cell.SetBiome(Biome.RainForest);
+                }
+                continue;
+            }
+        }
+    }
 
     private void DetectEdgeType(HexCell[] gridCells)
     {

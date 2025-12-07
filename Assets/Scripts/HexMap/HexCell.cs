@@ -1,7 +1,18 @@
-using System;
 using TMPro;
-using UnityEditor.Rendering;
 using UnityEngine;
+
+public enum Biome
+{
+    Ocean,
+    Mountain,
+    Tundra,
+    Grassland,
+    ContinentalDry,
+    continentalWet,
+    RainForest,
+    Savanna,
+    Desert
+}
 
 public class HexCell : MonoBehaviour
 {
@@ -22,7 +33,9 @@ public class HexCell : MonoBehaviour
         set { coordinates = value; }
     }
 
-    private Color[] colors = new Color[] { Color.white, Color.yellow, Color.orange, Color.orangeRed, Color.red, Color.hotPink, Color.magenta, Color.darkBlue, Color.gray7, Color.black };
+    private Biome cellBiome;
+
+    private Color[] colors = new Color[] { Color.turquoise, Color.black, Color.white, Color.yellowGreen, Color.limeGreen, Color.forestGreen, Color.darkGreen, Color.orange, Color.yellow, Color.pink};
 
     private Color cellColor = Color.turquoise;
     public Color CellColor
@@ -136,8 +149,14 @@ public class HexCell : MonoBehaviour
             IsMountain = true;
 
         terrainLevelIndex = level;
-        cellColor = colors[terrainLevelIndex];
+        //cellColor = colors[terrainLevelIndex];
         terrainLevel = terrainLevelIndex * HexData.levelStepHeight;
+    }
+
+    public void SetBiome(Biome biome)
+    {
+        cellBiome = biome;
+        cellColor = colors[(int)cellBiome];
     }
 
     public void SetCoordinateText()
