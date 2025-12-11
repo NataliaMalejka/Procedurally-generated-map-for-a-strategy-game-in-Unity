@@ -47,7 +47,6 @@ public class SamplesShowcase : MonoBehaviour
 
     #if UNITY_EDITOR
     [SerializeField]
-    public RequiredSettingsSO requiredSettingsSO;
     #endif
 
     //Variable containing TMPPro compatible sanitized text

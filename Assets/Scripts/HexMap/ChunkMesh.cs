@@ -8,7 +8,6 @@ public class ChunkMesh : MonoBehaviour
 
     private List<Vector3> vertices = new List<Vector3>();
     private List<int> triangles = new List<int>();
-    private List<Vector2> uvs = new List<Vector2>();
     private List<Vector4> uv3 = new List<Vector4>();
     private List<Color> colors = new List<Color>();
 
@@ -27,7 +26,6 @@ public class ChunkMesh : MonoBehaviour
         mesh.Clear();
         vertices.Clear();
         triangles.Clear();
-        uvs.Clear();
         uv3.Clear();
         colors.Clear();
     }
@@ -81,10 +79,6 @@ public class ChunkMesh : MonoBehaviour
         vertices.Add(v1);
         vertices.Add(v2);
         vertices.Add(v3);
-
-        AddUV(v1);
-        AddUV(v2);
-        AddUV(v3);
 
         triangles.Add(index);
         triangles.Add(index + 1);
@@ -286,41 +280,14 @@ public class ChunkMesh : MonoBehaviour
 
     private void AddTexture(int t1, int t2, int t3)
     {
-        //uvs.Add(new Vector2(0, 0));
-        //uvs.Add(new Vector2(1, 0));
-        //uvs.Add(new Vector2(0.5f, 1));
-
-        //uv3.Add(new Vector4((float)t1, 0f, 0f, 0f));  
-        //uv3.Add(new Vector4(0f, (float)t2, 0f, 0f));   
-        //uv3.Add(new Vector4(0f, 0f, (float)t3, 0f));  
-
-        //colors.Add(new Color(1f, 0f, 0f, 0f)); 
-        //colors.Add(new Color(0f, 1f, 0f, 0f)); 
-        //colors.Add(new Color(0f, 0f, 1f, 0f)); 
-
         colors.Add(new Color(1f, 0f, 0f, 0f));
-        uv3.Add(new Vector4((float)t1, (float)t2, (float)t3, 0f));
+        uv3.Add(new Vector4(t1, t2, t3, 0f));
 
         colors.Add(new Color(0f, 1f, 0f, 0f));
-        uv3.Add(new Vector4((float)t1, (float)t2, (float)t3, 0f));
+        uv3.Add(new Vector4(t1, t2, t3, 0f));
 
         colors.Add(new Color(0f, 0f, 1f, 0f));
-        uv3.Add(new Vector4((float)t1, (float)t2, (float)t3, 0f));
-
-        //uv3.Add(new Vector4(1, 0, 0, t1));
-        //uv3.Add(new Vector4(1, 0, 0, t2));
-        //uv3.Add(new Vector4(1, 0, 0, t3));
-        //colors.Add(c1);
-        //colors.Add(c2);
-        //colors.Add(c3);
-    }
-
-    private void AddUV(Vector3 v)
-    {
-        uvs.Add(new Vector2(
-            (v.x + this.transform.position.x) * 0.015f,
-            (v.z + this.transform.position.z) * 0.015f
-        ));
+        uv3.Add(new Vector4(t1, t2, t3, 0f));
     }
 
     private Vector3 AddNoise(Vector3 v, float noiseStrength)
@@ -339,16 +306,8 @@ public class ChunkMesh : MonoBehaviour
     {
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
-        mesh.uv = uvs.ToArray();
         mesh.SetUVs(2, uv3);
 
-        //mesh.SetVertexBufferParams(mesh.vertexCount,
-        //    new VertexAttributeDescriptor(VertexAttribute.Position),
-        //    new VertexAttributeDescriptor(VertexAttribute.Normal),
-        //    new VertexAttributeDescriptor(VertexAttribute.TexCoord0, dimension: 2),
-        //    new VertexAttributeDescriptor(VertexAttribute.TexCoord2, dimension: 4),
-        //    new VertexAttributeDescriptor(VertexAttribute.Color, dimension: 4, format: VertexAttributeFormat.Float32)
-        //);
         mesh.colors = colors.ToArray();
 
         mesh.RecalculateNormals();

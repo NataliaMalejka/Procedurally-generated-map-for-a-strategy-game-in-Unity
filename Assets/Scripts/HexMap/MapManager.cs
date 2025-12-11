@@ -133,7 +133,7 @@ public class MapManager : MonoBehaviour
 
         texArray.Apply();
 
-        terrainMaterial.SetTexture("_MainTex", texArray);
+        terrainMaterial.SetTexture("_MainTexture", texArray);
     }
 
     private Texture2D ConvertToRGBA32(Texture2D source)
