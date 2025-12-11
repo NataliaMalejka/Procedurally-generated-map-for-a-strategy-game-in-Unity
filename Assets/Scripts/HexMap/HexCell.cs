@@ -44,6 +44,13 @@ public class HexCell : MonoBehaviour
         set { cellColor = value; }
     }
 
+    private int textureIndex = -1;
+    public int TextureIndex
+    {
+        get { return textureIndex; }
+        set { textureIndex = value; }
+    }
+
     private HexCell[] neighbors = new HexCell[6];
     private Edge[] edges = new Edge[6];
 
@@ -157,6 +164,7 @@ public class HexCell : MonoBehaviour
     {
         cellBiome = biome;
         cellColor = colors[(int)cellBiome];
+        textureIndex = (int)cellBiome;
     }
 
     public void SetCoordinateText()

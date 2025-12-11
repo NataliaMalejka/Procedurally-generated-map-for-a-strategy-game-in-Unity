@@ -1,9 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Search;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 enum MapSize
 {
@@ -85,16 +82,17 @@ public class MapManager : MonoBehaviour
     [Header("Hex Noise")]
     public Texture2D hexMeshNoise;
 
-    public int[] GetContinentsCentres()
-    {
-        return continentsCentres;
-    }
+    [Header("Textures")]
+    public Material terrainMaterial;
+    public Texture2D[] texturesColor;
 
     private void Awake()
     {
         Instance = this;
 
         UnityEngine.Random.InitState(seed);
+
+        SetTextures();
 
         (xChunkCount, zChunkCount) = SetChunkCounts(mapSize);
 
@@ -109,13 +107,64 @@ public class MapManager : MonoBehaviour
         SetContinentsInRegions();
     }
 
-    private (int x, int z) SetChunkCounts(MapSize size)//1,3 przelicznik
+    private void SetTextures()
+    {
+        int w = texturesColor[0].width;
+        int h = texturesColor[0].height;
+
+        var texArray = new Texture2DArray(
+            w, h,
+            texturesColor.Length,
+            TextureFormat.RGBA32,
+            true
+        );
+
+        texArray.wrapMode = TextureWrapMode.Repeat;
+        texArray.filterMode = FilterMode.Bilinear;
+
+        for (int i = 0; i < texturesColor.Length; i++)
+        {
+            Texture2D tex = texturesColor[i];
+
+            Texture2D converted = ConvertToRGBA32(tex);
+
+            Graphics.CopyTexture(converted, 0, 0, texArray, i, 0);
+        }
+
+        texArray.Apply();
+
+        terrainMaterial.SetTexture("_MainTex", texArray);
+    }
+
+    private Texture2D ConvertToRGBA32(Texture2D source)
+    {
+        RenderTexture rt = RenderTexture.GetTemporary(
+            source.width,
+            source.height,
+            0,
+            RenderTextureFormat.ARGB32
+        );
+
+        Graphics.Blit(source, rt);
+
+        Texture2D tex = new Texture2D(source.width, source.height, TextureFormat.RGBA32, true);
+        RenderTexture.active = rt;
+        tex.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0);
+        tex.Apply();
+
+        RenderTexture.active = null;
+        RenderTexture.ReleaseTemporary(rt);
+
+        return tex;
+    }
+
+    private (int x, int z) SetChunkCounts(MapSize size)
     {
         return size switch
         {
-            MapSize.Small => (15, 10),//10 6     //5 3
-            MapSize.Medium => (21, 14),//15 9     //10 6
-            MapSize.Large => (27, 18),//20 12       //15 9
+            MapSize.Small => (15, 10),
+            MapSize.Medium => (21, 14),
+            MapSize.Large => (27, 18),
             _ => (21, 14)
         };
     }
@@ -238,10 +287,7 @@ public class MapManager : MonoBehaviour
 
         SetOceans(gridCells);
 
-        for (int i = 0; i < continentsCount; i++)
-        {
-            RemoveLakes(i);
-        }
+        RemoveLakes();
 
         CalculateDistancToOcean(gridCells);
 
@@ -419,18 +465,21 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    private void RemoveLakes(int continentIndex)
-    {
-        var chunkList = continents[continentIndex].GetContinentChunks();
-
-        foreach (var chunk in chunkList)
+    private void RemoveLakes()
+    {    
+        for (int i = 0; i < continentsCount; i++)
         {
-            foreach (var cell in chunk.GetCells())
+            var chunkList = continents[i].GetContinentChunks();
+
+            foreach (var chunk in chunkList)
             {
-                if (cell.TerrainLevel == -1 && !cell.isOcean)
-                    SetContinentPart(cell, continentIndex);
+                foreach (var cell in chunk.GetCells())
+                {
+                    if (cell.TerrainLevel == -1 && !cell.isOcean)
+                        SetContinentPart(cell, i);
+                }
             }
-        }
+        }       
     }
 
     private void CalculateDistancToOcean(HexCell[] gridCells)
@@ -845,12 +894,20 @@ public class MapManager : MonoBehaviour
                 {
                     int terrainLevelDiff = Mathf.Abs(cell.TerrainLevelIndex - neighbourCell.TerrainLevelIndex);
 
-                    if (terrainLevelDiff == 0)
+                    if(cell.IsMountain && neighbourCell.IsMountain)
+                    {
+                        cell.AddEdge(EdgeType.Mountain, (HexDirection)j);
+                    }
+                    else if (terrainLevelDiff == 0)
                     {
                         cell.AddEdge(EdgeType.Flat, (HexDirection)j);
                     }
                     else if (terrainLevelDiff == 1)
                     {
+                        if(cell.IsMountain || neighbourCell.IsMountain)
+                        {
+                            Debug.Log("mountain");
+                        }
                         cell.AddEdge(EdgeType.Smooth, (HexDirection)j);
                         allSmoothEdges.Add(cell.GetEdge(j));
                     }

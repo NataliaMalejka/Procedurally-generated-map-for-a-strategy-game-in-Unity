@@ -5,6 +5,7 @@ public enum EdgeType
     Flat,
     Smooth,
     Cliff,
+    Mountain,
     None
 }
 

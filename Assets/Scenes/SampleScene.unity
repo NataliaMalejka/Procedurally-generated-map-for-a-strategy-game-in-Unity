@@ -442,6 +442,17 @@ MonoBehaviour:
   dryMax: 0.35
   moderateMoistureMax: 0.75
   hexMeshNoise: {fileID: 2800000, guid: 5004222ab684ce641adfe8d397c274bf, type: 3}
+  terrainMaterial: {fileID: 2100000, guid: 7c1089e564007c846a9da922a23377c0, type: 2}
+  texturesColor:
+  - {fileID: 2800000, guid: 5917067bbc97e6f48a8d61992e76b800, type: 3}
+  - {fileID: 2800000, guid: 3597ddc38e2fca04ebc543f81b86eee3, type: 3}
+  - {fileID: 2800000, guid: de0dcc3b1c573324c9fd6ff86a5eadda, type: 3}
+  - {fileID: 2800000, guid: 0f3ff7b69ba368b479cade7803389182, type: 3}
+  - {fileID: 2800000, guid: 5be61121a9b88ae418a1c6752c2c1577, type: 3}
+  - {fileID: 2800000, guid: 7f5cff0009cec2a4dacb5a126e5c9570, type: 3}
+  - {fileID: 2800000, guid: ce538e869129a6642879293183e4717d, type: 3}
+  - {fileID: 2800000, guid: 68d11a855d017ab4a8c9babf9b26a677, type: 3}
+  - {fileID: 2800000, guid: 33eb930ca3a3eb74481981a0f4c443ef, type: 3}
 --- !u!4 &571916395
 Transform:
   m_ObjectHideFlags: 0
