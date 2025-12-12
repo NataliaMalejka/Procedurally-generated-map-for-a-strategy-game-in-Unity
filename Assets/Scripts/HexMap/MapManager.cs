@@ -107,6 +107,8 @@ public class MapManager : MonoBehaviour
         SetContinentCellsAmound();
 
         SetContinentsInRegions();
+
+        NewMargins();
     }
 
     private void SetTextures()
@@ -279,6 +281,15 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    private void NewMargins()
+    {
+        minXMargin = 3 * ((int)mapSize + 1);
+        minZMargin = 4 * ((int)mapSize + 1);
+
+        maxXMargin = xCellCount * xChunkCount - minXMargin;
+        maxZMargin = zCellCount * zChunkCount - minZMargin;
+    }
+
     private void SetContinentsCentres(int localXMin, int localXMax, int localZMin, int localZMax, int index)
     {
         int xPos = UnityEngine.Random.Range(localXMin, localXMax);
@@ -312,13 +323,11 @@ public class MapManager : MonoBehaviour
 
         CalculateDistancToOcean(gridCells);
 
-        CalculateTerrainLevelAndTemperature(gridCells);
+        CalculateHexData(gridCells);
 
         CalculateMoisture(gridCells);
 
         SetBiomes(gridCells);
-
-        CreateMountains(gridCells);
 
         DetectEdgeType(gridCells);
     }
@@ -357,6 +366,8 @@ public class MapManager : MonoBehaviour
                     if (IsBehindBorders(neighborCell)) continue;
 
                     if (AdjacentToOtherContinent(neighborCell, i)) continue;
+
+                    if (NearContinentCentre(currentCell, i, gridCells)) continue;
 
                     if (CheckNoise(neighborCell, centreCell, i)) continue;
 
@@ -428,6 +439,30 @@ public class MapManager : MonoBehaviour
         }
 
         return adjacentToOtherContinent;
+    }
+
+    private bool NearContinentCentre(HexCell cell, int index, HexCell[] gridCells)
+    {
+        for (int i = 0; i < continentsCentres.Length; i++) 
+        {
+            if (i == index) continue;
+
+            HexCoordinates continentCentre = gridCells[continentsCentres[i]].Coordinates;
+
+            if (HexDistance(cell.Coordinates, continentCentre) < 10 * ((int)mapSize + 1)) 
+                return true;
+        }
+
+        return false;
+    }
+
+    private int HexDistance(HexCoordinates cell, HexCoordinates continentCentre)
+    {
+        return (
+            Mathf.Abs(cell.Q - continentCentre.Q) +
+            Mathf.Abs(cell.R - continentCentre.R) +
+            Mathf.Abs(cell.S - continentCentre.S)
+        ) / 2;
     }
 
     private bool CheckNoise(HexCell neighborCell, HexCell centreCell, int index)
@@ -537,7 +572,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    private void CalculateTerrainLevelAndTemperature(HexCell[] gridCells)
+    private void CalculateHexData(HexCell[] gridCells)
     {
         foreach (var cell in gridCells)
         {
@@ -545,7 +580,15 @@ public class MapManager : MonoBehaviour
             {
                 SetTerrainLevel(cell);
                 SetTemperature(cell);
+
+                if(cell.IsMountain)
+                {
+                    CreateMountain(cell);
+                }
             }
+            else
+                SetArctic(cell, gridCells);
+
         }
     }
 
@@ -596,6 +639,66 @@ public class MapManager : MonoBehaviour
         temperature = Mathf.Clamp01(temperature);
 
         cell.Temperature = temperature;
+    }
+
+    private void CreateMountain(HexCell cell)
+    {
+        int baseMountainLevel = 3;
+
+        for (int j = 0; j < 6; j++)
+        {
+            HexCell neighbourCell = cell.GetNeighbor((HexDirection)j);
+
+            if (neighbourCell != null)
+            {
+                if (!neighbourCell.IsMountain)
+                {
+                    if (neighbourCell.TerrainLevel > baseMountainLevel)
+                    {
+                        baseMountainLevel = neighbourCell.TerrainLevel;
+                    }
+                }
+            }
+        }
+
+        cell.SetTerrainLevel(baseMountainLevel);
+        cell.CentreTerrainLevel += UnityEngine.Random.Range(7f, 13f);
+    }
+
+    private void SetArctic(HexCell cell, HexCell[] gridCells)
+    {
+        if (cell.Coordinates.GlobalZ == 0 || cell.Coordinates.GlobalZ == (zCellCount * zChunkCount - 1))
+        {
+            SetArcticCell(cell);
+        }
+        else if (cell.Coordinates.GlobalZ == 1 || cell.Coordinates.GlobalZ == (zCellCount * zChunkCount - 2))
+        {
+            HexCell neighbourCell = gridCells[GetCellIndex(cell.Coordinates.GlobalX, zCellCount * zChunkCount - 3)];
+
+            if (UnityEngine.Random.value < 0.8f || (cell.Coordinates.GlobalZ == (zCellCount * zChunkCount - 2) && !neighbourCell.isOcean))
+            {
+                SetArcticCell(cell);
+            }
+        }
+        else if (cell.Coordinates.GlobalZ == 2 || cell.Coordinates.GlobalZ == (zCellCount * zChunkCount - 3))
+        {
+            if (UnityEngine.Random.value < 0.4f)
+            {
+                HexCell neighbourCell = gridCells[GetCellIndex(cell.Coordinates.GlobalX, 1)];
+
+                if ((cell.Coordinates.GlobalZ == 2 && !neighbourCell.isOcean) || cell.Coordinates.GlobalZ == (zCellCount * zChunkCount - 3))
+                {
+                    SetArcticCell(cell);
+                }
+            }
+        }
+    }
+
+    private void SetArcticCell(HexCell cell)
+    {
+        cell.isOcean = false;
+        cell.SetTerrainLevel(2);
+        SetTemperature(cell);
     }
 
     private int CalculateDictanceToOceanHeight(HexCell cell)
@@ -761,7 +864,6 @@ public class MapManager : MonoBehaviour
         }
     }
 
-
     private void ApplyMountainsRain(HexCell[] gridCells)
     {
         foreach (var cell in gridCells)
@@ -807,7 +909,6 @@ public class MapManager : MonoBehaviour
             }
         }
     }
-
 
     private void SetBiomes(HexCell[] gridCells)
     {
@@ -859,36 +960,6 @@ public class MapManager : MonoBehaviour
                     cell.SetBiome(Biome.RainForest);
                 }
                 continue;
-            }
-        }
-    }
-
-    private void CreateMountains(HexCell[] gridCells)
-    {
-        foreach (var cell in gridCells)
-        {
-            if (cell.IsMountain)
-            {
-                int baseMountainLevel = 3;
-
-                for (int j = 0; j < 6; j++)
-                {
-                    HexCell neighbourCell = cell.GetNeighbor((HexDirection)j);
-
-                    if (neighbourCell != null)
-                    {
-                        if (!neighbourCell.IsMountain)
-                        {
-                            if (neighbourCell.TerrainLevel > baseMountainLevel)
-                            {
-                                baseMountainLevel = neighbourCell.TerrainLevel;
-                            }
-                        }
-                    }
-                }
-
-                cell.SetTerrainLevel(baseMountainLevel);
-                cell.CentreTerrainLevel += UnityEngine.Random.Range(7f, 13f);
             }
         }
     }
