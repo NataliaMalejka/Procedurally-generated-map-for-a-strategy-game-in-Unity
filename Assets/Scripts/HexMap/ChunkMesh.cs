@@ -19,7 +19,7 @@ public class ChunkMesh : MonoBehaviour
     private void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
-        GetComponent<MeshRenderer>().sharedMaterial = MapManager.Instance.terrainMaterial;
+        GetComponent<MeshRenderer>().sharedMaterial = MapManager.Instance.GetTerrainmaterial();
     }
 
     public void Clear()
@@ -393,7 +393,7 @@ public class ChunkMesh : MonoBehaviour
     {
         Vector3 chunkPos = this.GetComponentInParent<Transform>().position;
 
-        Vector4 noise = MapManager.Instance.hexMeshNoise.GetPixelBilinear(v.x + chunkPos.x, v.z + chunkPos.z);
+        Vector4 noise = MapManager.Instance.GetHexMeshNoise().GetPixelBilinear(v.x + chunkPos.x, v.z + chunkPos.z);
 
         v.x += noise.x * noiseStrength;
         v.z += noise.z * noiseStrength;

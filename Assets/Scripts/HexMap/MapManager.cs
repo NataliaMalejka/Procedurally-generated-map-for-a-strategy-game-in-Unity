@@ -80,11 +80,13 @@ public class MapManager : MonoBehaviour
     [SerializeField] private float moderateMoistureMax = 0.7f;
 
     [Header("Hex Noise")]
-    public Texture2D hexMeshNoise;
+    [SerializeField] private Texture2D hexMeshNoise;
 
     [Header("Textures")]
-    public Material terrainMaterial;
-    public Texture2D[] texturesColor;
+    [SerializeField] private Material terrainMaterial;
+    [SerializeField] private Texture2D[] texturesColor;
+    [SerializeField] private Texture2D[] texturesNormal;
+
 
     private void Awake()
     {
@@ -112,9 +114,20 @@ public class MapManager : MonoBehaviour
         int w = texturesColor[0].width;
         int h = texturesColor[0].height;
 
+        var texArrayColor = SetTex(w, h, texturesColor);
+        texArrayColor.Apply();
+        terrainMaterial.SetTexture("_TexColor", texArrayColor);
+
+        var texArrayNormal = SetTex(w, h, texturesNormal);
+        texArrayNormal.Apply();
+        terrainMaterial.SetTexture("_TexNormal", texArrayNormal);
+    }
+
+    private Texture2DArray SetTex(int w, int h, Texture2D[] texs)
+    {
         var texArray = new Texture2DArray(
             w, h,
-            texturesColor.Length,
+            texs.Length,
             TextureFormat.RGBA32,
             true
         );
@@ -122,18 +135,16 @@ public class MapManager : MonoBehaviour
         texArray.wrapMode = TextureWrapMode.Repeat;
         texArray.filterMode = FilterMode.Bilinear;
 
-        for (int i = 0; i < texturesColor.Length; i++)
+        for (int i = 0; i < texs.Length; i++)
         {
-            Texture2D tex = texturesColor[i];
+            Texture2D tex = texs[i];
 
             Texture2D converted = ConvertToRGBA32(tex);
 
             Graphics.CopyTexture(converted, 0, 0, texArray, i, 0);
         }
 
-        texArray.Apply();
-
-        terrainMaterial.SetTexture("_MainTexture", texArray);
+        return texArray;
     }
 
     private Texture2D ConvertToRGBA32(Texture2D source)
@@ -156,6 +167,16 @@ public class MapManager : MonoBehaviour
         RenderTexture.ReleaseTemporary(rt);
 
         return tex;
+    }
+
+    public Material GetTerrainmaterial()
+    {
+        return terrainMaterial;
+    }
+
+    public Texture2D GetHexMeshNoise()
+    {
+        return hexMeshNoise;
     }
 
     private (int x, int z) SetChunkCounts(MapSize size)
