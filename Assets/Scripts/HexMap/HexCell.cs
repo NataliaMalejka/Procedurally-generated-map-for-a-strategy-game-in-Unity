@@ -82,6 +82,13 @@ public class HexCell : MonoBehaviour
         set { terrainLevel = value; }
     }
 
+    private float centreTerrainlevel = -1;
+    public float CentreTerrainLevel
+    {
+        get { return centreTerrainlevel; }
+        set { centreTerrainlevel = value; }
+    }
+
     private int terrainLevelIndex = -1;
     public int TerrainLevelIndex
     {
@@ -156,8 +163,8 @@ public class HexCell : MonoBehaviour
             IsMountain = true;
 
         terrainLevelIndex = level;
-        //cellColor = colors[terrainLevelIndex];
         terrainLevel = terrainLevelIndex * HexData.levelStepHeight;
+        centreTerrainlevel = terrainLevel;
     }
 
     public void SetBiome(Biome biome)

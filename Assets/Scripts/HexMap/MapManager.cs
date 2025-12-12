@@ -297,6 +297,8 @@ public class MapManager : MonoBehaviour
 
         SetBiomes(gridCells);
 
+        CreateMountains(gridCells);
+
         DetectEdgeType(gridCells);
     }
 
@@ -573,21 +575,6 @@ public class MapManager : MonoBehaviour
         temperature = Mathf.Clamp01(temperature);
 
         cell.Temperature = temperature;
-
-        //if (temperature < coldMax)
-        //{
-        //    cell.CellColor = Color.blue;
-        //}
-        //else if (temperature < moderateMax)
-        //{
-        //    cell.CellColor = Color.green;
-        //}
-        //else
-        //{
-        //    cell.CellColor = Color.red;
-        //}
-
-        //cell.CellColor = new Color(temperature, temperature, temperature);
     }
 
     private int CalculateDictanceToOceanHeight(HexCell cell)
@@ -640,29 +627,6 @@ public class MapManager : MonoBehaviour
         ApplyWind(gridCells);
         ApplyMountainsDry(gridCells);
         ApplyMountainsRain(gridCells);
-
-        foreach (var cell in gridCells)
-        {
-            if (!cell.isOcean)
-            {
-                cell.CellColor = new Color(cell.Moisture, cell.Moisture, cell.Moisture);
-
-                //if (cell.Moisture < dryMax)
-                //{
-                //    cell.CellColor = Color.blue;
-                //}
-                //else if (cell.Moisture < moderateMoistureMax)
-                //{
-                //    cell.CellColor = Color.green;
-                //}
-                //else
-                //{
-                //    cell.CellColor = Color.red;
-                //}
-            }
-
-
-        }
     }
 
     private void SetWind()
@@ -878,6 +842,36 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    private void CreateMountains(HexCell[] gridCells)
+    {
+        foreach (var cell in gridCells)
+        {
+            if (cell.IsMountain)
+            {
+                int baseMountainLevel = 3;
+
+                for (int j = 0; j < 6; j++)
+                {
+                    HexCell neighbourCell = cell.GetNeighbor((HexDirection)j);
+
+                    if (neighbourCell != null)
+                    {
+                        if (!neighbourCell.IsMountain)
+                        {
+                            if (neighbourCell.TerrainLevel > baseMountainLevel)
+                            {
+                                baseMountainLevel = neighbourCell.TerrainLevel;
+                            }
+                        }
+                    }
+                }
+
+                cell.SetTerrainLevel(baseMountainLevel);
+                cell.CentreTerrainLevel += UnityEngine.Random.Range(7f, 13f);
+            }
+        }
+    }
+
     private void DetectEdgeType(HexCell[] gridCells)
     {
         List<Edge> allSmoothEdges = new List<Edge>();
@@ -894,7 +888,7 @@ public class MapManager : MonoBehaviour
                 {
                     int terrainLevelDiff = Mathf.Abs(cell.TerrainLevelIndex - neighbourCell.TerrainLevelIndex);
 
-                    if(cell.IsMountain && neighbourCell.IsMountain)
+                    if(cell.IsMountain || neighbourCell.IsMountain)
                     {
                         cell.AddEdge(EdgeType.Mountain, (HexDirection)j);
                     }
@@ -904,10 +898,6 @@ public class MapManager : MonoBehaviour
                     }
                     else if (terrainLevelDiff == 1)
                     {
-                        if(cell.IsMountain || neighbourCell.IsMountain)
-                        {
-                            Debug.Log("mountain");
-                        }
                         cell.AddEdge(EdgeType.Smooth, (HexDirection)j);
                         allSmoothEdges.Add(cell.GetEdge(j));
                     }

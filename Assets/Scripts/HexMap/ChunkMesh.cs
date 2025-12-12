@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -45,12 +46,57 @@ public class ChunkMesh : MonoBehaviour
             v2 = AddNoise(v2, noiseStrengthNormal);
         }
 
-        CreateTriangle(AddNoise(c, noiseStrengthNormal), v1, AddNoise(m1, noiseStrengthNormal));
+        if (cell.IsMountain)
+        {
+            CreateMountainSlope(c, v1, v2, t, m1, m2, index, cell);
+        }
+        else
+        { 
+            CreateTriangle(AddNoise(c, noiseStrengthNormal), v1, AddNoise(m1, noiseStrengthNormal));
+            AddTexture(t, t, t);
+            CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal));
+            AddTexture(t, t, t);
+            CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), v2);
+            AddTexture(t, t, t);       
+        }
+
+    }
+
+    private void CreateMountainSlope(Vector3 c, Vector3 v1, Vector3 v2, int t, Vector3 m1, Vector3 m2, int index, HexCell cell)
+    {
+        var s1v1 = Vector3.Lerp(c, v1, 1f / 3f);
+        var s2v1 = Vector3.Lerp(c, v1, 2f / 3f);
+        var s1v2 = Vector3.Lerp(c, v2, 1f / 3f);
+        var s2v2 = Vector3.Lerp(c, v2, 2f / 3f);
+        var s1m1 = Vector3.Lerp(c, m1, 1f / 3f);
+        var s2m1 = Vector3.Lerp(c, m1, 2f / 3f);
+        var s1m2 = Vector3.Lerp(c, m2, 1f / 3f);
+        var s2m2 = Vector3.Lerp(c, m2, 2f / 3f);
+
+        CreateTriangle(AddNoise(c, noiseStrengthNormal), s1v1, AddNoise(s1m1, noiseStrengthNormal));
         AddTexture(t, t, t);
-        CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal));
+        CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(s1m1, noiseStrengthNormal), AddNoise(s1m2, noiseStrengthNormal));
         AddTexture(t, t, t);
-        CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), v2);
+        CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(s1m2, noiseStrengthNormal), s1v2);
         AddTexture(t, t, t);
+
+        CreateRectangle(t,t, s1v1, s2v1, AddNoise(s1m1, noiseStrengthNormal), AddNoise(s2m1, noiseStrengthNormal));
+        CreateRectangle(t, t, AddNoise(s1m1, noiseStrengthNormal), AddNoise(s2m1, noiseStrengthNormal), AddNoise(s1m2, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal));
+        CreateRectangle(t, t, AddNoise(s1m2, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal), s1v2, s2v2);
+
+        if(cell.GetNeighbor((HexDirection)index).IsMountain)
+        {
+            CreateTriangle(s2v1, v1, AddNoise(s2m1, noiseStrengthNormal));
+            AddTexture(t, t, t);
+            CreateTriangle(s2v2, AddNoise(s2m2, noiseStrengthNormal), v2);
+            AddTexture(t, t, t);
+        }
+        else
+        {
+            CreateRectangle(t, t, s2v1, v1, AddNoise(s2m1, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal));
+            CreateRectangle(t, t, AddNoise(s2m1, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal));
+            CreateRectangle(t, t, AddNoise(s2m2, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), s2v2, v2);
+        }
 
     }
 
@@ -117,15 +163,68 @@ public class ChunkMesh : MonoBehaviour
                 v2d = AddNoise(v2d, noiseStrengthNormal);
         }
 
-        if(cell.GetEdge(index).GetEdgeType() == EdgeType.Cliff)
+        if(cell.GetEdge(index).GetEdgeType() == EdgeType.Cliff || cell.GetEdge(index).GetEdgeType() == EdgeType.Mountain)
         {
             t = 1;
             t2 = 1;
         }
 
-        CreateRectangle(t, t2, v1, v1d, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal));
-        CreateRectangle(t, t2, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal));
-        CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), v2, v2d);
+        if(cell.IsMountain && neighbourCell.IsMountain)
+        {
+            CreateMountainRectangleConnection(t, v1, v2, v1d, v2d, m1, m2, m1d, m2d, cell, neighbourCell);
+        }
+        else
+        {
+            CreateRectangle(t, t2, v1, v1d, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal));
+            CreateRectangle(t, t2, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal));
+            CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), v2, v2d);
+        }
+    }
+
+    private void CreateMountainRectangleConnection(int t, Vector3 v1, Vector3 v2, Vector3 v1d, Vector3 v2d, Vector3 m1, Vector3 m2, Vector3 m1d, Vector3 m2d, HexCell cell, HexCell neighbourCell)
+    {
+        Vector3 c = new Vector3(
+            cell.transform.localPosition.x,
+            cell.CentreTerrainLevel,
+            cell.transform.localPosition.z
+        );
+
+        Vector3 cn = transform.InverseTransformPoint(neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.transform.localPosition));
+        cn.y = neighbourCell.CentreTerrainLevel;
+
+        var s2m1 = Vector3.Lerp(c, m1, 2f / 3f);
+        var s2m2 = Vector3.Lerp(c, m2, 2f / 3f);
+
+        var s2m1n = Vector3.Lerp(cn, m1d, 2f / 3f);
+        var s2m2n = Vector3.Lerp(cn, m2d, 2f / 3f);
+
+        CreateRectangle(t, t, v1, v1d, AddNoise(s2m1, noiseStrengthNormal), AddNoise(s2m1n, noiseStrengthNormal));
+        CreateRectangle(t, t, AddNoise(s2m2, noiseStrengthNormal), AddNoise(s2m2n, noiseStrengthNormal), v2, v2d);
+
+        var chainCentre = Vector3.Lerp(AddNoise(s2m1, noiseStrengthNormal), AddNoise(s2m2n, noiseStrengthNormal), Random.Range(0.1f, 0.9f));
+        chainCentre.y += Random.Range(0.5f, 2.3f);
+
+        var m1Chain = Vector3.Lerp(AddNoise(s2m1, noiseStrengthNormal), chainCentre, Random.Range(0.1f, 0.9f));
+        var m2Chain = Vector3.Lerp(AddNoise(s2m2, noiseStrengthNormal), chainCentre, Random.Range(0.1f, 0.9f));
+        var m1nChain = Vector3.Lerp(AddNoise(s2m1n, noiseStrengthNormal), chainCentre, Random.Range(0.1f, 0.9f));
+        var m2nChain = Vector3.Lerp(AddNoise(s2m2n, noiseStrengthNormal), chainCentre, Random.Range(0.1f, 0.9f));
+
+        CreateRectangle(t, t, AddNoise(s2m1, noiseStrengthNormal), AddNoise(s2m1n, noiseStrengthNormal), m1Chain, m1nChain);
+        CreateRectangle(t, t, m2Chain, m2nChain, AddNoise(s2m2, noiseStrengthNormal), AddNoise(s2m2n, noiseStrengthNormal));
+        CreateRectangle(t, t, AddNoise(s2m1, noiseStrengthNormal), m1Chain, AddNoise(s2m2, noiseStrengthNormal), m2Chain);
+        CreateRectangle(t, t, m1nChain, AddNoise(s2m1n, noiseStrengthNormal), m2nChain, AddNoise(s2m2n, noiseStrengthNormal));
+
+        chainCentre.y += Random.Range(0.1f, 1.3f);
+
+        CreateTriangle(m1Chain, chainCentre, m2Chain);
+        AddTexture(t, t, t);
+        CreateTriangle(m1nChain, m2nChain, chainCentre);
+        AddTexture(t, t, t);
+        CreateTriangle(chainCentre, m1Chain, m1nChain);
+        AddTexture(t, t, t);
+        CreateTriangle(chainCentre, m2nChain, m2Chain);
+        AddTexture(t, t, t);
+
     }
 
     public void CreateSmoothConnection(Vector3 v1, Vector3 v2, int index, int t, HexCell neighbourCell, Vector3 m1, Vector3 m2)
@@ -184,7 +283,7 @@ public class ChunkMesh : MonoBehaviour
         int t2 = neighbourCell.TextureIndex;
         int t3 = nextNeighbourCell.TextureIndex;
 
-        if (cellEdge == EdgeType.Cliff || cellEdge2 == EdgeType.Cliff)
+        if (cellEdge == EdgeType.Cliff || cellEdge2 == EdgeType.Cliff || cellEdge == EdgeType.Mountain|| cellEdge2 == EdgeType.Mountain)
             t = 1;
 
         if (index == 0) 
@@ -205,7 +304,7 @@ public class ChunkMesh : MonoBehaviour
                 v1d1 = AddNoise(v1d1, noiseStrengthNormal);
             }
 
-            if (edge2 == EdgeType.Cliff || edge3 == EdgeType.Cliff)
+            if (edge2 == EdgeType.Cliff || edge3 == EdgeType.Cliff || edge2 == EdgeType.Mountain || edge3 == EdgeType.Mountain)
                 t2 = 1;
 
             if (edge4 != EdgeType.Smooth && edge5 != EdgeType.Smooth)
@@ -213,7 +312,7 @@ public class ChunkMesh : MonoBehaviour
                 v1d2 = AddNoise(v1d2, noiseStrengthNormal);               
             }
 
-            if (edge4 == EdgeType.Cliff || edge5 == EdgeType.Cliff)
+            if (edge4 == EdgeType.Cliff || edge5 == EdgeType.Cliff || edge4 == EdgeType.Mountain || edge5 == EdgeType.Mountain)
                 t3 = 1;
         }
         else 
@@ -239,10 +338,10 @@ public class ChunkMesh : MonoBehaviour
                 v1d2 = AddNoise(v1d2, noiseStrengthNormal);
             }
 
-            if (edge3 == EdgeType.Cliff || edge4 == EdgeType.Cliff)
+            if (edge3 == EdgeType.Cliff || edge4 == EdgeType.Cliff || edge3 == EdgeType.Mountain || edge4 == EdgeType.Mountain)
                 t2 = 1;
 
-            if (edge5 == EdgeType.Cliff || edge0 == EdgeType.Cliff)
+            if (edge5 == EdgeType.Cliff || edge0 == EdgeType.Cliff || edge5 == EdgeType.Mountain || edge0 == EdgeType.Mountain)
                 t3 = 1;
         }
 

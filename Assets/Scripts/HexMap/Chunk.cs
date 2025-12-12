@@ -74,7 +74,7 @@ public class Chunk : MonoBehaviour
         Vector3 position;
 
         position.x = (index / zCells) * HexData.distanceToEdge * 2f;
-        position.y = cell.TerrainLevel;
+        position.y = cell.CentreTerrainLevel;
         position.z = (index % zCells) * HexData.distanceToCorner * 1.5f;
 
         int rowIndex = (index % zCells) % 2;
@@ -92,17 +92,14 @@ public class Chunk : MonoBehaviour
     {
         Vector3 centre = new Vector3(
             cell.transform.localPosition.x,
-            cell.TerrainLevel,
+            cell.CentreTerrainLevel,
             cell.transform.localPosition.z
         );
-
-        //Color color = cell.CellColor;
 
         int t = cell.TextureIndex;
 
         for (int i = 0; i < 6; i++)
         {
-
             Vector3 v1 = cell.GetEdge(i).GetLocalV1();
             Vector3 v2 = cell.GetEdge(i).GetLocalV2();
 
