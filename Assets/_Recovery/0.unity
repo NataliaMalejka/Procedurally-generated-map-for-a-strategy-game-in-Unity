@@ -463,16 +463,6 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 335c00cd555f79e4eb57dc7df21df4ff, type: 3}
   - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}
   - {fileID: 2800000, guid: 9aeefad93a386fa4ab3b69ffe933de44, type: 3}
-  texturesRough:
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 930ccc8ddfb168443b2605feddce7d06, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: e072fd4ead95db341a17b8887b80c617, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
   snowTexture: {fileID: 2800000, guid: de0dcc3b1c573324c9fd6ff86a5eadda, type: 3}
 --- !u!4 &571916395
 Transform:

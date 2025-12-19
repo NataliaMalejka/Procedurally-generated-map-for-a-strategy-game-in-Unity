@@ -86,7 +86,8 @@ public class MapManager : MonoBehaviour
     [SerializeField] private Material terrainMaterial;
     [SerializeField] private Texture2D[] texturesColor;
     [SerializeField] private Texture2D[] texturesNormal;
-
+    [SerializeField] private Texture2D[] texturesRough;
+    [SerializeField] private Texture2D snowTexture;
 
     private void Awake()
     {
@@ -123,6 +124,16 @@ public class MapManager : MonoBehaviour
         var texArrayNormal = SetTex(w, h, texturesNormal);
         texArrayNormal.Apply();
         terrainMaterial.SetTexture("_TexNormal", texArrayNormal);
+
+        var texArrayRough = SetTex(w, h, texturesRough);
+        texArrayRough.Apply();
+        terrainMaterial.SetTexture("_TexRough", texArrayRough);
+
+        snowTexture.wrapMode = TextureWrapMode.Repeat;
+        snowTexture.filterMode = FilterMode.Bilinear;      
+        terrainMaterial.SetTexture("_TexSnow", snowTexture);
+
+        terrainMaterial.SetFloat("_ColdMax", coldMax);
     }
 
     private Texture2DArray SetTex(int w, int h, Texture2D[] texs)
@@ -323,7 +334,7 @@ public class MapManager : MonoBehaviour
 
         CalculateDistancToOcean(gridCells);
 
-        CalculateHexData(gridCells);
+        CalculateBiomesData(gridCells);
 
         CalculateMoisture(gridCells);
 
@@ -572,7 +583,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    private void CalculateHexData(HexCell[] gridCells)
+    private void CalculateBiomesData(HexCell[] gridCells)
     {
         foreach (var cell in gridCells)
         {

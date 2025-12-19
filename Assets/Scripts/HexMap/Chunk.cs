@@ -110,7 +110,7 @@ public class Chunk : MonoBehaviour
 
             if (neighborCell != null && cell.GetEdge(i).GetEdgeType() == EdgeType.Smooth)
             {
-                chunkMesh.CreateSmoothTriangleWithColor(centre, v1, v2, middle1, middle2, t);
+                chunkMesh.CreateSmoothTriangleWithColor(centre, v1, v2, middle1, middle2, t, cell);
             }
             else
             {
@@ -124,7 +124,7 @@ public class Chunk : MonoBehaviour
                 {
                     if (cell.GetEdge(i).GetEdgeType() == EdgeType.Smooth)
                     {
-                        chunkMesh.CreateSmoothConnection(v1, v2, i, t, neighborCell, middle1, middle2);
+                        chunkMesh.CreateSmoothConnection(v1, v2, i, t, neighborCell, middle1, middle2, cell.Temperature);
                     }
                     else
                         chunkMesh.CreateRectangularCellsConnection(v1, v2, i, t, neighborCell, middle1, middle2, cell);

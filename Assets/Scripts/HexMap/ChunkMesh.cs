@@ -53,11 +53,11 @@ public class ChunkMesh : MonoBehaviour
         else
         { 
             CreateTriangle(AddNoise(c, noiseStrengthNormal), v1, AddNoise(m1, noiseStrengthNormal));
-            AddTexture(t, t, t);
+            AddTexture(t, t, t, cell.Temperature);
             CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal));
-            AddTexture(t, t, t);
+            AddTexture(t, t, t, cell.Temperature);
             CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), v2);
-            AddTexture(t, t, t);       
+            AddTexture(t, t, t, cell.Temperature);       
         }
 
     }
@@ -74,33 +74,33 @@ public class ChunkMesh : MonoBehaviour
         var s2m2 = Vector3.Lerp(c, m2, 2f / 3f);
 
         CreateTriangle(AddNoise(c, noiseStrengthNormal), s1v1, AddNoise(s1m1, noiseStrengthNormal));
-        AddTexture(t, t, t);
+        AddTexture(t, t, t, cell.Temperature);
         CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(s1m1, noiseStrengthNormal), AddNoise(s1m2, noiseStrengthNormal));
-        AddTexture(t, t, t);
+        AddTexture(t, t, t, cell.Temperature);
         CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(s1m2, noiseStrengthNormal), s1v2);
-        AddTexture(t, t, t);
+        AddTexture(t, t, t, cell.Temperature);
 
-        CreateRectangle(t,t, s1v1, s2v1, AddNoise(s1m1, noiseStrengthNormal), AddNoise(s2m1, noiseStrengthNormal));
-        CreateRectangle(t, t, AddNoise(s1m1, noiseStrengthNormal), AddNoise(s2m1, noiseStrengthNormal), AddNoise(s1m2, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal));
-        CreateRectangle(t, t, AddNoise(s1m2, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal), s1v2, s2v2);
+        CreateRectangle(t,t, s1v1, s2v1, AddNoise(s1m1, noiseStrengthNormal), AddNoise(s2m1, noiseStrengthNormal), cell.Temperature);
+        CreateRectangle(t, t, AddNoise(s1m1, noiseStrengthNormal), AddNoise(s2m1, noiseStrengthNormal), AddNoise(s1m2, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal), cell.Temperature);
+        CreateRectangle(t, t, AddNoise(s1m2, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal), s1v2, s2v2, cell.Temperature);
 
         if(cell.GetNeighbor((HexDirection)index).IsMountain)
         {
             CreateTriangle(s2v1, v1, AddNoise(s2m1, noiseStrengthNormal));
-            AddTexture(t, t, t);
+            AddTexture(t, t, t, cell.Temperature);
             CreateTriangle(s2v2, AddNoise(s2m2, noiseStrengthNormal), v2);
-            AddTexture(t, t, t);
+            AddTexture(t, t, t, cell.Temperature);
         }
         else
         {
-            CreateRectangle(t, t, s2v1, v1, AddNoise(s2m1, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal));
-            CreateRectangle(t, t, AddNoise(s2m1, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal));
-            CreateRectangle(t, t, AddNoise(s2m2, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), s2v2, v2);
+            CreateRectangle(t, t, s2v1, v1, AddNoise(s2m1, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), cell.Temperature);
+            CreateRectangle(t, t, AddNoise(s2m1, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), cell.Temperature);
+            CreateRectangle(t, t, AddNoise(s2m2, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), s2v2, v2, cell.Temperature);
         }
 
     }
 
-    public void CreateSmoothTriangleWithColor(Vector3 c, Vector3 v1, Vector3 v2, Vector3 m1, Vector3 m2, int t)
+    public void CreateSmoothTriangleWithColor(Vector3 c, Vector3 v1, Vector3 v2, Vector3 m1, Vector3 m2, int t, HexCell cell)
     {
         c = AddNoise(c, noiseStrengthNormal);
 
@@ -114,7 +114,7 @@ public class ChunkMesh : MonoBehaviour
         for(int i = 0; i < verticles.Count-1; i++)
         {
             CreateTriangle(c, verticles[i], verticles[i + 1]);
-            AddTexture(t, t, t);
+            AddTexture(t, t, t, cell.Temperature);
         }
     }
 
@@ -175,9 +175,9 @@ public class ChunkMesh : MonoBehaviour
         }
         else
         {
-            CreateRectangle(t, t2, v1, v1d, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal));
-            CreateRectangle(t, t2, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal));
-            CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), v2, v2d);
+            CreateRectangle(t, t2, v1, v1d, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), cell.Temperature);
+            CreateRectangle(t, t2, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), cell.Temperature);
+            CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), v2, v2d, cell.Temperature);
         }
     }
 
@@ -198,8 +198,8 @@ public class ChunkMesh : MonoBehaviour
         var s2m1n = Vector3.Lerp(cn, m1d, 2f / 3f);
         var s2m2n = Vector3.Lerp(cn, m2d, 2f / 3f);
 
-        CreateRectangle(t, t, v1, v1d, AddNoise(s2m1, noiseStrengthNormal), AddNoise(s2m1n, noiseStrengthNormal));
-        CreateRectangle(t, t, AddNoise(s2m2, noiseStrengthNormal), AddNoise(s2m2n, noiseStrengthNormal), v2, v2d);
+        CreateRectangle(t, t, v1, v1d, AddNoise(s2m1, noiseStrengthNormal), AddNoise(s2m1n, noiseStrengthNormal), cell.Temperature);
+        CreateRectangle(t, t, AddNoise(s2m2, noiseStrengthNormal), AddNoise(s2m2n, noiseStrengthNormal), v2, v2d, cell.Temperature);
 
         var chainCentre = Vector3.Lerp(AddNoise(s2m1, noiseStrengthNormal), AddNoise(s2m2n, noiseStrengthNormal), Random.Range(0.1f, 0.9f));
         chainCentre.y += Random.Range(0.5f, 2.3f);
@@ -209,25 +209,25 @@ public class ChunkMesh : MonoBehaviour
         var m1nChain = Vector3.Lerp(AddNoise(s2m1n, noiseStrengthNormal), chainCentre, Random.Range(0.1f, 0.9f));
         var m2nChain = Vector3.Lerp(AddNoise(s2m2n, noiseStrengthNormal), chainCentre, Random.Range(0.1f, 0.9f));
 
-        CreateRectangle(t, t, AddNoise(s2m1, noiseStrengthNormal), AddNoise(s2m1n, noiseStrengthNormal), m1Chain, m1nChain);
-        CreateRectangle(t, t, m2Chain, m2nChain, AddNoise(s2m2, noiseStrengthNormal), AddNoise(s2m2n, noiseStrengthNormal));
-        CreateRectangle(t, t, AddNoise(s2m1, noiseStrengthNormal), m1Chain, AddNoise(s2m2, noiseStrengthNormal), m2Chain);
-        CreateRectangle(t, t, m1nChain, AddNoise(s2m1n, noiseStrengthNormal), m2nChain, AddNoise(s2m2n, noiseStrengthNormal));
+        CreateRectangle(t, t, AddNoise(s2m1, noiseStrengthNormal), AddNoise(s2m1n, noiseStrengthNormal), m1Chain, m1nChain, cell.Temperature);
+        CreateRectangle(t, t, m2Chain, m2nChain, AddNoise(s2m2, noiseStrengthNormal), AddNoise(s2m2n, noiseStrengthNormal), cell.Temperature);
+        CreateRectangle(t, t, AddNoise(s2m1, noiseStrengthNormal), m1Chain, AddNoise(s2m2, noiseStrengthNormal), m2Chain, cell.Temperature);
+        CreateRectangle(t, t, m1nChain, AddNoise(s2m1n, noiseStrengthNormal), m2nChain, AddNoise(s2m2n, noiseStrengthNormal), cell.Temperature);
 
         chainCentre.y += Random.Range(0.1f, 1.3f);
 
         CreateTriangle(m1Chain, chainCentre, m2Chain);
-        AddTexture(t, t, t);
+        AddTexture(t, t, t, cell.Temperature);
         CreateTriangle(m1nChain, m2nChain, chainCentre);
-        AddTexture(t, t, t);
+        AddTexture(t, t, t, cell.Temperature);
         CreateTriangle(chainCentre, m1Chain, m1nChain);
-        AddTexture(t, t, t);
+        AddTexture(t, t, t, cell.Temperature);
         CreateTriangle(chainCentre, m2nChain, m2Chain);
-        AddTexture(t, t, t);
+        AddTexture(t, t, t, cell.Temperature);
 
     }
 
-    public void CreateSmoothConnection(Vector3 v1, Vector3 v2, int index, int t, HexCell neighbourCell, Vector3 m1, Vector3 m2)
+    public void CreateSmoothConnection(Vector3 v1, Vector3 v2, int index, int t, HexCell neighbourCell, Vector3 m1, Vector3 m2, float temp)
     {
         Vector3 v1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV2());
         Vector3 v2d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV1());
@@ -254,17 +254,17 @@ public class ChunkMesh : MonoBehaviour
 
         for (int i = 0; i < verticles.Count - 1; i++)
         {
-            CreateRectangle(t, neighbourCell.TextureIndex, verticles[i], verticlesD[i], verticles[i + 1], verticlesD[i + 1]);
+            CreateRectangle(t, neighbourCell.TextureIndex, verticles[i], verticlesD[i], verticles[i + 1], verticlesD[i + 1], temp);
         }
     }
 
-    private void CreateRectangle(int t, int neighbourT, Vector3 v1, Vector3 v1d, Vector3 v2, Vector3 v2d)
+    private void CreateRectangle(int t, int neighbourT, Vector3 v1, Vector3 v1d, Vector3 v2, Vector3 v2d, float temp)
     {
         CreateTriangle(v1, v1d, v2);
-        AddTexture(t, neighbourT, t);
+        AddTexture(t, neighbourT, t, temp);
 
         CreateTriangle(v1d, v2d, v2);
-        AddTexture(neighbourT, neighbourT, t);
+        AddTexture(neighbourT, neighbourT, t, temp);
     }
 
     public void CreateTriangleCellsConnection(Vector3 v1, int index, int t, HexCell cell ,HexCell neighbourCell, HexCell nextNeighbourCell)
@@ -346,7 +346,7 @@ public class ChunkMesh : MonoBehaviour
         }
 
         CreateTriangle((v1), (v1d1), (v1d2));
-        AddTexture(t, t2, t3);
+        AddTexture(t, t2, t3, cell.Temperature);
     }
 
     List<Vector3> ChaikinSmooth(List<Vector3> verticles)
@@ -377,15 +377,15 @@ public class ChunkMesh : MonoBehaviour
         return verticles;
     }
 
-    private void AddTexture(int t1, int t2, int t3)
+    private void AddTexture(int t1, int t2, int t3, float temp)
     {
-        colors.Add(new Color(1f, 0f, 0f, 0f));
+        colors.Add(new Color(1f, 0f, 0f, temp));
         uv3.Add(new Vector4(t1, t2, t3, 0f));
 
-        colors.Add(new Color(0f, 1f, 0f, 0f));
+        colors.Add(new Color(0f, 1f, 0f, temp));
         uv3.Add(new Vector4(t1, t2, t3, 0f));
 
-        colors.Add(new Color(0f, 0f, 1f, 0f));
+        colors.Add(new Color(0f, 0f, 1f, temp));
         uv3.Add(new Vector4(t1, t2, t3, 0f));
     }
 
