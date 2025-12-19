@@ -159,9 +159,6 @@ public class HexCell : MonoBehaviour
         if(level < 0)
             level = 0;
 
-        if(level > 7)
-            IsMountain = true;
-
         terrainLevelIndex = level;
         terrainLevel = terrainLevelIndex * HexData.levelStepHeight;
         centreTerrainlevel = terrainLevel;

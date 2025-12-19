@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -592,13 +593,16 @@ public class MapManager : MonoBehaviour
                 SetTerrainLevel(cell);
                 SetTemperature(cell);
 
-                if(cell.IsMountain)
+                if (cell.IsMountain)
                 {
                     CreateMountain(cell);
                 }
             }
             else
+            {
+                cell.Temperature = 0.5f;
                 SetArctic(cell, gridCells);
+            }
 
         }
     }
@@ -625,7 +629,9 @@ public class MapManager : MonoBehaviour
         }
 
         int mountainsNoise = SetMountains(cell);
-        terrainLevel += mountainsNoise;
+
+        if(mountainsNoise > 0)
+            cell.IsMountain = true;
 
         cell.SetTerrainLevel(terrainLevel);
     }
@@ -656,9 +662,9 @@ public class MapManager : MonoBehaviour
     {
         int baseMountainLevel = 3;
 
-        for (int j = 0; j < 6; j++)
+        for (int i = 0; i < 6; i++) 
         {
-            HexCell neighbourCell = cell.GetNeighbor((HexDirection)j);
+            HexCell neighbourCell = cell.GetNeighbor((HexDirection)i);
 
             if (neighbourCell != null)
             {

@@ -124,7 +124,7 @@ public class Chunk : MonoBehaviour
                 {
                     if (cell.GetEdge(i).GetEdgeType() == EdgeType.Smooth)
                     {
-                        chunkMesh.CreateSmoothConnection(v1, v2, i, t, neighborCell, middle1, middle2, cell.Temperature);
+                        chunkMesh.CreateSmoothConnection(v1, v2, i, t, cell, neighborCell, middle1, middle2);
                     }
                     else
                         chunkMesh.CreateRectangularCellsConnection(v1, v2, i, t, neighborCell, middle1, middle2, cell);

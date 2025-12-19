@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.Rendering;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -169,15 +170,29 @@ public class ChunkMesh : MonoBehaviour
             t2 = 1;
         }
 
-        if(cell.IsMountain && neighbourCell.IsMountain)
+        var temp = cell.Temperature;
+
+        if(cell.TerrainLevel > neighbourCell.TerrainLevel)
+            temp = cell.Temperature;
+
+        else if(cell.TerrainLevel < neighbourCell.TerrainLevel)
+            temp = neighbourCell.Temperature;
+
+        else if (cell.TerrainLevel == neighbourCell.TerrainLevel)
+        {
+            if(neighbourCell.Temperature < temp)
+                temp = neighbourCell.Temperature;
+        }
+
+        if (cell.IsMountain && neighbourCell.IsMountain)
         {
             CreateMountainRectangleConnection(t, v1, v2, v1d, v2d, m1, m2, m1d, m2d, cell, neighbourCell);
         }
         else
         {
-            CreateRectangle(t, t2, v1, v1d, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), cell.Temperature);
-            CreateRectangle(t, t2, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), cell.Temperature);
-            CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), v2, v2d, cell.Temperature);
+            CreateRectangle(t, t2, v1, v1d, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), temp);
+            CreateRectangle(t, t2, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), temp);
+            CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), v2, v2d, temp);
         }
     }
 
@@ -227,7 +242,7 @@ public class ChunkMesh : MonoBehaviour
 
     }
 
-    public void CreateSmoothConnection(Vector3 v1, Vector3 v2, int index, int t, HexCell neighbourCell, Vector3 m1, Vector3 m2, float temp)
+    public void CreateSmoothConnection(Vector3 v1, Vector3 v2, int index, int t, HexCell cell, HexCell neighbourCell, Vector3 m1, Vector3 m2)
     {
         Vector3 v1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV2());
         Vector3 v2d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV1());
@@ -251,6 +266,20 @@ public class ChunkMesh : MonoBehaviour
 
         verticles = ChaikinSmooth(verticles);
         verticlesD = ChaikinSmooth(verticlesD);
+
+        var temp = cell.Temperature;
+
+        if (cell.TerrainLevel > neighbourCell.TerrainLevel)
+            temp = cell.Temperature;
+
+        else if (cell.TerrainLevel < neighbourCell.TerrainLevel)
+            temp = neighbourCell.Temperature;
+
+        else if (cell.TerrainLevel == neighbourCell.TerrainLevel)
+        {
+            if (neighbourCell.Temperature < temp)
+                temp = neighbourCell.Temperature;
+        }
 
         for (int i = 0; i < verticles.Count - 1; i++)
         {
@@ -345,8 +374,33 @@ public class ChunkMesh : MonoBehaviour
                 t3 = 1;
         }
 
+        var temp = cell.Temperature;
+        var highestTerrain = cell.TerrainLevel;
+
+        if (neighbourCell.TerrainLevel > highestTerrain)
+        {
+            highestTerrain = neighbourCell.TerrainLevel;
+            temp = neighbourCell.Temperature;
+        }
+        else if (neighbourCell.TerrainLevel == highestTerrain &&
+                 neighbourCell.Temperature < temp)
+        {
+            temp = neighbourCell.Temperature;
+        }
+
+        if (nextNeighbourCell.TerrainLevel > highestTerrain)
+        {
+            highestTerrain = nextNeighbourCell.TerrainLevel;
+            temp = nextNeighbourCell.Temperature;
+        }
+        else if (nextNeighbourCell.TerrainLevel == highestTerrain &&
+                 nextNeighbourCell.Temperature < temp)
+        {
+            temp = nextNeighbourCell.Temperature;
+        }
+
         CreateTriangle((v1), (v1d1), (v1d2));
-        AddTexture(t, t2, t3, cell.Temperature);
+        AddTexture(t, t2, t3, temp);
     }
 
     List<Vector3> ChaikinSmooth(List<Vector3> verticles)
