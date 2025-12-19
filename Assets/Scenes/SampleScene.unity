@@ -441,6 +441,8 @@ MonoBehaviour:
   rainDistance: 3
   dryMax: 0.35
   moderateMoistureMax: 0.75
+  riverSuorceMinLevel: 3
+  riverSuorceMinMoisture: 0.2
   hexMeshNoise: {fileID: 2800000, guid: 5004222ab684ce641adfe8d397c274bf, type: 3}
   terrainMaterial: {fileID: 2100000, guid: e9a63e44986c76b4da3629872269fd57, type: 2}
   texturesColor:
@@ -453,6 +455,7 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 313ea507e43b3cb429f426750066130e, type: 3}
   - {fileID: 2800000, guid: 68d11a855d017ab4a8c9babf9b26a677, type: 3}
   - {fileID: 2800000, guid: 33eb930ca3a3eb74481981a0f4c443ef, type: 3}
+  - {fileID: 2800000, guid: 7a73c9e4720d34945b721dac6cdc6ff0, type: 3}
   texturesNormal:
   - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}
   - {fileID: 2800000, guid: 7a73c9e4720d34945b721dac6cdc6ff0, type: 3}
@@ -463,6 +466,7 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 335c00cd555f79e4eb57dc7df21df4ff, type: 3}
   - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}
   - {fileID: 2800000, guid: 9aeefad93a386fa4ab3b69ffe933de44, type: 3}
+  - {fileID: 2800000, guid: 9aeefad93a386fa4ab3b69ffe933de44, type: 3}
   texturesRough:
   - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
   - {fileID: 2800000, guid: 930ccc8ddfb168443b2605feddce7d06, type: 3}
@@ -471,6 +475,7 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
   - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
   - {fileID: 2800000, guid: e072fd4ead95db341a17b8887b80c617, type: 3}
+  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
   - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
   - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
   snowTexture: {fileID: 2800000, guid: de0dcc3b1c573324c9fd6ff86a5eadda, type: 3}

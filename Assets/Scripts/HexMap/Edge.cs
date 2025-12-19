@@ -25,6 +25,20 @@ public class Edge : MonoBehaviour
     private Vector3 centre;
     private Vector3 chunkPos;
 
+    private bool inRiver = false;
+    public bool InRiver
+    {
+        get { return inRiver; }
+        set { inRiver = value; }
+    }
+
+    private bool outRiver = false;
+    public bool OutRiver
+    {
+        get { return outRiver; }
+        set { outRiver = value; }
+    }
+
     public void SetData(EdgeType edgeType, HexDirection hexDirection, int terrainLevel, Vector3 hexPos, Vector3 chunkPos, HexCell cell)
     {
         Vector3 centre = new Vector3(

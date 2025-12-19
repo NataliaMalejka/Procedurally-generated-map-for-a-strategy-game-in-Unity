@@ -11,7 +11,8 @@ public enum Biome
     continentalWet,
     RainForest,
     Savanna,
-    Desert
+    Desert,
+    River
 }
 
 public class HexCell : MonoBehaviour
@@ -115,6 +116,13 @@ public class HexCell : MonoBehaviour
     {
         get { return moisture; }
         set { moisture = value; }
+    }
+
+    private bool isRiver = false;
+    public bool IsRiver
+    {
+        get { return isRiver; }
+        set { isRiver = value; }
     }
 
     public void AddEdge(EdgeType edgeType, HexDirection direction)

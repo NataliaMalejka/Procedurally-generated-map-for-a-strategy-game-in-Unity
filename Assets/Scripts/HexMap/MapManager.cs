@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -42,6 +41,8 @@ public class MapManager : MonoBehaviour
 
     private HexDirection windDirection;
 
+    private List<HexCell> potencionalRiverSources = new List<HexCell>();
+
     [Header("Continent Shape")]
     [SerializeField] private float perlinScale = 0.15f;
     [SerializeField] private float distWeight = 0.3f;
@@ -79,6 +80,12 @@ public class MapManager : MonoBehaviour
     [SerializeField] private int rainDistance = 3;
     [SerializeField] private float dryMax = 0.4f;
     [SerializeField] private float moderateMoistureMax = 0.7f;
+
+    [Header("Rivers")]
+    [SerializeField] private float riverSuorceMinLevel = 4;
+    [SerializeField] private float riverSuorceMinMoisture = 0.4f;
+    [SerializeField] private int riversPerContinentMin = 3;
+    [SerializeField] private int riversPerContinentMax = 6;
 
     [Header("Hex Noise")]
     [SerializeField] private Texture2D hexMeshNoise;
@@ -340,6 +347,8 @@ public class MapManager : MonoBehaviour
         CalculateMoisture(gridCells);
 
         SetBiomes(gridCells);
+
+        CreateRivers();
 
         DetectEdgeType(gridCells);
     }
@@ -603,7 +612,6 @@ public class MapManager : MonoBehaviour
                 cell.Temperature = 0.5f;
                 SetArctic(cell, gridCells);
             }
-
         }
     }
 
@@ -628,9 +636,7 @@ public class MapManager : MonoBehaviour
             terrainLevel += hillHeight;
         }
 
-        int mountainsNoise = SetMountains(cell);
-
-        if(mountainsNoise > 0)
+        if(SetMountains(cell) > 0)
             cell.IsMountain = true;
 
         cell.SetTerrainLevel(terrainLevel);
@@ -941,6 +947,9 @@ public class MapManager : MonoBehaviour
                 cell.SetBiome(Biome.Mountain);
                 continue;
             }
+
+            AddPotencionalRiverSource(cell);
+
             if (cell.Temperature < coldMax)
             {
                 cell.SetBiome(Biome.Tundra);
@@ -979,6 +988,104 @@ public class MapManager : MonoBehaviour
                 continue;
             }
         }
+    }
+
+    private void AddPotencionalRiverSource(HexCell cell)
+    {
+        if (cell.TerrainLevelIndex >= riverSuorceMinLevel && cell.Moisture >= riverSuorceMinMoisture && cell.Temperature > coldMax && cell.Temperature < moderateTempMax)
+        {
+            float heightWeight = Normalize(cell.TerrainLevelIndex, riverSuorceMinLevel, 6f);
+            float moistureWeight = Normalize(cell.Moisture, riverSuorceMinMoisture, 1f);
+
+            float finalWeight = (heightWeight * 0.6f) + (moistureWeight * 0.4f);
+
+            int repetitions = 0;
+
+            if (finalWeight > 0.75f)
+                repetitions = 3; 
+            else if (finalWeight > 0.5f)
+                repetitions = 2; 
+            else if (finalWeight > 0.25f)
+                repetitions = 1;
+
+            for (int i = 0; i < repetitions; i++)
+            {
+                potencionalRiverSources.Add(cell);
+            }
+        }
+    }
+
+    private float Normalize(float value, float min, float max)
+    {
+        return Mathf.Clamp01((value - min) / (max - min));
+    }
+
+    private void CreateRivers()
+    {
+        var sourcesByContinent = GroupSourcesByContinent();
+
+        foreach (var group in sourcesByContinent)
+        {
+            List<HexCell> sources = group.Value;
+
+            if (sources.Count == 0)
+                continue;
+
+            int riverCount = UnityEngine.Random.Range(riversPerContinentMin, Mathf.Min(riversPerContinentMax, sources.Count));
+
+            int safety = 0;
+            int maxAttempts = sources.Count * 2;
+
+            while (riverCount > 0 && safety < maxAttempts)
+            {
+                safety++;
+
+                HexCell source = sources[UnityEngine.Random.Range(0, sources.Count)];
+
+                if (source.IsRiver)
+                    continue;
+
+                if (HasRiverSourceNeighbour(source))
+                    continue;
+
+                source.SetBiome(Biome.River);
+                source.IsRiver = true;
+                riverCount--;
+            }
+        }
+    }
+
+    private Dictionary<int, List<HexCell>> GroupSourcesByContinent()
+    {
+        Dictionary<int, List<HexCell>> grouped = new Dictionary<int, List<HexCell>>();
+
+        foreach (HexCell cell in potencionalRiverSources)
+        {
+            int continent = cell.ContinentIndex;
+
+            if (!grouped.ContainsKey(continent))
+                grouped[continent] = new List<HexCell>();
+
+            grouped[continent].Add(cell);
+        }
+
+        return grouped;
+    }
+
+    private bool HasRiverSourceNeighbour(HexCell cell)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            HexCell neighbour = cell.GetNeighbor((HexDirection)i);
+
+            if (neighbour == null)
+                continue;
+
+            if (neighbour.IsRiver)
+                return true;
+        }
+
+        return false;
     }
 
     private void DetectEdgeType(HexCell[] gridCells)
