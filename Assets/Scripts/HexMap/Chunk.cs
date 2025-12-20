@@ -117,9 +117,31 @@ public class Chunk : MonoBehaviour
                 chunkMesh.CreateTriangleWithColor(centre, v1, v2, t, cell, i);
             }
 
-            if (i < 3)
+            if (cell.GetEdge(i).InRiver)
             {
-                
+                chunkMesh.CreateHexRiver(middle1, middle2, cell, cell.GetEdge(i).GetEdgeType() == EdgeType.Smooth, centre);
+            }
+            else if (cell.GetEdge(i).OutRiver)
+            {
+                bool hasInRiver = false;
+
+                for (int j = 0; j < 6; j++)
+                {
+                    if (cell.GetEdge(j).InRiver)
+                    {
+                        hasInRiver = true;
+                        break;
+                    }
+                }
+
+                if (!hasInRiver)
+                {
+                    chunkMesh.CreateRiverSourceOrEnd(middle1, middle2, cell, cell.GetEdge(i).GetEdgeType() == EdgeType.Smooth, centre);
+                }
+            }
+
+            if (i < 3)
+            {               
                 if (neighborCell!= null)
                 {
                     if (cell.GetEdge(i).GetEdgeType() == EdgeType.Smooth)

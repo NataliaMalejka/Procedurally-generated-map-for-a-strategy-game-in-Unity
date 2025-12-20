@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static Unity.VisualScripting.Member;
 
 enum MapSize
 {
@@ -84,8 +85,8 @@ public class MapManager : MonoBehaviour
     [Header("Rivers")]
     [SerializeField] private float riverSuorceMinLevel = 4;
     [SerializeField] private float riverSuorceMinMoisture = 0.4f;
-    [SerializeField] private int riversPerContinentMin = 3;
-    [SerializeField] private int riversPerContinentMax = 6;
+    [SerializeField] private int riversPerContinentMin = 4;
+    [SerializeField] private int riversPerContinentMax = 7;
 
     [Header("Hex Noise")]
     [SerializeField] private Texture2D hexMeshNoise;
@@ -348,9 +349,9 @@ public class MapManager : MonoBehaviour
 
         SetBiomes(gridCells);
 
-        CreateRivers();
-
         DetectEdgeType(gridCells);
+
+        CreateRivers();
     }
 
     public void GenerateContinents(HexCell[] gridCells)
@@ -1020,74 +1021,6 @@ public class MapManager : MonoBehaviour
         return Mathf.Clamp01((value - min) / (max - min));
     }
 
-    private void CreateRivers()
-    {
-        var sourcesByContinent = GroupSourcesByContinent();
-
-        foreach (var group in sourcesByContinent)
-        {
-            List<HexCell> sources = group.Value;
-
-            if (sources.Count == 0)
-                continue;
-
-            int riverCount = UnityEngine.Random.Range(riversPerContinentMin, Mathf.Min(riversPerContinentMax, sources.Count));
-
-            int safety = 0;
-            int maxAttempts = sources.Count * 2;
-
-            while (riverCount > 0 && safety < maxAttempts)
-            {
-                safety++;
-
-                HexCell source = sources[UnityEngine.Random.Range(0, sources.Count)];
-
-                if (source.IsRiver)
-                    continue;
-
-                if (HasRiverSourceNeighbour(source))
-                    continue;
-
-                source.SetBiome(Biome.River);
-                source.IsRiver = true;
-                riverCount--;
-            }
-        }
-    }
-
-    private Dictionary<int, List<HexCell>> GroupSourcesByContinent()
-    {
-        Dictionary<int, List<HexCell>> grouped = new Dictionary<int, List<HexCell>>();
-
-        foreach (HexCell cell in potencionalRiverSources)
-        {
-            int continent = cell.ContinentIndex;
-
-            if (!grouped.ContainsKey(continent))
-                grouped[continent] = new List<HexCell>();
-
-            grouped[continent].Add(cell);
-        }
-
-        return grouped;
-    }
-
-    private bool HasRiverSourceNeighbour(HexCell cell)
-    {
-        for (int i = 0; i < 6; i++)
-        {
-            HexCell neighbour = cell.GetNeighbor((HexDirection)i);
-
-            if (neighbour == null)
-                continue;
-
-            if (neighbour.IsRiver)
-                return true;
-        }
-
-        return false;
-    }
-
     private void DetectEdgeType(HexCell[] gridCells)
     {
         List<Edge> allSmoothEdges = new List<Edge>();
@@ -1423,5 +1356,203 @@ public class MapManager : MonoBehaviour
             edges[i].SetGlobalV1(newPts[p++]);
             edges[i].SetGlobalV2(newPts[p++]);
         }
+    }
+
+    private void CreateRivers()
+    {
+        var sourcesByContinent = GroupSourcesByContinent();
+
+        foreach (var group in sourcesByContinent)
+        {
+            List<HexCell> sources = group.Value;
+
+            if (sources.Count == 0)
+                continue;
+
+            int riverCount = UnityEngine.Random.Range(riversPerContinentMin, Mathf.Min(riversPerContinentMax, sources.Count));
+
+            int safety = 0;
+            int maxAttempts = sources.Count * 2;
+
+            while (riverCount > 0 && safety < maxAttempts)
+            {
+                safety++;
+
+                HexCell source = sources[UnityEngine.Random.Range(0, sources.Count)];
+
+                if (source.IsRiver)
+                    continue;
+
+                if (HasRiverSourceNeighbour(source))
+                    continue;
+
+                if (CreateRiverFromSource(source))
+                    riverCount--;
+            }
+        }
+    }
+
+    private bool CreateRiverFromSource(HexCell startCell)
+    {
+        List<HexCell> riverPath = new List<HexCell>();
+        riverPath.Add(startCell);
+
+        HexCell cell = startCell;
+
+        bool endedInTrap = false;
+
+        int safety = 0;
+        int maxLength = 200;
+
+        while (safety < maxLength)
+        {
+            safety++;
+
+            if (cell.isOcean)
+            {
+                break;
+            }
+
+            HexCell neighbour = GetNextRiverCell(cell);
+
+            if (neighbour == null)
+            {
+                endedInTrap = true;
+                break;
+            }
+
+            riverPath.Add(neighbour);
+
+            if (neighbour.IsRiver)
+            {
+                break;
+            }
+
+            cell = neighbour;
+        }
+
+        if (riverPath.Count < 5)
+            return false;
+
+        for (int i = 0; i < riverPath.Count - 1; i++)
+        {
+            HexCell from = riverPath[i];
+            HexCell to = riverPath[i + 1];
+
+            if (endedInTrap && i == riverPath.Count - 2)
+            {
+                int dir = GetDirectionIndex(from, to);
+                if (dir != -1)
+                {
+                    Edge inEdge = to.GetEdge((dir + 3) % 6);
+                    inEdge.InRiver = true;
+                }
+            }
+            else
+            {
+                SetRiverEdge(from, to);
+            }
+
+            from.IsRiver = true;
+        }
+
+        riverPath[riverPath.Count - 1].IsRiver = true;
+
+        return true;
+    }
+
+    private HexCell GetNextRiverCell(HexCell cell)
+    {
+        List<HexCell> candidates = new List<HexCell>();
+
+        for (int i = 0; i < 6; i++)
+        {
+            HexCell neighbour = cell.GetNeighbor((HexDirection)i);
+            if (neighbour == null)
+                continue;
+            if (neighbour.TerrainLevelIndex > cell.TerrainLevelIndex)
+                continue;
+            if (neighbour.IsMountain)
+                continue;
+
+            candidates.Add(neighbour);
+        }
+
+        if (candidates.Count == 0)
+            return null;
+
+        candidates.Sort((a, b) =>
+        {
+            int oceanCompare = a.DistanceFromOcean.CompareTo(b.DistanceFromOcean);
+            if (oceanCompare != 0)
+                return oceanCompare;
+
+            return a.TerrainLevelIndex.CompareTo(b.TerrainLevelIndex);
+        });
+
+        int bestCount = Mathf.Min(2, candidates.Count);
+        return candidates[UnityEngine.Random.Range(0, bestCount)];
+    }
+
+    private Dictionary<int, List<HexCell>> GroupSourcesByContinent()
+    {
+        Dictionary<int, List<HexCell>> grouped = new Dictionary<int, List<HexCell>>();
+
+        foreach (HexCell cell in potencionalRiverSources)
+        {
+            int continent = cell.ContinentIndex;
+
+            if (!grouped.ContainsKey(continent))
+                grouped[continent] = new List<HexCell>();
+
+            grouped[continent].Add(cell);
+        }
+
+        return grouped;
+    }
+
+    private bool HasRiverSourceNeighbour(HexCell cell)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            HexCell neighbour = cell.GetNeighbor((HexDirection)i);
+
+            if (neighbour == null)
+                continue;
+
+            if (neighbour.IsRiver)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void SetRiverEdge(HexCell from, HexCell to)
+    {
+        int dir = GetDirectionIndex(from, to);
+        if (dir == -1)
+            return;
+
+        Edge outEdge = from.GetEdge(dir);
+        Edge inEdge = to.GetEdge((dir + 3) % 6);
+
+        if (outEdge.InRiver || outEdge.OutRiver)
+            return;
+
+        if (inEdge.InRiver || inEdge.OutRiver)
+            return;
+
+        outEdge.OutRiver = true;
+        inEdge.InRiver = true;
+    }
+
+    private int GetDirectionIndex(HexCell from, HexCell to)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            if (from.GetNeighbor((HexDirection)i) == to)
+                return i;
+        }
+        return -1;
     }
 }

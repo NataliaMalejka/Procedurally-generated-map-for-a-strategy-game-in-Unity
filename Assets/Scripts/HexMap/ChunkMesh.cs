@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor.Rendering;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -60,7 +58,6 @@ public class ChunkMesh : MonoBehaviour
             CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), v2);
             AddTexture(t, t, t, cell.Temperature);       
         }
-
     }
 
     private void CreateMountainSlope(Vector3 c, Vector3 v1, Vector3 v2, int t, Vector3 m1, Vector3 m2, int index, HexCell cell)
@@ -117,11 +114,90 @@ public class ChunkMesh : MonoBehaviour
             CreateTriangle(c, verticles[i], verticles[i + 1]);
             AddTexture(t, t, t, cell.Temperature);
         }
+
+    }
+
+    public void CreateRiverSourceOrEnd(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c)
+    {
+        if(!isSmooth)
+        {
+            m1i = AddNoise(m1i, noiseStrengthNormal);
+            m2i = AddNoise(m2i, noiseStrengthNormal);
+        }
+        else
+        {
+            m1i = AddNoise(m1i, noiseStrengthSmooth);
+            m2i = AddNoise(m2i, noiseStrengthSmooth);
+        }
+
+        c = AddNoise(c, noiseStrengthNormal);
+
+        m1i.y += 0.1f;
+        m2i.y += 0.1f;
+        c.y += 0.1f;
+
+        CreateTriangle(c, m1i, m2i);
+        AddTexture(9, 9, 9, cell.Temperature);
+    }
+
+    public void CreateHexRiver(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c)
+    {
+        if(!isSmooth)
+        {
+            m1i = AddNoise(m1i, noiseStrengthNormal);
+            m2i = AddNoise(m2i, noiseStrengthNormal);
+        }
+        else
+        {
+            m1i = AddNoise(m1i, noiseStrengthSmooth);
+            m2i = AddNoise(m2i, noiseStrengthSmooth);
+        }
+
+        bool isEnd = true;
+
+        for (int i = 0; i < 6; i++)
+        {
+            if (cell.GetEdge(i).OutRiver)
+            {
+                isEnd = false;
+
+                Vector3 m1o = cell.GetEdge(i).GetMiddle1();
+                Vector3 m2o = cell.GetEdge(i).GetMiddle2();
+
+                if (cell.GetEdge(i).GetEdgeType() != EdgeType.Smooth)
+                {
+                    m1o = AddNoise(m1o, noiseStrengthNormal);
+                    m2o = AddNoise(m2o, noiseStrengthNormal);
+                }
+                else
+                {
+                    m1o = AddNoise(m1o, noiseStrengthSmooth);
+                    m2o = AddNoise(m2o, noiseStrengthSmooth);
+                }
+
+                m1i.y += 0.1f;
+                m2i.y += 0.1f;
+                m1o.y += 0.1f;
+                m2o.y += 0.1f;
+
+                CreateRiverRectangle(9, 9, m1i, m2i, m1o, m2o, cell.Temperature);
+            }
+        }
+
+        if(isEnd)
+        {
+            CreateRiverSourceOrEnd(m1i, m2i, cell, isSmooth, c);
+        }
     }
 
     public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
     {
         int index = vertices.Count;
+
+        if (!IsTriangleFacingUp(v1, v2, v3))
+        {
+            (v2, v3) = (v3, v2);
+        }
 
         vertices.Add(v1);
         vertices.Add(v2);
@@ -130,6 +206,12 @@ public class ChunkMesh : MonoBehaviour
         triangles.Add(index);
         triangles.Add(index + 1);
         triangles.Add(index + 2);
+    }
+
+    private bool IsTriangleFacingUp(Vector3 v1, Vector3 v2, Vector3 v3)
+    {
+        Vector3 normal = Vector3.Cross(v2 - v1, v3 - v1);
+        return normal.y > 0f;
     }
 
     public void CreateRectangularCellsConnection(Vector3 v1, Vector3 v2, int index, int t, HexCell neighbourCell, Vector3 m1, Vector3 m2, HexCell cell)
@@ -193,6 +275,16 @@ public class ChunkMesh : MonoBehaviour
             CreateRectangle(t, t2, v1, v1d, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), temp);
             CreateRectangle(t, t2, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), temp);
             CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), v2, v2d, temp);
+        }
+
+        if((cell.GetEdge(index).InRiver && neighbourCell.GetEdge((index + 3) % 6).OutRiver) || (cell.GetEdge(index).OutRiver && neighbourCell.GetEdge((index + 3) % 6).InRiver))
+        {
+            m1.y += 0.1f;
+            m2.y += 0.1f;
+            m1d.y += 0.1f;
+            m2d.y += 0.1f;
+
+            CreateRectangle(9, 9, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), 1);
         }
     }
 
@@ -285,15 +377,34 @@ public class ChunkMesh : MonoBehaviour
         {
             CreateRectangle(t, neighbourCell.TextureIndex, verticles[i], verticlesD[i], verticles[i + 1], verticlesD[i + 1], temp);
         }
+
+        if ((cell.GetEdge(index).InRiver && neighbourCell.GetEdge((index + 3) % 6).OutRiver) || (cell.GetEdge(index).OutRiver && neighbourCell.GetEdge((index + 3) % 6).InRiver))
+        {
+            m1.y += 0.1f;
+            m2.y += 0.1f;
+            m1d.y += 0.1f;
+            m2d.y += 0.1f;
+
+            CreateRectangle(9, 9, AddNoise(m1, noiseStrengthSmooth), AddNoise(m1d, noiseStrengthSmooth), AddNoise(m2, noiseStrengthSmooth), AddNoise(m2d, noiseStrengthSmooth), 1);
+        }
     }
 
     private void CreateRectangle(int t, int neighbourT, Vector3 v1, Vector3 v1d, Vector3 v2, Vector3 v2d, float temp)
+    { 
+        CreateTriangle(v1, v1d, v2); 
+        AddTexture(t, neighbourT, t, temp); 
+
+        CreateTriangle(v1d, v2d, v2); 
+        AddTexture(neighbourT, neighbourT, t, temp); 
+    }
+
+    private void CreateRiverRectangle(int t, int neighbourT, Vector3 v1, Vector3 v1d, Vector3 v2, Vector3 v2d, float temp)
     {
         CreateTriangle(v1, v1d, v2);
-        AddTexture(t, neighbourT, t, temp);
+        AddTexture(t, neighbourT, t, 1);
 
-        CreateTriangle(v1d, v2d, v2);
-        AddTexture(neighbourT, neighbourT, t, temp);
+        CreateTriangle(v2, v2d, v1);
+        AddTexture(t, neighbourT, t, 1);
     }
 
     public void CreateTriangleCellsConnection(Vector3 v1, int index, int t, HexCell cell ,HexCell neighbourCell, HexCell nextNeighbourCell)
