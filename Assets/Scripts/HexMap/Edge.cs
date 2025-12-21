@@ -26,6 +26,9 @@ public class Edge : MonoBehaviour
     private Vector3 centre;
     private Vector3 chunkPos;
 
+    private bool isOceanEdge = false;
+    public bool IsOceanEdge => isOceanEdge;
+
     private bool inRiver = false;
     public bool InRiver
     {
@@ -149,4 +152,10 @@ public class Edge : MonoBehaviour
     {
         return edgeType;
     }
+
+    public void SetOceanEdge(bool value)
+    {
+        isOceanEdge = value;
+    }
+
 }

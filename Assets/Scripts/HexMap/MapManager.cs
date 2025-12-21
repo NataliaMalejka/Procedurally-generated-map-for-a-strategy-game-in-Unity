@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using static Unity.VisualScripting.Member;
 
 enum MapSize
 {
@@ -352,6 +352,8 @@ public class MapManager : MonoBehaviour
         DetectEdgeType(gridCells);
 
         CreateRivers();
+
+        GroupSmoothEdges(gridCells);
     }
 
     public void GenerateContinents(HexCell[] gridCells)
@@ -555,7 +557,7 @@ public class MapManager : MonoBehaviour
             {
                 foreach (var cell in chunk.GetCells())
                 {
-                    if (cell.TerrainLevel == -1 && !cell.isOcean)
+                    if (cell.TerrainLevelIndex == -1 && !cell.isOcean)
                         SetContinentPart(cell, i);
                 }
             }
@@ -1023,52 +1025,79 @@ public class MapManager : MonoBehaviour
 
     private void DetectEdgeType(HexCell[] gridCells)
     {
-        List<Edge> allSmoothEdges = new List<Edge>();
-
         for (int i = 0; i < gridCells.Length; i++)
         {
             HexCell cell = gridCells[i];
 
-            for (int j = 0; j < 6; j++)
+            ChcekNeighbourEdges(cell);
+        }
+    }
+
+    private void ChcekNeighbourEdges(HexCell cell)
+    {
+        for (int j = 0; j < 6; j++)
+        {
+            HexCell neighbourCell = cell.GetNeighbor((HexDirection)j);
+
+            EdgeType type;
+
+            if (neighbourCell == null)
             {
-                HexCell neighbourCell = cell.GetNeighbor((HexDirection)j);
+                type = EdgeType.None;
+            }
+            else
+            {
+                int diff = Mathf.Abs(
+                    cell.TerrainLevelIndex - neighbourCell.TerrainLevelIndex
+                );
 
-                if (neighbourCell != null)
-                {
-                    int terrainLevelDiff = Mathf.Abs(cell.TerrainLevelIndex - neighbourCell.TerrainLevelIndex);
-
-                    if(cell.IsMountain || neighbourCell.IsMountain)
-                    {
-                        cell.AddEdge(EdgeType.Mountain, (HexDirection)j);
-                    }
-                    else if (terrainLevelDiff == 0)
-                    {
-                        cell.AddEdge(EdgeType.Flat, (HexDirection)j);
-                    }
-                    else if (terrainLevelDiff == 1)
-                    {
-                        cell.AddEdge(EdgeType.Smooth, (HexDirection)j);
-                        allSmoothEdges.Add(cell.GetEdge(j));
-                    }
-                    else if (terrainLevelDiff > 1)
-                    {
-                        cell.AddEdge(EdgeType.Cliff, (HexDirection)j);
-                    }
-                }
+                if (cell.IsMountain || neighbourCell.IsMountain)
+                    type = EdgeType.Mountain;
+                else if (diff == 0)
+                    type = EdgeType.Flat;
+                else if (diff == 1)
+                    type = EdgeType.Smooth;
                 else
+                    type = EdgeType.Cliff;
+            }
+
+            cell.UpdateEdge(j, type);
+        }
+    }
+
+    private List<Edge> FindSmoothEdges(HexCell[] gridCells)
+    {
+        List<Edge> smoothEdges = new List<Edge>();
+
+        foreach (HexCell cell in gridCells)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                Edge edge = cell.GetEdge(i);
+
+                if (edge == null)
+                    continue;
+
+                if (edge.GetEdgeType() == EdgeType.Smooth)
                 {
-                    cell.AddEdge(EdgeType.None, (HexDirection)j);
+                    bool oceanEdge = cell.isOcean || (cell.GetNeighbor((HexDirection)i) != null && cell.GetNeighbor((HexDirection)i).isOcean);
+
+                    edge.SetOceanEdge(oceanEdge);
+                    smoothEdges.Add(edge);
                 }
             }
         }
 
-        GroupSmoothEdges(allSmoothEdges);
+        return smoothEdges;
     }
 
-    private void GroupSmoothEdges(List<Edge> allSmoothEdges)
+    private void GroupSmoothEdges(HexCell[] gridCells)
     {
         List<List<Edge>> groupsSmoothEdges = new List<List<Edge>>();
+        List<bool> groupTouchesOcean = new List<bool>();
         HashSet<Edge> used = new HashSet<Edge>();
+
+        var allSmoothEdges = FindSmoothEdges(gridCells);
 
         foreach (var e in allSmoothEdges)
         {
@@ -1076,6 +1105,7 @@ public class MapManager : MonoBehaviour
                 continue;
 
             List<Edge> chain = new List<Edge>();
+            bool touchesOcean = e.IsOceanEdge;
             chain.Add(e);
             used.Add(e);
 
@@ -1091,6 +1121,10 @@ public class MapManager : MonoBehaviour
                     if (SamePoint(end, other.GetFullV1()))
                     {
                         chain.Add(other);
+
+                        if (other.IsOceanEdge)
+                            touchesOcean = true;
+
                         used.Add(other);
                         end = other.GetFullV2();
                         extended = true;
@@ -1099,6 +1133,10 @@ public class MapManager : MonoBehaviour
                     else if (SamePoint(end, other.GetFullV2()))
                     {
                         chain.Add(other);
+
+                        if (other.IsOceanEdge)
+                            touchesOcean = true;
+
                         used.Add(other);
                         end = other.GetFullV1();
                         extended = true;
@@ -1119,6 +1157,10 @@ public class MapManager : MonoBehaviour
                     if (SamePoint(start, other.GetFullV2()))
                     {
                         chain.Insert(0, other);
+
+                        if (other.IsOceanEdge)
+                            touchesOcean = true;
+
                         used.Add(other);
                         start = other.GetFullV1();
                         extended = true;
@@ -1127,6 +1169,10 @@ public class MapManager : MonoBehaviour
                     else if (SamePoint(start, other.GetFullV1()))
                     {
                         chain.Insert(0, other);
+
+                        if (other.IsOceanEdge)
+                            touchesOcean = true;
+
                         used.Add(other);
                         start = other.GetFullV2();
                         extended = true;
@@ -1136,9 +1182,10 @@ public class MapManager : MonoBehaviour
             }
 
             groupsSmoothEdges.Add(chain);
+            groupTouchesOcean.Add(touchesOcean);
         }
 
-        SmoothEdges(groupsSmoothEdges);
+        SmoothEdges(groupsSmoothEdges, groupTouchesOcean);
     }
 
     private bool SamePoint(Vector3 a, Vector3 b)
@@ -1146,7 +1193,7 @@ public class MapManager : MonoBehaviour
         return (a - b).sqrMagnitude < 0.0001f;
     }
 
-    private void SmoothEdges(List<List<Edge>> groupsSmoothEdges)
+    private void SmoothEdges(List<List<Edge>> groupsSmoothEdges, List<bool> groupTouchesOcean)
     {
         for (int i = 0; i < groupsSmoothEdges.Count; i++)
         {
@@ -1159,9 +1206,11 @@ public class MapManager : MonoBehaviour
             bool isLoop = IsLoop(verticles);
 
             List<int> map;
+
             List<Vector3> unique = RemoveDuplicates(verticles, out map);
 
-            List<Vector3> smoothUnique = ChaikinSmoothSameCount(unique, isLoop);
+            int iterations = groupTouchesOcean[i] ? 3 : 1;   
+            List<Vector3> smoothUnique = ChaikinSmoothSameCount(unique, isLoop, iterations);
 
             List<Vector3> result = ReapplyDuplicates(smoothUnique, map);
 
@@ -1233,7 +1282,7 @@ public class MapManager : MonoBehaviour
         return unique;
     }
 
-    private List<Vector3> ChaikinSmoothSameCount(List<Vector3> pts, bool loop, int iterations = 3)
+    private List<Vector3> ChaikinSmoothSameCount(List<Vector3> pts, bool loop, int iterations)
     {
         if (pts.Count < 3)
             return new List<Vector3>(pts);
@@ -1405,13 +1454,17 @@ public class MapManager : MonoBehaviour
         int maxLength = 200;
 
         bool mergedIntoRiver = false;
+        bool endedInOcean = false;
 
         while (safety < maxLength)
         {
             safety++;
 
             if (cell.isOcean)
+            {
+                endedInOcean = true;
                 break;
+            }
 
             HexCell neighbour = GetNextRiverCell(cell, visited);
 
@@ -1463,9 +1516,16 @@ public class MapManager : MonoBehaviour
             river.AddCell(from);
         }
 
-        riverPath[riverPath.Count - 1].IsRiver = true;
-        riverPath[riverPath.Count - 1].AddRiver(river);
-        river.AddCell(riverPath[riverPath.Count - 1]);
+        HexCell lastCell = riverPath[riverPath.Count-1];
+
+        lastCell.IsRiver = true;
+        lastCell.AddRiver(river);
+        river.AddCell(lastCell);
+
+        if (!endedInOcean && !mergedIntoRiver)
+        {
+            CreateLakes(lastCell);
+        }
 
         return true;
     }
@@ -1586,6 +1646,47 @@ public class MapManager : MonoBehaviour
             {
                 fromOut.OutRiver = true;
                 break;
+            }
+        }
+    }
+
+    private void CreateLakes(HexCell lake)
+    {
+        int lakeTerrainIndex = lake.TerrainLevelIndex;
+
+        bool hasOutflow = false;
+
+        for (int i = 0; i < 6; i++)
+        {
+            HexCell neighbour = lake.GetNeighbor((HexDirection)i);
+
+            if (neighbour == null)
+                continue;
+
+            if (neighbour.TerrainLevelIndex <= lakeTerrainIndex)
+            {
+                hasOutflow = true;
+                lakeTerrainIndex = neighbour.TerrainLevelIndex;
+            }
+        }
+
+        if (!hasOutflow)
+        {
+            return;
+        }
+        else
+        {
+            lake.SetTerrainLevel(lakeTerrainIndex - 1);
+            ChcekNeighbourEdges(lake);
+
+            for (int i = 0; i < 6; i++)
+            {
+                HexCell neighbour = lake.GetNeighbor((HexDirection)i);
+
+                if (neighbour == null)
+                    continue;
+
+                ChcekNeighbourEdges(neighbour);
             }
         }
     }

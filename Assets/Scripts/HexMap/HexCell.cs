@@ -148,6 +148,18 @@ public class HexCell : MonoBehaviour
         edge.transform.SetParent(transform);
     }
 
+    public void UpdateEdge(int index, EdgeType type)
+    {
+        Edge edge = edges[index];
+        if (edge == null)
+        {
+           AddEdge(type, (HexDirection)index);
+            return;
+        }
+
+        edge.SetData(type, (HexDirection)index, terrainLevel, transform.localPosition, hexChunk.transform.position, this);
+    }
+
     public Edge GetEdge(int index)
     {
         return edges[index];
@@ -179,8 +191,8 @@ public class HexCell : MonoBehaviour
         if (level >= colors.Length)
            level = colors.Length - 1;
 
-        if(level < 0)
-            level = 0;
+        //if(level < 0)
+        //    level = 0;
 
         terrainLevelIndex = level;
         terrainLevel = terrainLevelIndex * HexData.levelStepHeight;
