@@ -119,7 +119,7 @@ public class Chunk : MonoBehaviour
 
             if (cell.GetEdge(i).InRiver)
             {
-                chunkMesh.CreateHexRiver(middle1, middle2, cell, cell.GetEdge(i).GetEdgeType() == EdgeType.Smooth, centre);
+                chunkMesh.CreateHexRiver(middle1, middle2, cell, cell.GetEdge(i).GetEdgeType() == EdgeType.Smooth, centre, i);
             }
             else if (cell.GetEdge(i).OutRiver)
             {

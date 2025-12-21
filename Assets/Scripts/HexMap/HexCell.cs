@@ -1,3 +1,5 @@
+using NUnit.Framework;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -123,6 +125,19 @@ public class HexCell : MonoBehaviour
     {
         get { return isRiver; }
         set { isRiver = value; }
+    }
+
+    private List<River> rivers = new List<River>();
+    
+    public List<River> GetRivers()
+    {
+        return rivers;
+    }
+
+    public void AddRiver(River river)
+    {
+        if (!rivers.Contains(river))
+            rivers.Add(river);
     }
 
     public void AddEdge(EdgeType edgeType, HexDirection direction)

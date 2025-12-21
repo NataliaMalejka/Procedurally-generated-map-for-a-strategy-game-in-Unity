@@ -1394,59 +1394,64 @@ public class MapManager : MonoBehaviour
 
     private bool CreateRiverFromSource(HexCell startCell)
     {
+        HashSet<HexCell> visited = new HashSet<HexCell>();
+
         List<HexCell> riverPath = new List<HexCell>();
         riverPath.Add(startCell);
 
         HexCell cell = startCell;
 
-        bool endedInTrap = false;
-
         int safety = 0;
         int maxLength = 200;
+
+        bool mergedIntoRiver = false;
 
         while (safety < maxLength)
         {
             safety++;
 
             if (cell.isOcean)
-            {
                 break;
-            }
 
-            HexCell neighbour = GetNextRiverCell(cell);
+            HexCell neighbour = GetNextRiverCell(cell, visited);
 
             if (neighbour == null)
             {
-                endedInTrap = true;
                 break;
             }
 
-            riverPath.Add(neighbour);
+            if (visited.Contains(neighbour))
+            {
+                int loopIndex = riverPath.IndexOf(neighbour);
+                riverPath.RemoveRange(loopIndex + 1, riverPath.Count - loopIndex - 1);
+                break;
+            }
 
             if (neighbour.IsRiver)
             {
+                riverPath.Add(neighbour);
+                mergedIntoRiver = true;
                 break;
             }
 
+            visited.Add(neighbour);
+            riverPath.Add(neighbour);
             cell = neighbour;
         }
 
         if (riverPath.Count < 5)
             return false;
 
+        River river = new River();
+
         for (int i = 0; i < riverPath.Count - 1; i++)
         {
             HexCell from = riverPath[i];
             HexCell to = riverPath[i + 1];
 
-            if (endedInTrap && i == riverPath.Count - 2)
+            if (mergedIntoRiver && i == riverPath.Count - 2)
             {
-                int dir = GetDirectionIndex(from, to);
-                if (dir != -1)
-                {
-                    Edge inEdge = to.GetEdge((dir + 3) % 6);
-                    inEdge.InRiver = true;
-                }
+                ConnectIntoExistingRiver(from, to);
             }
             else
             {
@@ -1454,14 +1459,18 @@ public class MapManager : MonoBehaviour
             }
 
             from.IsRiver = true;
+            from.AddRiver(river);
+            river.AddCell(from);
         }
 
         riverPath[riverPath.Count - 1].IsRiver = true;
+        riverPath[riverPath.Count - 1].AddRiver(river);
+        river.AddCell(riverPath[riverPath.Count - 1]);
 
         return true;
     }
 
-    private HexCell GetNextRiverCell(HexCell cell)
+    private HexCell GetNextRiverCell(HexCell cell, HashSet<HexCell> visited)
     {
         List<HexCell> candidates = new List<HexCell>();
 
@@ -1473,6 +1482,8 @@ public class MapManager : MonoBehaviour
             if (neighbour.TerrainLevelIndex > cell.TerrainLevelIndex)
                 continue;
             if (neighbour.IsMountain)
+                continue;
+            if (visited.Contains(neighbour))
                 continue;
 
             candidates.Add(neighbour);
@@ -1554,5 +1565,28 @@ public class MapManager : MonoBehaviour
                 return i;
         }
         return -1;
+    }
+
+    private void ConnectIntoExistingRiver(HexCell from, HexCell to)
+    {
+        int dir = GetDirectionIndex(from, to);
+        if (dir == -1)
+            return;
+
+        Edge fromOut = from.GetEdge(dir);
+        Edge toIn = to.GetEdge((dir + 3) % 6);
+
+        fromOut.OutRiver = true;
+
+        toIn.InRiver = true;
+
+        for (int i = 0; i < 6; i++)
+        {
+            if (to.GetEdge(i).OutRiver)
+            {
+                fromOut.OutRiver = true;
+                break;
+            }
+        }
     }
 }

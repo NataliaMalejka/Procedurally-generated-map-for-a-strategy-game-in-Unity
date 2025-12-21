@@ -119,7 +119,7 @@ public class ChunkMesh : MonoBehaviour
 
     public void CreateRiverSourceOrEnd(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c)
     {
-        if(!isSmooth)
+        if (!isSmooth)
         {
             m1i = AddNoise(m1i, noiseStrengthNormal);
             m2i = AddNoise(m2i, noiseStrengthNormal);
@@ -140,19 +140,8 @@ public class ChunkMesh : MonoBehaviour
         AddTexture(9, 9, 9, cell.Temperature);
     }
 
-    public void CreateHexRiver(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c)
+    public void CreateHexRiver(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c, int index)
     {
-        if(!isSmooth)
-        {
-            m1i = AddNoise(m1i, noiseStrengthNormal);
-            m2i = AddNoise(m2i, noiseStrengthNormal);
-        }
-        else
-        {
-            m1i = AddNoise(m1i, noiseStrengthSmooth);
-            m2i = AddNoise(m2i, noiseStrengthSmooth);
-        }
-
         bool isEnd = true;
 
         for (int i = 0; i < 6; i++)
@@ -160,6 +149,19 @@ public class ChunkMesh : MonoBehaviour
             if (cell.GetEdge(i).OutRiver)
             {
                 isEnd = false;
+
+                if (!isSmooth)
+                {
+                    m1i = AddNoise(m1i, noiseStrengthNormal);
+                    m2i = AddNoise(m2i, noiseStrengthNormal);
+                }
+                else
+                {
+                    m1i = AddNoise(m1i, noiseStrengthSmooth);
+                    m2i = AddNoise(m2i, noiseStrengthSmooth);
+                }
+
+                c = AddNoise(c, noiseStrengthNormal);
 
                 Vector3 m1o = cell.GetEdge(i).GetMiddle1();
                 Vector3 m2o = cell.GetEdge(i).GetMiddle2();
@@ -180,7 +182,47 @@ public class ChunkMesh : MonoBehaviour
                 m1o.y += 0.1f;
                 m2o.y += 0.1f;
 
-                CreateRiverRectangle(9, 9, m1i, m2i, m1o, m2o, cell.Temperature);
+                if ((index + 1) %6 == i || (index + 5) %6 == i || (index + 2) % 6 == i || (index + 4) % 6 == i)
+                {
+                    List<Vector3> verticlesE = new List<Vector3>();
+                    List<Vector3> verticlesC = new List<Vector3>();
+
+                    var betweenEdges = Vector3.Lerp(m2i, m1o, 0.5f);
+                    var betweenCentre = Vector3.Lerp(c, betweenEdges, 0.5f);
+
+                    if ((index + 1) % 6 == i || (index + 2) % 6 == i)
+                    {
+                        verticlesE.Add(m1i);
+                        verticlesE.Add(c);
+                        verticlesE.Add(m2o);
+
+                        verticlesC.Add(m2i);
+                        verticlesC.Add(betweenCentre);
+                        verticlesC.Add(m1o);
+                    }
+                    else
+                    {
+                        verticlesE.Add(m1i);
+                        verticlesE.Add(betweenCentre);
+                        verticlesE.Add(m2o);
+
+                        verticlesC.Add(m2i);
+                        verticlesC.Add(c);
+                        verticlesC.Add(m1o);
+                    }
+                        
+                    verticlesE = ChaikinSmooth(verticlesE);
+                    verticlesC = ChaikinSmooth(verticlesC);
+
+                    for (int j = 0; j < verticlesE.Count - 1; j++)
+                    {
+                        CreateRectangle(9, 9, verticlesE[j], verticlesC[j], verticlesE[j + 1], verticlesC[j + 1], 1);
+                    }
+                }               
+                else
+                {
+                    CreateRectangle(9, 9, m2o, m1i, m1o, m2i, cell.Temperature);
+                }
             }
         }
 
@@ -190,14 +232,9 @@ public class ChunkMesh : MonoBehaviour
         }
     }
 
-    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
+    private void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
     {
         int index = vertices.Count;
-
-        if (!IsTriangleFacingUp(v1, v2, v3))
-        {
-            (v2, v3) = (v3, v2);
-        }
 
         vertices.Add(v1);
         vertices.Add(v2);
@@ -206,12 +243,6 @@ public class ChunkMesh : MonoBehaviour
         triangles.Add(index);
         triangles.Add(index + 1);
         triangles.Add(index + 2);
-    }
-
-    private bool IsTriangleFacingUp(Vector3 v1, Vector3 v2, Vector3 v3)
-    {
-        Vector3 normal = Vector3.Cross(v2 - v1, v3 - v1);
-        return normal.y > 0f;
     }
 
     public void CreateRectangularCellsConnection(Vector3 v1, Vector3 v2, int index, int t, HexCell neighbourCell, Vector3 m1, Vector3 m2, HexCell cell)
@@ -279,12 +310,18 @@ public class ChunkMesh : MonoBehaviour
 
         if((cell.GetEdge(index).InRiver && neighbourCell.GetEdge((index + 3) % 6).OutRiver) || (cell.GetEdge(index).OutRiver && neighbourCell.GetEdge((index + 3) % 6).InRiver))
         {
-            m1.y += 0.1f;
-            m2.y += 0.1f;
-            m1d.y += 0.1f;
-            m2d.y += 0.1f;
+            foreach(var river in cell.GetRivers())
+            {
+                if (river.AreNeighboursInRiver(cell, neighbourCell))
+                {
+                    m1.y += 0.1f;
+                    m2.y += 0.1f;
+                    m1d.y += 0.1f;
+                    m2d.y += 0.1f;
 
-            CreateRectangle(9, 9, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), 1);
+                    CreateRectangle(9, 9, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), 1);
+                }
+            }        
         }
     }
 
@@ -380,12 +417,18 @@ public class ChunkMesh : MonoBehaviour
 
         if ((cell.GetEdge(index).InRiver && neighbourCell.GetEdge((index + 3) % 6).OutRiver) || (cell.GetEdge(index).OutRiver && neighbourCell.GetEdge((index + 3) % 6).InRiver))
         {
-            m1.y += 0.1f;
-            m2.y += 0.1f;
-            m1d.y += 0.1f;
-            m2d.y += 0.1f;
+            foreach (var river in cell.GetRivers())
+            {
+                if (river.AreNeighboursInRiver(cell, neighbourCell))
+                {
+                    m1.y += 0.1f;
+                    m2.y += 0.1f;
+                    m1d.y += 0.1f;
+                    m2d.y += 0.1f;
 
-            CreateRectangle(9, 9, AddNoise(m1, noiseStrengthSmooth), AddNoise(m1d, noiseStrengthSmooth), AddNoise(m2, noiseStrengthSmooth), AddNoise(m2d, noiseStrengthSmooth), 1);
+                    CreateRectangle(9, 9, AddNoise(m1, noiseStrengthSmooth), AddNoise(m1d, noiseStrengthSmooth), AddNoise(m2, noiseStrengthSmooth), AddNoise(m2d, noiseStrengthSmooth), 1);
+                }
+            }                    
         }
     }
 
@@ -396,15 +439,6 @@ public class ChunkMesh : MonoBehaviour
 
         CreateTriangle(v1d, v2d, v2); 
         AddTexture(neighbourT, neighbourT, t, temp); 
-    }
-
-    private void CreateRiverRectangle(int t, int neighbourT, Vector3 v1, Vector3 v1d, Vector3 v2, Vector3 v2d, float temp)
-    {
-        CreateTriangle(v1, v1d, v2);
-        AddTexture(t, neighbourT, t, 1);
-
-        CreateTriangle(v2, v2d, v1);
-        AddTexture(t, neighbourT, t, 1);
     }
 
     public void CreateTriangleCellsConnection(Vector3 v1, int index, int t, HexCell cell ,HexCell neighbourCell, HexCell nextNeighbourCell)
@@ -514,7 +548,7 @@ public class ChunkMesh : MonoBehaviour
         AddTexture(t, t2, t3, temp);
     }
 
-    List<Vector3> ChaikinSmooth(List<Vector3> verticles)
+    private List<Vector3> ChaikinSmooth(List<Vector3> verticles)
     {
         for (int i = 0; i < iterations; i++)
         {
