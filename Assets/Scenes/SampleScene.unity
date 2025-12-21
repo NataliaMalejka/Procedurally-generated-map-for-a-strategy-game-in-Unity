@@ -447,8 +447,9 @@ MonoBehaviour:
   riversPerContinentMax: 7
   hexMeshNoise: {fileID: 2800000, guid: 5004222ab684ce641adfe8d397c274bf, type: 3}
   terrainMaterial: {fileID: 2100000, guid: e9a63e44986c76b4da3629872269fd57, type: 2}
+  waterMaterial: {fileID: 2100000, guid: 14753fae9f9a5b8458f74f31246cb5cc, type: 2}
   texturesColor:
-  - {fileID: 2800000, guid: 5917067bbc97e6f48a8d61992e76b800, type: 3}
+  - {fileID: 2800000, guid: 33eb930ca3a3eb74481981a0f4c443ef, type: 3}
   - {fileID: 2800000, guid: 75dfd5e216d848b498dbdf7026b2c014, type: 3}
   - {fileID: 2800000, guid: de0dcc3b1c573324c9fd6ff86a5eadda, type: 3}
   - {fileID: 2800000, guid: 0f3ff7b69ba368b479cade7803389182, type: 3}
@@ -459,7 +460,7 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 33eb930ca3a3eb74481981a0f4c443ef, type: 3}
   - {fileID: 2800000, guid: 7a73c9e4720d34945b721dac6cdc6ff0, type: 3}
   texturesNormal:
-  - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}
+  - {fileID: 2800000, guid: 9aeefad93a386fa4ab3b69ffe933de44, type: 3}
   - {fileID: 2800000, guid: 7a73c9e4720d34945b721dac6cdc6ff0, type: 3}
   - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}
   - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}

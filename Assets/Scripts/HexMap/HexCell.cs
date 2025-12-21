@@ -78,14 +78,14 @@ public class HexCell : MonoBehaviour
         set { continentIndex = value; }
     }
 
-    private int terrainLevel = -1; 
+    private int terrainLevel = -2; 
     public int TerrainLevel
     {
         get { return terrainLevel; }
         set { terrainLevel = value; }
     }
 
-    private float centreTerrainlevel = -1;
+    private float centreTerrainlevel = -2;
     public float CentreTerrainLevel
     {
         get { return centreTerrainlevel; }
@@ -118,6 +118,13 @@ public class HexCell : MonoBehaviour
     {
         get { return moisture; }
         set { moisture = value; }
+    }
+
+    private bool isLake = false;
+    public bool IsLake
+    {
+        get { return isLake; }
+        set { isLake = value; }
     }
 
     private bool isRiver = false;

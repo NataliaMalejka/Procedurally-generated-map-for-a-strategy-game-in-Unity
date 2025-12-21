@@ -31,7 +31,8 @@ Transform:
   m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 3192499046993417620}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &1641595638770940434
@@ -102,3 +103,77 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6b86210fa4187d4187d821f742d1072, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkMesh
+  waterMesh: {fileID: 1671132606096830171}
+--- !u!1001 &7752839944575532357
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 94042339042066721}
+    m_Modifications:
+    - target: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5229509093773622511, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+      propertyPath: m_Name
+      value: WaterMesh
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+--- !u!114 &1671132606096830171 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8982025498978374558, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+  m_PrefabInstance: {fileID: 7752839944575532357}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21dd92735f79fed479cea8ab7d880c3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaterMesh
+--- !u!4 &3192499046993417620 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5177334368958605521, guid: 4ba45b11c9ae9df41b42216167bdd159, type: 3}
+  m_PrefabInstance: {fileID: 7752839944575532357}
+  m_PrefabAsset: {fileID: 0}

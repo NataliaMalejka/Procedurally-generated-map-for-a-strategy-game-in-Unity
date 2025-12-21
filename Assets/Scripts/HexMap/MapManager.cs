@@ -93,6 +93,7 @@ public class MapManager : MonoBehaviour
 
     [Header("Textures")]
     [SerializeField] private Material terrainMaterial;
+    [SerializeField] private Material waterMaterial;
     [SerializeField] private Texture2D[] texturesColor;
     [SerializeField] private Texture2D[] texturesNormal;
     [SerializeField] private Texture2D[] texturesRough;
@@ -194,6 +195,11 @@ public class MapManager : MonoBehaviour
     public Material GetTerrainmaterial()
     {
         return terrainMaterial;
+    }
+
+    public Material GetWatermaterial()
+    {
+        return waterMaterial;
     }
 
     public Texture2D GetHexMeshNoise()
@@ -1669,6 +1675,8 @@ public class MapManager : MonoBehaviour
                 lakeTerrainIndex = neighbour.TerrainLevelIndex;
             }
         }
+
+        lake.IsLake = true;
 
         if (!hasOutflow)
         {

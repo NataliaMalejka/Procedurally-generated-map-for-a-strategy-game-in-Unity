@@ -15,6 +15,8 @@ public class ChunkMesh : MonoBehaviour
     private float noiseStrengthNormal = 3f;
     private float noiseStrengthSmooth = 0.3f;
 
+    [SerializeField] private WaterMesh waterMesh;
+
     private void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
@@ -28,6 +30,8 @@ public class ChunkMesh : MonoBehaviour
         triangles.Clear();
         uv3.Clear();
         colors.Clear();
+
+        waterMesh.Clear();
     }
 
     public void CreateTriangleWithColor(Vector3 c, Vector3 v1, Vector3 v2, int t, HexCell cell, int index)
@@ -57,6 +61,13 @@ public class ChunkMesh : MonoBehaviour
             AddTexture(t, t, t, cell.Temperature);
             CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), v2);
             AddTexture(t, t, t, cell.Temperature);       
+        }
+
+        if(cell.isOcean || cell.IsLake)
+        {
+           waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), v1, AddNoise(m1, noiseStrengthNormal));
+           waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal));
+           waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), v2);
         }
     }
 
@@ -113,6 +124,11 @@ public class ChunkMesh : MonoBehaviour
         {
             CreateTriangle(c, verticles[i], verticles[i + 1]);
             AddTexture(t, t, t, cell.Temperature);
+
+            if (cell.isOcean || cell.IsLake)
+            {
+                waterMesh.CreateTriangle(c, verticles[i], verticles[i + 1]);
+            }
         }
 
     }
@@ -323,6 +339,60 @@ public class ChunkMesh : MonoBehaviour
                 }
             }        
         }
+
+        if (cell.isOcean || cell.IsLake || neighbourCell.isOcean || neighbourCell.IsLake)
+        {
+            m1= AddNoise(m1, noiseStrengthNormal);
+            m2 = AddNoise(m2, noiseStrengthNormal);
+            m1d = AddNoise(m1d, noiseStrengthNormal);
+            m2d = AddNoise(m2d, noiseStrengthNormal);
+
+            var coastV1 = v1;
+            var coastV2 = v2;
+
+            var coastV1d = v1d;
+            var coastV2d = v2d;
+
+            var coastM1 = m1;
+            var coastM2 = m2;
+
+            var coastM1d = m1d;
+            var coastM2d = m2d;
+
+            if (cell.isOcean || cell.IsLake)
+            {
+                var scale = 1/Mathf.Abs(v1.y - v1d.y);
+
+                coastV1d = Vector3.Lerp(v1, v1d, scale);
+                coastV2d = Vector3.Lerp(v2, v2d, scale);
+
+                coastM1d = Vector3.Lerp(m1, m1d, scale);
+                coastM2d = Vector3.Lerp(m2, m2d, scale);
+
+                coastV1d.y = coastV1.y;
+                coastV2d.y = coastV2.y;
+                coastM1d.y = coastM1.y;
+                coastM2d.y = coastM2.y;
+            }
+            else
+            {
+                var scale = 1/Mathf.Abs(v1d.y - v1.y);
+
+                coastV1 = Vector3.Lerp(v1d, v1, scale);
+                coastV2 = Vector3.Lerp(v2d, v2, scale);
+
+                coastM1 = Vector3.Lerp(m1d, m1, scale);
+                coastM2 = Vector3.Lerp(m2d, m2, scale);
+
+                coastV1.y = coastV1d.y;
+                coastV2.y = coastV2d.y;
+                coastM1.y = coastM1d.y;
+                coastM2.y = coastM2d.y;
+            }
+            waterMesh.CreateRectangle(coastV1, coastV1d, coastM1, coastM1d);
+            waterMesh.CreateRectangle(coastM1 , coastM1d ,coastM2,  coastM2d);
+            waterMesh.CreateRectangle(coastM2, coastM2d, coastV2, coastV2d);
+        }
     }
 
     private void CreateMountainRectangleConnection(int t, Vector3 v1, Vector3 v2, Vector3 v1d, Vector3 v2d, Vector3 m1, Vector3 m2, Vector3 m1d, Vector3 m2d, HexCell cell, HexCell neighbourCell)
@@ -412,6 +482,39 @@ public class ChunkMesh : MonoBehaviour
 
         for (int i = 0; i < verticles.Count - 1; i++)
         {
+            if (cell.isOcean || cell.IsLake || neighbourCell.isOcean || neighbourCell.IsLake)
+            {
+                var ov1 = verticles[i];
+                var ov2 = verticles[i + 1];
+                var ov1d = verticlesD[i];
+                var ov2d = verticlesD[i + 1];
+
+                var coastO1 = ov1;
+                var coastO2 = ov2;
+
+                var coastO1d = ov1d;
+                var coastO2d = ov2d;
+
+                if (cell.isOcean || cell.IsLake)
+                {
+                    ov1d.y = ov1.y;
+                    ov2d.y = ov2.y;
+
+                    coastO1d = Vector3.Lerp(ov1, ov1d, 0.5f);
+                    coastO2d = Vector3.Lerp(ov2, ov2d, 0.5f);
+                }
+                else
+                {
+                    ov1.y = ov1d.y;
+                    ov2.y = ov2d.y;
+                    
+                    coastO1 = Vector3.Lerp(ov1, ov1d, 0.5f);
+                    coastO2 = Vector3.Lerp(ov2, ov2d, 0.5f);
+                }
+
+                waterMesh.CreateRectangle(coastO1, coastO1d, coastO2, coastO2d);
+            }
+
             CreateRectangle(t, neighbourCell.TextureIndex, verticles[i], verticlesD[i], verticles[i + 1], verticlesD[i + 1], temp);
         }
 
@@ -546,6 +649,112 @@ public class ChunkMesh : MonoBehaviour
 
         CreateTriangle((v1), (v1d1), (v1d2));
         AddTexture(t, t2, t3, temp);
+
+        if(cell.isOcean || cell.IsLake || neighbourCell.isOcean || neighbourCell.IsLake || nextNeighbourCell.isOcean || nextNeighbourCell.IsLake)
+        {
+            CreateTriangleWaterConnection(v1, v1d1, v1d2, cell, neighbourCell, nextNeighbourCell);
+        }
+    }
+
+    private void CreateTriangleWaterConnection(Vector3 v1, Vector3 v1d1, Vector3 v1d2, HexCell cell, HexCell neighbourCell, HexCell nextNeighbourCell)
+    {
+        var coastV1 = v1;
+        var coastV1d1 = v1d1;
+        var coastV1d2 = v1d2;
+
+        if (cell.isOcean || cell.IsLake)
+        {
+            if (!neighbourCell.isOcean && !neighbourCell.IsLake && !nextNeighbourCell.isOcean && !nextNeighbourCell.IsLake)
+            {
+                var scale = 1 / Mathf.Abs(v1.y - v1d1.y);
+                coastV1d1 = Vector3.Lerp(v1, v1d1, scale);
+
+                var scale2 = 1 / Mathf.Abs(v1.y - v1d2.y);
+                coastV1d2 = Vector3.Lerp(v1, v1d2, scale2);
+
+                coastV1d1.y = coastV1.y;
+                coastV1d2.y = coastV1.y;
+
+                waterMesh.CreateTriangle(v1, coastV1d1, coastV1d2);
+            }
+            else if (!neighbourCell.isOcean && !neighbourCell.IsLake && (nextNeighbourCell.isOcean || nextNeighbourCell.IsLake))
+            {
+                var scale = 1 / Mathf.Abs(v1.y - v1d1.y);
+                coastV1d1 = Vector3.Lerp(v1, v1d1, scale);
+
+                var scale2 = 1 / Mathf.Abs(v1d2.y - v1d1.y);
+                coastV1d2 = Vector3.Lerp(v1d2, v1d1, scale2);
+
+                coastV1d1.y = coastV1.y;
+                coastV1d2.y = coastV1.y;
+
+                waterMesh.CreateTriangle(v1, coastV1d1, v1d2);
+                waterMesh.CreateTriangle(v1d2, coastV1d1, coastV1d2);
+            }
+            else if ((neighbourCell.isOcean || neighbourCell.IsLake) && !nextNeighbourCell.isOcean && !nextNeighbourCell.IsLake)
+            {
+                var scale = 1 / Mathf.Abs(v1d1.y - v1d2.y);
+                coastV1d1 = Vector3.Lerp(v1d1, v1d2, scale);
+
+                var scale2 = 1 / Mathf.Abs(v1.y - v1d2.y);
+                coastV1d2 = Vector3.Lerp(v1, v1d2, scale2);
+
+                coastV1d1.y = coastV1.y;
+                coastV1d2.y = coastV1.y;
+
+                waterMesh.CreateTriangle(v1, v1d1, coastV1d2);
+                waterMesh.CreateTriangle(coastV1d2, v1d1, coastV1d1);
+
+            }
+            else
+            {
+                waterMesh.CreateTriangle(v1, v1d1, v1d2);
+            }
+        }
+        else if (neighbourCell.isOcean || neighbourCell.IsLake)
+        {
+            if(!nextNeighbourCell.isOcean && !nextNeighbourCell.IsLake)
+            {
+                var scale = 1 / Mathf.Abs(v1d1.y - v1.y);
+                coastV1 = Vector3.Lerp(v1d1, v1, scale);
+
+                var scale2 = 1 / Mathf.Abs(v1d1.y - v1d2.y);
+                coastV1d2 = Vector3.Lerp(v1d1, v1d2, scale2);
+
+                coastV1.y = coastV1d1.y;
+                coastV1d2.y = coastV1d1.y;
+
+                waterMesh.CreateTriangle(coastV1, v1d1, coastV1d2);
+            }
+            else
+            {
+                var scale = 1 / Mathf.Abs(v1d1.y - v1.y);
+                coastV1 = Vector3.Lerp(v1d1, v1, scale);
+
+                var scale2 = 1 / Mathf.Abs(v1d2.y - v1.y);
+                coastV1d2 = Vector3.Lerp(v1d2, v1, scale2);
+
+                coastV1.y = coastV1d1.y;
+                coastV1d2.y = coastV1d1.y;
+
+                waterMesh.CreateTriangle(coastV1, v1d1, v1d2);
+                waterMesh.CreateTriangle(coastV1, v1d2, coastV1d2);
+            }
+
+        }
+        else if (nextNeighbourCell.isOcean || nextNeighbourCell.IsLake)
+        {
+            var scale = 1 / Mathf.Abs(v1d2.y - v1.y);
+            coastV1 = Vector3.Lerp(v1d2, v1, scale);
+
+            var scale2 = 1 / Mathf.Abs(v1d2.y - v1d1.y);
+            coastV1d1 = Vector3.Lerp(v1d2, v1d1, scale2);
+
+            coastV1.y = coastV1d2.y;
+            coastV1d1.y = coastV1d2.y;
+
+            waterMesh.CreateTriangle(coastV1, coastV1d1, v1d2);
+        }
     }
 
     private List<Vector3> ChaikinSmooth(List<Vector3> verticles)
@@ -607,6 +816,8 @@ public class ChunkMesh : MonoBehaviour
         mesh.SetUVs(2, uv3);
 
         mesh.colors = colors.ToArray();
+
+        waterMesh.Apply();
 
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
