@@ -78,21 +78,21 @@ public class HexCell : MonoBehaviour
         set { continentIndex = value; }
     }
 
-    private int terrainLevel = -2; 
+    private int terrainLevel = -4; 
     public int TerrainLevel
     {
         get { return terrainLevel; }
         set { terrainLevel = value; }
     }
 
-    private float centreTerrainlevel = -2;
+    private float centreTerrainlevel = -4;
     public float CentreTerrainLevel
     {
         get { return centreTerrainlevel; }
         set { centreTerrainlevel = value; }
     }
 
-    private int terrainLevelIndex = -1;
+    private int terrainLevelIndex = -2;
     public int TerrainLevelIndex
     {
         get { return terrainLevelIndex; }

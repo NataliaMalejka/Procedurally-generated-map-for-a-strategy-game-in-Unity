@@ -359,6 +359,8 @@ public class MapManager : MonoBehaviour
 
         CreateRivers();
 
+        SetOceanDeep(gridCells);
+
         GroupSmoothEdges(gridCells);
     }
 
@@ -563,7 +565,7 @@ public class MapManager : MonoBehaviour
             {
                 foreach (var cell in chunk.GetCells())
                 {
-                    if (cell.TerrainLevelIndex == -1 && !cell.isOcean)
+                    if (cell.TerrainLevelIndex == -2 && !cell.isOcean)
                         SetContinentPart(cell, i);
                 }
             }
@@ -1695,6 +1697,48 @@ public class MapManager : MonoBehaviour
                     continue;
 
                 ChcekNeighbourEdges(neighbour);
+            }
+        }
+    }
+
+    private void SetOceanDeep(HexCell[] gridCells)
+    {
+        foreach(var cell in gridCells)
+        {
+            if (cell.isOcean)
+            {
+                bool coast = false;
+
+                for (int i = 0; i < 6; i++)
+                {
+                    HexCell neighbour = cell.GetNeighbor((HexDirection)i);
+
+                    if (neighbour == null)
+                        continue;
+
+                    if(!neighbour.isOcean && neighbour.TerrainLevelIndex==0)
+                    {
+                        coast = true;
+                        break;
+                    }                  
+                }
+
+                if (coast)
+                {
+                    cell.SetTerrainLevel(-1);
+
+                    ChcekNeighbourEdges(cell);
+
+                    for (int i = 0; i < 6; i++)
+                    {
+                        HexCell neighbour = cell.GetNeighbor((HexDirection)i);
+
+                        if (neighbour == null)
+                            continue;
+
+                        ChcekNeighbourEdges(neighbour);
+                    }
+                }
             }
         }
     }

@@ -53,6 +53,11 @@ Material:
     m_Floats:
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _foamDistance: 0.1
+    - _foamStrength: 1
+    - _fresnelPower: 169.13
+    - _waveHeight: 0.3
+    - _waveSpeed: 1
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1

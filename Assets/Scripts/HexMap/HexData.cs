@@ -10,7 +10,8 @@ public static class HexData
 
     public static int oceanDistanceLevelStep = 2;
     public static int levelStepHeight = 2;
-    public static int waterLevel = levelStepHeight/2;
+    public static float waterLevel = levelStepHeight * 0.5f;
+    public static float oceanWaterLevel = -1;
 
     public static Vector3[] corners =
     {
