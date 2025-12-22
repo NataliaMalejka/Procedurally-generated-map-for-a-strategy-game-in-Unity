@@ -32,6 +32,7 @@ Transform:
   m_Children:
   - {fileID: 6570815903188128788}
   - {fileID: 9210362266667027054}
+  - {fileID: 3148494514041409649}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4259961913410535322
@@ -48,6 +49,79 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Chunk
   cellPrefab: {fileID: 1788320759516535580, guid: 100d3877bbd1db0458a6511af9dffef0, type: 3}
   chunkMesh: {fileID: 3894564383335295127}
+--- !u!1001 &3607944052769502123
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 6525888856375751950}
+    m_Modifications:
+    - target: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5773425153864940640, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+      propertyPath: m_Name
+      value: RiverMesh
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+--- !u!114 &158851050698255420 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3469359615968157591, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+  m_PrefabInstance: {fileID: 3607944052769502123}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87796b19df6490a439fbb1b5a2ff7e5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RiverMesh
+--- !u!4 &3148494514041409649 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1846560596262872026, guid: 2b1e73154618c2044baa2c53a8fa26d3, type: 3}
+  m_PrefabInstance: {fileID: 3607944052769502123}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4037566690570756799
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -129,6 +203,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6525888856375751950}
     m_Modifications:
+    - target: {fileID: -1408952758540583518, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
+      propertyPath: riverMesh
+      value: 
+      objectReference: {fileID: 158851050698255420}
     - target: {fileID: -1408952758540583518, guid: 1184fa6bedb22154e9d495cbe5fd1154, type: 3}
       propertyPath: waterMesh
       value: 

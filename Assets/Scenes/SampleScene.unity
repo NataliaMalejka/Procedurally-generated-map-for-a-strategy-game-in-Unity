@@ -448,6 +448,7 @@ MonoBehaviour:
   hexMeshNoise: {fileID: 2800000, guid: 5004222ab684ce641adfe8d397c274bf, type: 3}
   terrainMaterial: {fileID: 2100000, guid: e9a63e44986c76b4da3629872269fd57, type: 2}
   waterMaterial: {fileID: 2100000, guid: 14753fae9f9a5b8458f74f31246cb5cc, type: 2}
+  riverMaterial: {fileID: 2100000, guid: 88c60449d9e3fcb4dbe5168d8dae0347, type: 2}
   texturesColor:
   - {fileID: 2800000, guid: 33eb930ca3a3eb74481981a0f4c443ef, type: 3}
   - {fileID: 2800000, guid: 75dfd5e216d848b498dbdf7026b2c014, type: 3}

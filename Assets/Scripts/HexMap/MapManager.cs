@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 enum MapSize
@@ -94,6 +93,7 @@ public class MapManager : MonoBehaviour
     [Header("Textures")]
     [SerializeField] private Material terrainMaterial;
     [SerializeField] private Material waterMaterial;
+    [SerializeField] private Material riverMaterial;
     [SerializeField] private Texture2D[] texturesColor;
     [SerializeField] private Texture2D[] texturesNormal;
     [SerializeField] private Texture2D[] texturesRough;
@@ -200,6 +200,11 @@ public class MapManager : MonoBehaviour
     public Material GetWatermaterial()
     {
         return waterMaterial;
+    }
+
+    public Material GetRivermaterial()
+    {
+        return riverMaterial;
     }
 
     public Texture2D GetHexMeshNoise()

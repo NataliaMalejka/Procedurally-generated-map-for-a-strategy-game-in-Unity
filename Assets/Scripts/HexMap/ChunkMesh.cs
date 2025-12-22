@@ -16,6 +16,7 @@ public class ChunkMesh : MonoBehaviour
     private float noiseStrengthSmooth = 0.3f;
 
     [SerializeField] private WaterMesh waterMesh;
+    [SerializeField] private RiverMesh riverMesh;
 
     private void Awake()
     {
@@ -32,6 +33,7 @@ public class ChunkMesh : MonoBehaviour
         colors.Clear();
 
         waterMesh.Clear();
+        riverMesh.Clear();
     }
 
     public void CreateTriangleWithColor(Vector3 c, Vector3 v1, Vector3 v2, int t, HexCell cell, int index)
@@ -134,25 +136,24 @@ public class ChunkMesh : MonoBehaviour
 
     public void CreateRiverSourceOrEnd(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c)
     {
-        if (!isSmooth)
-        {
-            m1i = AddNoise(m1i, noiseStrengthNormal);
-            m2i = AddNoise(m2i, noiseStrengthNormal);
-        }
-        else
-        {
-            m1i = AddNoise(m1i, noiseStrengthSmooth);
-            m2i = AddNoise(m2i, noiseStrengthSmooth);
-        }
+        //if (!isSmooth)
+        //{
+        //    m1i = AddNoise(m1i, noiseStrengthNormal);
+        //    m2i = AddNoise(m2i, noiseStrengthNormal);
+        //}
+        //else
+        //{
+        //    m1i = AddNoise(m1i, noiseStrengthSmooth);
+        //    m2i = AddNoise(m2i, noiseStrengthSmooth);
+        //}
 
-        c = AddNoise(c, noiseStrengthNormal);
+        //c = AddNoise(c, noiseStrengthNormal);
 
-        m1i.y += 0.1f;
-        m2i.y += 0.1f;
-        c.y += 0.1f;
+        //m1i.y += 0.1f;
+        //m2i.y += 0.1f;
+        //c.y += 0.1f;
 
-        CreateTriangle(c, m1i, m2i);
-        AddTexture(9, 9, 9, cell.Temperature);
+        //riverMesh.CreateTriangle(c, m1i, m2i);
     }
 
     public void CreateHexRiver(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c, int index)
@@ -231,12 +232,30 @@ public class ChunkMesh : MonoBehaviour
 
                     for (int j = 0; j < verticlesE.Count - 1; j++)
                     {
-                        CreateRectangle(9, 9, verticlesE[j], verticlesC[j], verticlesE[j + 1], verticlesC[j + 1], 1);
+                        riverMesh.CreateRectangle(verticlesE[j], verticlesC[j], verticlesE[j + 1], verticlesC[j + 1]);
+
+
+                        //00 10 11
+                        riverMesh.AddUV(new Vector2(1, 1));
+                        riverMesh.AddUV(new Vector2(0, 0));
+                        riverMesh.AddUV(new Vector2(1, 0));
+
+                        riverMesh.AddUV(new Vector2(0, 1));
+                        riverMesh.AddUV(new Vector2(0, 0));
+                        riverMesh.AddUV(new Vector2(1, 1));
                     }
                 }               
                 else
                 {
-                    CreateRectangle(9, 9, m2o, m1i, m1o, m2i, cell.Temperature);
+                    riverMesh.CreateRectangle(m2o, m1i, m1o, m2i);
+
+                    riverMesh.AddUV(new Vector2(0, 0));
+                    riverMesh.AddUV(new Vector2(0, 1));
+                    riverMesh.AddUV(new Vector2(1, 0));
+
+                    riverMesh.AddUV(new Vector2(0, 1));
+                    riverMesh.AddUV(new Vector2(1, 1));
+                    riverMesh.AddUV(new Vector2(1, 0));
                 }
             }
         }
@@ -334,7 +353,28 @@ public class ChunkMesh : MonoBehaviour
                     m1d.y += 0.1f;
                     m2d.y += 0.1f;
 
-                    CreateRectangle(9, 9, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), 1);
+                    riverMesh.CreateRectangle(AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal));
+
+                    if (cell.GetEdge(index).InRiver)
+                    {
+                        riverMesh.AddUV(new Vector2(1, 0));
+                        riverMesh.AddUV(new Vector2(1, 1));
+                        riverMesh.AddUV(new Vector2(0, 0));
+
+                        riverMesh.AddUV(new Vector2(1, 1));
+                        riverMesh.AddUV(new Vector2(0, 1));
+                        riverMesh.AddUV(new Vector2(0, 0));
+                    }
+                    else
+                    {
+                        riverMesh.AddUV(new Vector2(1, 1));
+                        riverMesh.AddUV(new Vector2(1, 0));
+                        riverMesh.AddUV(new Vector2(0, 1));
+
+                        riverMesh.AddUV(new Vector2(1, 0));
+                        riverMesh.AddUV(new Vector2(0, 0));
+                        riverMesh.AddUV(new Vector2(0, 1));
+                    }
                 }
             }        
         }
@@ -547,7 +587,28 @@ public class ChunkMesh : MonoBehaviour
                     m1d.y += 0.1f;
                     m2d.y += 0.1f;
 
-                    CreateRectangle(9, 9, AddNoise(m1, noiseStrengthSmooth), AddNoise(m1d, noiseStrengthSmooth), AddNoise(m2, noiseStrengthSmooth), AddNoise(m2d, noiseStrengthSmooth), 1);
+                    riverMesh.CreateRectangle(AddNoise(m1, noiseStrengthSmooth), AddNoise(m1d, noiseStrengthSmooth), AddNoise(m2, noiseStrengthSmooth), AddNoise(m2d, noiseStrengthSmooth));
+
+                    if (cell.GetEdge(index).InRiver)
+                    {
+                        riverMesh.AddUV(new Vector2(1, 0));
+                        riverMesh.AddUV(new Vector2(1, 1));
+                        riverMesh.AddUV(new Vector2(0, 0));
+
+                        riverMesh.AddUV(new Vector2(1, 1));
+                        riverMesh.AddUV(new Vector2(0, 1));
+                        riverMesh.AddUV(new Vector2(0, 0));
+                    }
+                    else
+                    {
+                        riverMesh.AddUV(new Vector2(1, 1));
+                        riverMesh.AddUV(new Vector2(1, 0));
+                        riverMesh.AddUV(new Vector2(0, 1));
+
+                        riverMesh.AddUV(new Vector2(1, 0));
+                        riverMesh.AddUV(new Vector2(0, 0));
+                        riverMesh.AddUV(new Vector2(0, 1));
+                    }
                 }
             }                    
         }
@@ -846,5 +907,6 @@ public class ChunkMesh : MonoBehaviour
         mesh.RecalculateBounds();
 
         waterMesh.Apply();
+        riverMesh.Apply();
     }
 }
