@@ -40,16 +40,7 @@ public class RiverMesh : MonoBehaviour
     public void CreateRectangle(Vector3 v1, Vector3 v1d, Vector3 v2, Vector3 v2d)
     {
         CreateTriangle(v1, v1d, v2);
-        //uvs.Add(new Vector2(0, 0));
-        //uvs.Add(new Vector2(0, 1));
-        //uvs.Add(new Vector2(1, 0));
-
-
         CreateTriangle(v1d, v2d, v2);
-        //uvs.Add(new Vector2(0, 1));
-        //uvs.Add(new Vector2(1, 1));
-        //uvs.Add(new Vector2(1, 0));
-
     }
 
     public void AddUV(Vector2 uv)

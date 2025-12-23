@@ -1497,6 +1497,7 @@ public class MapManager : MonoBehaviour
             {
                 riverPath.Add(neighbour);
                 mergedIntoRiver = true;
+                endedInOcean = true;
                 break;
             }
 
@@ -1505,7 +1506,7 @@ public class MapManager : MonoBehaviour
             cell = neighbour;
         }
 
-        if (riverPath.Count < 5)
+        if (riverPath.Count < 4)
             return false;
 
         River river = new River();

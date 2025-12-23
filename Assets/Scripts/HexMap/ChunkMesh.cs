@@ -136,24 +136,28 @@ public class ChunkMesh : MonoBehaviour
 
     public void CreateRiverSourceOrEnd(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c)
     {
-        //if (!isSmooth)
-        //{
-        //    m1i = AddNoise(m1i, noiseStrengthNormal);
-        //    m2i = AddNoise(m2i, noiseStrengthNormal);
-        //}
-        //else
-        //{
-        //    m1i = AddNoise(m1i, noiseStrengthSmooth);
-        //    m2i = AddNoise(m2i, noiseStrengthSmooth);
-        //}
+        if (!isSmooth)
+        {
+            m1i = AddNoise(m1i, noiseStrengthNormal);
+            m2i = AddNoise(m2i, noiseStrengthNormal);
+        }
+        else
+        {
+            m1i = AddNoise(m1i, noiseStrengthSmooth);
+            m2i = AddNoise(m2i, noiseStrengthSmooth);
+        }
 
-        //c = AddNoise(c, noiseStrengthNormal);
+        c = AddNoise(c, noiseStrengthNormal);
 
-        //m1i.y += 0.1f;
-        //m2i.y += 0.1f;
-        //c.y += 0.1f;
+        m1i.y += 0.1f;
+        m2i.y += 0.1f;
+        c.y += 0.1f;
 
-        //riverMesh.CreateTriangle(c, m1i, m2i);
+        riverMesh.CreateTriangle(c, m1i, m2i);
+
+        riverMesh.AddUV(new Vector2(1, 1));
+        riverMesh.AddUV(new Vector2(0, 0));
+        riverMesh.AddUV(new Vector2(1, 0));
     }
 
     public void CreateHexRiver(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c, int index)
@@ -234,8 +238,6 @@ public class ChunkMesh : MonoBehaviour
                     {
                         riverMesh.CreateRectangle(verticlesE[j], verticlesC[j], verticlesE[j + 1], verticlesC[j + 1]);
 
-
-                        //00 10 11
                         riverMesh.AddUV(new Vector2(1, 1));
                         riverMesh.AddUV(new Vector2(0, 0));
                         riverMesh.AddUV(new Vector2(1, 0));
@@ -260,9 +262,9 @@ public class ChunkMesh : MonoBehaviour
             }
         }
 
-        if(isEnd)
+        if (isEnd)
         {
-            CreateRiverSourceOrEnd(m1i, m2i, cell, isSmooth, c);
+            //CreateRiverSourceOrEnd(m1i, m2i, cell, isSmooth, c);
         }
     }
 
