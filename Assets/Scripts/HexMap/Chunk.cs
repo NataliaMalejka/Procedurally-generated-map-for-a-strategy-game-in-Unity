@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 public class Chunk : MonoBehaviour
 {
@@ -163,6 +164,36 @@ public class Chunk : MonoBehaviour
                 }              
             }
         }
+
+        if(cell.StructureIndex >= 0)
+        {
+            CreateStructure(cell, centre);
+        }
+    }
+
+    private void CreateStructure(HexCell cell, Vector3 pos)
+    {
+        GameObject[] structures = MapManager.Instance.GetObjects(cell.GetBiome());
+
+        Vector3 centre = new Vector3(
+            pos.x + this.transform.position.x,
+            pos.y,
+            pos.z + this.transform.position.z
+        );
+
+        if (structures == null || structures.Length == 0)
+            return;
+
+        GameObject cellStructure = structures[cell.StructureIndex];
+        Vector3 baseEuler = cellStructure.transform.eulerAngles;
+
+        Quaternion finalRotation = Quaternion.Euler(
+            baseEuler.x,
+            UnityEngine.Random.Range(0f, 360f),
+            baseEuler.z
+        );
+
+        Instantiate(cellStructure, centre, finalRotation, cell.transform);
     }
 
     public void RefreshChunk()

@@ -9,6 +9,13 @@ enum MapSize
     Large
 }
 
+[System.Serializable]
+public class BiomeObjects
+{
+    public Biome biome;
+    public GameObject[] objects;
+}
+
 public class MapManager : MonoBehaviour
 {
     public static MapManager Instance { get; private set; }
@@ -99,9 +106,27 @@ public class MapManager : MonoBehaviour
     [SerializeField] private Texture2D[] texturesRough;
     [SerializeField] private Texture2D snowTexture;
 
-    private void Awake()
+    public BiomeObjects[] biomeObjects;
+
+    [SerializeField] private int structureChance;
+
+    public GameObject[] GetObjects(Biome biome)
+    {
+        foreach (var group in biomeObjects)
+        {
+            if (group.biome == biome)
+                return group.objects;
+        }
+
+        return null;
+    }
+
+
+    private void Awake() //wywolanie z game manager zamiast awake
     {
         Instance = this;
+
+        //pobierz seed i rozmiar mapy z game managera
 
         UnityEngine.Random.InitState(seed);
 
@@ -115,11 +140,11 @@ public class MapManager : MonoBehaviour
 
         SetMaxMargin();
 
-        SetContinentCellsAmound();
+        //SetContinentCellsAmound();
 
-        SetContinentsInRegions();
+        //SetContinentsInRegions();
 
-        NewMargins();
+        //NewMargins();
     }
 
     private void SetTextures()
@@ -346,6 +371,12 @@ public class MapManager : MonoBehaviour
 
     public void GenerateMap(HexCell[] gridCells)
     {
+        SetContinentCellsAmound();
+
+        SetContinentsInRegions();
+
+        NewMargins();
+
         GenerateContinents(gridCells);
 
         SetOceans(gridCells);
@@ -366,10 +397,14 @@ public class MapManager : MonoBehaviour
 
         SetOceanDeep(gridCells);
 
+        RandomStructures(gridCells);
+
         GroupSmoothEdges(gridCells);
+
+        //resetowanie marginesow
     }
 
-    public void GenerateContinents(HexCell[] gridCells)
+    private void GenerateContinents(HexCell[] gridCells)
     {
         for (int i = 0; i < continentsCentres.Length; i++)
         {
@@ -426,7 +461,6 @@ public class MapManager : MonoBehaviour
 
         continents[continentIndex].AddChunk(cell.HexChunk);
     }
-
 
     private int AddCloseNeighborCells(HexCell centreCell, int continentIndex, Queue<HexCell> cellsToCheck)
     {
@@ -983,7 +1017,7 @@ public class MapManager : MonoBehaviour
                 }
                 else
                 {
-                    cell.SetBiome(Biome.continentalWet);
+                    cell.SetBiome(Biome.ContinentalWet);
                 }
                 continue;
             }
@@ -1745,6 +1779,48 @@ public class MapManager : MonoBehaviour
                         ChcekNeighbourEdges(neighbour);
                     }
                 }
+            }
+        }
+    }
+
+    private void RandomStructures(HexCell[] gridCells)
+    {
+        foreach (var cell in gridCells)
+        {
+            if(!cell.isOcean && !cell.IsMountain && !cell.IsLake && !cell.IsRiver)
+            {
+                bool noNeighbourStructure = true;
+
+                for (int i = 0; i < 6; i++)
+                {
+                    HexCell neighbour = cell.GetNeighbor((HexDirection)i);
+
+                    if (neighbour == null)
+                        continue;
+
+                    if (neighbour.StructureIndex != -1)
+                    {
+                        noNeighbourStructure = false;
+                        break;
+                    }
+                }
+
+                if (!noNeighbourStructure)
+                    continue;
+
+                if (UnityEngine.Random.Range(0, 100) >= structureChance)
+                    continue;;
+
+                GameObject[] objects = GetObjects(cell.GetBiome());
+                if (objects == null)
+                    continue;
+
+                int structures = objects.Length;
+
+                if (structures <= 0)
+                    continue;
+
+                cell.StructureIndex = UnityEngine.Random.Range(0, structures);
             }
         }
     }

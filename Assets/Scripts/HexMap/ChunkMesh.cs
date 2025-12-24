@@ -405,7 +405,7 @@ public class ChunkMesh : MonoBehaviour
             if (cell.isOcean || cell.IsLake)
             {
                 var scale = 1/Mathf.Abs(v1.y - v1d.y);
-
+                scale += 0.5f;
                 coastV1d = Vector3.Lerp(v1, v1d, scale);
                 coastV2d = Vector3.Lerp(v2, v2d, scale);
 
@@ -420,6 +420,7 @@ public class ChunkMesh : MonoBehaviour
             else
             {
                 var scale = 1/Mathf.Abs(v1d.y - v1.y);
+                scale += 0.5f;
 
                 coastV1 = Vector3.Lerp(v1d, v1, scale);
                 coastV2 = Vector3.Lerp(v2d, v2, scale);
@@ -542,8 +543,8 @@ public class ChunkMesh : MonoBehaviour
 
                 if (cell.isOcean || cell.IsLake)
                 {
-                    ov1d.y = ov1.y;
-                    ov2d.y = ov2.y;
+                    coastO1d.y = ov1.y;
+                    coastO2d.y = ov2.y;
 
 
                     if (cell.isOcean && neighbourCell.isOcean)
@@ -552,14 +553,14 @@ public class ChunkMesh : MonoBehaviour
                     }
                     else
                     {
-                        coastO1d = Vector3.Lerp(ov1, ov1d, 0.5f);
-                        coastO2d = Vector3.Lerp(ov2, ov2d, 0.5f);
+                        //coastO1d = Vector3.Lerp(ov1, ov1d, 0.5f);
+                        //coastO2d = Vector3.Lerp(ov2, ov2d, 0.5f);
                     }
                 }
                 else
                 {
-                    ov1.y = ov1d.y;
-                    ov2.y = ov2d.y;
+                    coastO1.y = ov1d.y;
+                    coastO2.y = ov2d.y;
 
                     if (cell.isOcean && neighbourCell.isOcean)
                     {
@@ -567,8 +568,8 @@ public class ChunkMesh : MonoBehaviour
                     }
                     else
                     {
-                        coastO1 = Vector3.Lerp(ov1, ov1d, 0.5f);
-                        coastO2 = Vector3.Lerp(ov2, ov2d, 0.5f);
+                        //coastO1 = Vector3.Lerp(ov1, ov1d, 0.5f);
+                        //coastO2 = Vector3.Lerp(ov2, ov2d, 0.5f);
                     }
                 }
 
@@ -748,9 +749,11 @@ public class ChunkMesh : MonoBehaviour
             if (!neighbourCell.isOcean && !neighbourCell.IsLake && !nextNeighbourCell.isOcean && !nextNeighbourCell.IsLake)
             {
                 var scale = 1 / Mathf.Abs(v1.y - v1d1.y);
+                scale += 0.5f;
                 coastV1d1 = Vector3.Lerp(v1, v1d1, scale);
 
                 var scale2 = 1 / Mathf.Abs(v1.y - v1d2.y);
+                scale2 += 0.5f;
                 coastV1d2 = Vector3.Lerp(v1, v1d2, scale2);
 
                 coastV1d1.y = coastV1.y;
@@ -763,9 +766,11 @@ public class ChunkMesh : MonoBehaviour
                 bool isOcean = cell.isOcean || nextNeighbourCell.isOcean;
 
                 var scale = 1 / Mathf.Abs(v1.y - v1d1.y);
+                scale += 0.5f;
                 coastV1d1 = Vector3.Lerp(v1, v1d1, scale);
 
                 var scale2 = 1 / Mathf.Abs(v1d2.y - v1d1.y);
+                scale2 += 0.5f;
                 coastV1d2 = Vector3.Lerp(v1d2, v1d1, scale2);
 
                 coastV1d1.y = coastV1.y;
@@ -779,9 +784,11 @@ public class ChunkMesh : MonoBehaviour
                 bool isOcean = cell.isOcean || neighbourCell.isOcean;
 
                 var scale = 1 / Mathf.Abs(v1d1.y - v1d2.y);
+                scale += 0.5f;
                 coastV1d1 = Vector3.Lerp(v1d1, v1d2, scale);
 
                 var scale2 = 1 / Mathf.Abs(v1.y - v1d2.y);
+                scale2 += 0.5f;
                 coastV1d2 = Vector3.Lerp(v1, v1d2, scale2);
 
                 coastV1d1.y = coastV1.y;
@@ -802,9 +809,11 @@ public class ChunkMesh : MonoBehaviour
             if(!nextNeighbourCell.isOcean && !nextNeighbourCell.IsLake)
             {
                 var scale = 1 / Mathf.Abs(v1d1.y - v1.y);
+                scale += 0.5f;
                 coastV1 = Vector3.Lerp(v1d1, v1, scale);
 
                 var scale2 = 1 / Mathf.Abs(v1d1.y - v1d2.y);
+                scale2 += 0.5f;
                 coastV1d2 = Vector3.Lerp(v1d1, v1d2, scale2);
 
                 coastV1.y = coastV1d1.y;
@@ -817,9 +826,11 @@ public class ChunkMesh : MonoBehaviour
                 bool isOcean = neighbourCell.isOcean || neighbourCell.isOcean; 
 
                 var scale = 1 / Mathf.Abs(v1d1.y - v1.y);
+                scale += 0.5f;
                 coastV1 = Vector3.Lerp(v1d1, v1, scale);
 
                 var scale2 = 1 / Mathf.Abs(v1d2.y - v1.y);
+                scale2 += 0.5f;
                 coastV1d2 = Vector3.Lerp(v1d2, v1, scale2);
 
                 coastV1.y = coastV1d1.y;
@@ -833,9 +844,11 @@ public class ChunkMesh : MonoBehaviour
         else if (nextNeighbourCell.isOcean || nextNeighbourCell.IsLake)
         {
             var scale = 1 / Mathf.Abs(v1d2.y - v1.y);
+            scale += 0.5f;
             coastV1 = Vector3.Lerp(v1d2, v1, scale);
 
             var scale2 = 1 / Mathf.Abs(v1d2.y - v1d1.y);
+            scale2 += 0.5f;
             coastV1d1 = Vector3.Lerp(v1d2, v1d1, scale2);
 
             coastV1.y = coastV1d2.y;

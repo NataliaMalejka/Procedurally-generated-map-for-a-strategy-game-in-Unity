@@ -10,11 +10,10 @@ public enum Biome
     Tundra,
     Grassland,
     ContinentalDry,
-    continentalWet,
+    ContinentalWet,
     RainForest,
     Savanna,
-    Desert,
-    River
+    Desert
 }
 
 public class HexCell : MonoBehaviour
@@ -97,6 +96,13 @@ public class HexCell : MonoBehaviour
     {
         get { return terrainLevelIndex; }
         set { terrainLevelIndex = value; }
+    }
+
+    private int structureIndex = -1;
+    public int StructureIndex
+    {
+        get { return structureIndex; }
+        set { structureIndex = value; }
     }
 
     private bool isMountain = false;
@@ -211,6 +217,11 @@ public class HexCell : MonoBehaviour
         cellBiome = biome;
         cellColor = colors[(int)cellBiome];
         textureIndex = (int)cellBiome;
+    }
+
+    public Biome GetBiome()
+    {
+        return cellBiome;
     }
 
     public void SetCoordinateText()
