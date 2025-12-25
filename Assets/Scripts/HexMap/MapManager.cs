@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-enum MapSize
+public enum MapSize
 {
     Small,
     Medium,
@@ -20,8 +20,7 @@ public class MapManager : MonoBehaviour
 {
     public static MapManager Instance { get; private set; }
 
-    [SerializeField] private MapSize mapSize;
-    [SerializeField] private int seed;
+    private MapSize mapSize;
 
     public int xChunkCount { get; private set; }
     public int zChunkCount { get; private set; }
@@ -121,16 +120,15 @@ public class MapManager : MonoBehaviour
         return null;
     }
 
-
-    private void Awake() //wywolanie z game manager zamiast awake
+    private void Awake()
     {
         Instance = this;
 
-        //pobierz seed i rozmiar mapy z game managera
-
-        UnityEngine.Random.InitState(seed);
+        ApplySeed();
 
         SetTextures();
+
+        mapSize = GameManager.Instance.GetMapSize();
 
         (xChunkCount, zChunkCount) = SetChunkCounts(mapSize);
 
@@ -139,12 +137,21 @@ public class MapManager : MonoBehaviour
         continents = new Continent[continentsCount];
 
         SetMaxMargin();
+    }
 
-        //SetContinentCellsAmound();
+    private void ApplySeed()
+    {
+        int seed = 10;
 
-        //SetContinentsInRegions();
+        if (int.TryParse(GameManager.Instance.GetSeedString(), out int parsedSeed))
+        {
+            if (parsedSeed >= 0 && parsedSeed <= 999999)
+            {
+                seed = parsedSeed;
+            }
+        }
 
-        //NewMargins();
+        UnityEngine.Random.InitState(seed);
     }
 
     private void SetTextures()
@@ -1698,6 +1705,23 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    private void SetNeighbourEdges(HexCell cell, int terrainLevel)
+    {
+        cell.SetTerrainLevel(terrainLevel);
+
+        ChcekNeighbourEdges(cell);
+
+        for (int i = 0; i < 6; i++)
+        {
+            HexCell neighbour = cell.GetNeighbor((HexDirection)i);
+
+            if (neighbour == null)
+                continue;
+
+            ChcekNeighbourEdges(neighbour);
+        }
+    }
+
     private void CreateLakes(HexCell lake)
     {
         int lakeTerrainIndex = lake.TerrainLevelIndex;
@@ -1716,6 +1740,13 @@ public class MapManager : MonoBehaviour
                 hasOutflow = true;
                 lakeTerrainIndex = neighbour.TerrainLevelIndex;
             }
+
+            if(neighbour.isOcean)
+            {
+                lake.isOcean = true;
+                SetNeighbourEdges(lake, neighbour.TerrainLevelIndex);
+                break;
+            }
         }
 
         lake.IsLake = true;
@@ -1726,18 +1757,7 @@ public class MapManager : MonoBehaviour
         }
         else
         {
-            lake.SetTerrainLevel(lakeTerrainIndex - 1);
-            ChcekNeighbourEdges(lake);
-
-            for (int i = 0; i < 6; i++)
-            {
-                HexCell neighbour = lake.GetNeighbor((HexDirection)i);
-
-                if (neighbour == null)
-                    continue;
-
-                ChcekNeighbourEdges(neighbour);
-            }
+            SetNeighbourEdges(lake, lakeTerrainIndex - 1);
         }
     }
 
@@ -1765,19 +1785,7 @@ public class MapManager : MonoBehaviour
 
                 if (coast)
                 {
-                    cell.SetTerrainLevel(-1);
-
-                    ChcekNeighbourEdges(cell);
-
-                    for (int i = 0; i < 6; i++)
-                    {
-                        HexCell neighbour = cell.GetNeighbor((HexDirection)i);
-
-                        if (neighbour == null)
-                            continue;
-
-                        ChcekNeighbourEdges(neighbour);
-                    }
+                    SetNeighbourEdges(cell, -1);
                 }
             }
         }

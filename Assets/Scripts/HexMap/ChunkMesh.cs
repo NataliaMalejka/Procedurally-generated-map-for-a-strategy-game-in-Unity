@@ -545,32 +545,11 @@ public class ChunkMesh : MonoBehaviour
                 {
                     coastO1d.y = ov1.y;
                     coastO2d.y = ov2.y;
-
-
-                    if (cell.isOcean && neighbourCell.isOcean)
-                    {
-                        
-                    }
-                    else
-                    {
-                        //coastO1d = Vector3.Lerp(ov1, ov1d, 0.5f);
-                        //coastO2d = Vector3.Lerp(ov2, ov2d, 0.5f);
-                    }
                 }
                 else
                 {
                     coastO1.y = ov1d.y;
                     coastO2.y = ov2d.y;
-
-                    if (cell.isOcean && neighbourCell.isOcean)
-                    {
-
-                    }
-                    else
-                    {
-                        //coastO1 = Vector3.Lerp(ov1, ov1d, 0.5f);
-                        //coastO2 = Vector3.Lerp(ov2, ov2d, 0.5f);
-                    }
                 }
 
                 waterMesh.CreateRectangle(coastO1, coastO1d, coastO2, coastO2d, isOcean);
@@ -898,7 +877,7 @@ public class ChunkMesh : MonoBehaviour
         uv3.Add(new Vector4(t1, t2, t3, 0f));
     }
 
-    private Vector3 AddNoise(Vector3 v, float noiseStrength)
+    public Vector3 AddNoise(Vector3 v, float noiseStrength)
     {
         Vector3 chunkPos = this.GetComponentInParent<Transform>().position;
 

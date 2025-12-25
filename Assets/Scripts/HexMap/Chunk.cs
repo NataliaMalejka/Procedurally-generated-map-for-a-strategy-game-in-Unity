@@ -175,6 +175,8 @@ public class Chunk : MonoBehaviour
     {
         GameObject[] structures = MapManager.Instance.GetObjects(cell.GetBiome());
 
+        pos = chunkMesh.AddNoise(pos, 3);
+
         Vector3 centre = new Vector3(
             pos.x + this.transform.position.x,
             pos.y,

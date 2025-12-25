@@ -11,7 +11,7 @@ public class GridHex : MonoBehaviour
 
     public HexCell[] cells { get; private set; }
 
-    private void Start() //zmienic start na funkvcje wywolana z game manager
+    private void Start()
     {
         xChunks = MapManager.Instance.xChunkCount;
         zChunks = MapManager.Instance.zChunkCount;
