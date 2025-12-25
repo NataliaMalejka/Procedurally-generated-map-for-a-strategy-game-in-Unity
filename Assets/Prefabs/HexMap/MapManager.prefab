@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7574026885498595833
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7867000213538023375}
+  - component: {fileID: 6631043231349289463}
+  m_Layer: 0
+  m_Name: MapManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7867000213538023375
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7574026885498595833}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6631043231349289463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7574026885498595833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9729f0f9cee5d1d4da1f351f8f0b1df9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MapManager
+  mapSize: 1
+  seed: 10
+  perlinScale: 0.07
+  distWeight: 0.4
+  perlinWeight: 0.3
+  dirWeight: 0.33
+  minScore: 0.7
+  minCoastNoise: 0.8
+  maxCoastNoise: 1.2
+  growthBonusFactor: 0.2
+  distanceWeight: 0.3
+  perlinLargeTerrainScale: 0.1
+  perlinMediumTerrainScale: 0.3
+  perlinSmallTerrainScale: 0.28
+  distanceNoiseTerrainAmp: 1
+  hillsNoiseTerrainAmp: 2
+  mountainsNoiseTerrainAmp: 10
+  hillsNoiseMargin: 0.6
+  mountainsNoiseMargin: 0.8
+  coldMax: 0.4
+  moderateTempMax: 0.75
+  temperatureTerrainScale: 20
+  windStrength: 4
+  dryStrength: 0.2
+  dryDistance: 4
+  rainStrength: 0.5
+  rainDistance: 3
+  dryMax: 0.35
+  moderateMoistureMax: 0.75
+  riverSuorceMinLevel: 3
+  riverSuorceMinMoisture: 0.2
+  riversPerContinentMin: 4
+  riversPerContinentMax: 7
+  hexMeshNoise: {fileID: 2800000, guid: 5004222ab684ce641adfe8d397c274bf, type: 3}
+  terrainMaterial: {fileID: 2100000, guid: e9a63e44986c76b4da3629872269fd57, type: 2}
+  waterMaterial: {fileID: 2100000, guid: 14753fae9f9a5b8458f74f31246cb5cc, type: 2}
+  riverMaterial: {fileID: 2100000, guid: 88c60449d9e3fcb4dbe5168d8dae0347, type: 2}
+  texturesColor:
+  - {fileID: 2800000, guid: 33eb930ca3a3eb74481981a0f4c443ef, type: 3}
+  - {fileID: 2800000, guid: 75dfd5e216d848b498dbdf7026b2c014, type: 3}
+  - {fileID: 2800000, guid: de0dcc3b1c573324c9fd6ff86a5eadda, type: 3}
+  - {fileID: 2800000, guid: 0f3ff7b69ba368b479cade7803389182, type: 3}
+  - {fileID: 2800000, guid: 5be61121a9b88ae418a1c6752c2c1577, type: 3}
+  - {fileID: 2800000, guid: 7f5cff0009cec2a4dacb5a126e5c9570, type: 3}
+  - {fileID: 2800000, guid: 313ea507e43b3cb429f426750066130e, type: 3}
+  - {fileID: 2800000, guid: 68d11a855d017ab4a8c9babf9b26a677, type: 3}
+  - {fileID: 2800000, guid: 33eb930ca3a3eb74481981a0f4c443ef, type: 3}
+  - {fileID: 2800000, guid: 7a73c9e4720d34945b721dac6cdc6ff0, type: 3}
+  texturesNormal:
+  - {fileID: 2800000, guid: 9aeefad93a386fa4ab3b69ffe933de44, type: 3}
+  - {fileID: 2800000, guid: 7a73c9e4720d34945b721dac6cdc6ff0, type: 3}
+  - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}
+  - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}
+  - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}
+  - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}
+  - {fileID: 2800000, guid: 335c00cd555f79e4eb57dc7df21df4ff, type: 3}
+  - {fileID: 2800000, guid: 8f8882648955dae4dbd69cffe08d014d, type: 3}
+  - {fileID: 2800000, guid: 9aeefad93a386fa4ab3b69ffe933de44, type: 3}
+  - {fileID: 2800000, guid: 9aeefad93a386fa4ab3b69ffe933de44, type: 3}
+  texturesRough:
+  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
+  - {fileID: 2800000, guid: 930ccc8ddfb168443b2605feddce7d06, type: 3}
+  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
+  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
+  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
+  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
+  - {fileID: 2800000, guid: e072fd4ead95db341a17b8887b80c617, type: 3}
+  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
+  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
+  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
+  snowTexture: {fileID: 2800000, guid: de0dcc3b1c573324c9fd6ff86a5eadda, type: 3}
+  biomeObjects:
+  - biome: 3
+    objects:
+    - {fileID: 8631333367816128507, guid: 4aef783566affe54382048a67c8d5818, type: 3}
+    - {fileID: 2641914481826866930, guid: 0c0cb56fefc6aff488134b39ec4e30e5, type: 3}
+    - {fileID: 4715772101878088429, guid: e51f718966ca4af4c8e8301d43d8b471, type: 3}
+    - {fileID: 3667784932306031693, guid: f94fa4b6b38704f4297a602065371ef4, type: 3}
+  - biome: 4
+    objects:
+    - {fileID: 4424965107011159425, guid: 9b021d6b495ad934b9c2dede14b04c1f, type: 3}
+    - {fileID: 5494791821125633097, guid: c18168fc71b87b04d885e2979bc36ceb, type: 3}
+    - {fileID: 4530487425665607358, guid: 850e1fdd265368b40bd802d767a302e0, type: 3}
+  - biome: 5
+    objects:
+    - {fileID: 7130018310285076887, guid: 8d3998fdc0de5d7428725c48e8ca8b78, type: 3}
+    - {fileID: 3551242784058129727, guid: 80af6d3b2be26ab43843a311d336e746, type: 3}
+    - {fileID: 7409936596472139186, guid: 6b6fb95335582874383dcb39a77e0aed, type: 3}
+    - {fileID: 2638936030102648414, guid: 5ee33259fa9bb23468ef34771fd28323, type: 3}
+  - biome: 6
+    objects:
+    - {fileID: 4149259673492295289, guid: 227e19d92153b774b81a2c7d4838339a, type: 3}
+    - {fileID: 5631270945031548552, guid: 6965d8cb9ce7f314c846a45c0dfffdee, type: 3}
+    - {fileID: 5632175688545731329, guid: b9c2c0ddc27bfcb4ab1cc14f7fe7f126, type: 3}
+    - {fileID: 5949952352077613235, guid: 61d11805ed445f445aac7aeff7e099f2, type: 3}
+    - {fileID: 8717318876236290382, guid: 8ffd99d24d42fe04399173bc7a5570cd, type: 3}
+  - biome: 7
+    objects:
+    - {fileID: 8582082531461574727, guid: 40e6c8d570646ee47a7d5a6ab0e34015, type: 3}
+    - {fileID: 1744924983829860715, guid: 0e9153d3c67cea14a8dec56f4e99c54a, type: 3}
+    - {fileID: 2860121766387398602, guid: 98fea946a6cfd754faaf1ca446d4c873, type: 3}
+  - biome: 8
+    objects:
+    - {fileID: 1868344604309515572, guid: 54c5ca21e84d3ea42a12e3253aa7ed03, type: 3}
+    - {fileID: 1940490407545393955, guid: 0ff9d418c6486424e8ddc215b5c7a431, type: 3}
+    - {fileID: 8058627124784445710, guid: 2f4120aecd935f04095b69a23107810d, type: 3}
+  structureChance: 1
