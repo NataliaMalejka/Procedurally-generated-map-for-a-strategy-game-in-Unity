@@ -9,17 +9,38 @@ public class GridHex : MonoBehaviour
     private int xChunks;
     private int zChunks;
 
-    public HexCell[] cells { get; private set; }
+    public HexCell[] cellsEarth { get; private set; }
+    public HexCell[] cellsCold { get; private set; }
+    public HexCell[] cellsHot { get; private set; }
 
     private void Start()
     {
         xChunks = MapManager.Instance.xChunkCount;
         zChunks = MapManager.Instance.zChunkCount;
-        CreateChunks();
-        //tu konczy sie ekran ladowania
+
+        int index = 0;
+
+        if (GameSettings.Instance.IsHotBiome())
+        {
+            CreateChunks(index, cellsHot);
+            index++;
+        }
+        if(GameSettings.Instance.IsEarthBiome())
+        {
+            CreateChunks(index, cellsEarth);
+            index++;
+        }
+        if (GameSettings.Instance.IsColdBiome())
+        {
+            CreateChunks(index, cellsCold);
+        }
+        if(!GameSettings.Instance.IsHotBiome() && !GameSettings.Instance.IsEarthBiome() && !GameSettings.Instance.IsColdBiome())
+        {
+            CreateChunks(index, cellsEarth);
+        }       
     }
 
-    private void CreateChunks()
+    private void CreateChunks(int level, HexCell[] cells)
     {
         chunks = new Chunk[xChunks * zChunks];
         cells = new HexCell[xChunks * zChunks * MapManager.Instance.xCellCount * MapManager.Instance.zCellCount];
@@ -33,10 +54,11 @@ public class GridHex : MonoBehaviour
                 Chunk chunk = Instantiate(chunkPrefab);
                 chunk.transform.SetParent(transform);
                 chunks[index] = chunk;
-                SetChunkPosition(chunk, index);
+                SetChunkPosition(chunk, index, level);
+                chunk.SetLevel(level);
                 chunk.SetGridCoords(x, z, index);
 
-                AddCells(chunk, index);
+                AddCells(chunk, index, cells);
                 index++;
             }
         }
@@ -49,18 +71,18 @@ public class GridHex : MonoBehaviour
         }
     }
 
-    private void SetChunkPosition(Chunk chunk, int index)
+    private void SetChunkPosition(Chunk chunk, int index, int level)
     {
         Vector3 position;
 
         position.x = (index / zChunks) * HexData.distanceToEdge * 2 * chunk.GetXCellCount();
-        position.y = 0f;
+        position.y = level * 1000f;
         position.z = (index % zChunks) * HexData.distanceToCorner * 1.5f * chunk.GetZCellCount();
 
         chunk.transform.position = position;
     }
 
-    private void AddCells(Chunk chunk, int index)
+    private void AddCells(Chunk chunk, int index, HexCell[] cells)
     {
         int cellIndex = 0;
 
@@ -74,7 +96,7 @@ public class GridHex : MonoBehaviour
                 cells[cellGlobalIndex] = cell;
 
                 SetCellCoordinates(cell, x, z, index, chunk);
-                SetCellNeighbors(cellGlobalIndex, cell);
+                SetCellNeighbors(cellGlobalIndex, cell, cells);
 
                 cellIndex++;
             }
@@ -92,7 +114,7 @@ public class GridHex : MonoBehaviour
         //cell.SetGlobalCoordinateText();
     }
 
-    private void SetCellNeighbors(int index, HexCell cell)
+    private void SetCellNeighbors(int index, HexCell cell, HexCell[] cells)
     {
         foreach (HexDirection dir in Enum.GetValues(typeof(HexDirection))) 
         {

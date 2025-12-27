@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -128,24 +129,18 @@ public class MapManager : MonoBehaviour
 
         SetTextures();
 
-        mapSize = GameManager.Instance.GetMapSize();
+        mapSize = GameSettings.Instance.GetMapSize();
 
         (xChunkCount, zChunkCount) = SetChunkCounts(mapSize);
-
-        continentsCount = SetContinentsCount(mapSize);
-
-        continents = new Continent[continentsCount];
-
-        SetMaxMargin();
     }
 
     private void ApplySeed()
     {
         int seed = 10;
 
-        if (int.TryParse(GameManager.Instance.GetSeedString(), out int parsedSeed))
+        if (int.TryParse(GameSettings.Instance.GetSeedString(), out int parsedSeed))
         {
-            if (parsedSeed >= 0 && parsedSeed <= 999999)
+            if (parsedSeed >= 0 && parsedSeed <= int.MaxValue)
             {
                 seed = parsedSeed;
             }
@@ -344,6 +339,14 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    private void SetContinentsCentres(int localXMin, int localXMax, int localZMin, int localZMax, int index)
+    {
+        int xPos = UnityEngine.Random.Range(localXMin, localXMax);
+        int zPos = UnityEngine.Random.Range(localZMin, localZMax);
+
+        continentsCentres[index] = GetCellIndex(xPos, zPos);
+    }
+
     private void NewMargins()
     {
         minXMargin = 3 * ((int)mapSize + 1);
@@ -351,14 +354,6 @@ public class MapManager : MonoBehaviour
 
         maxXMargin = xCellCount * xChunkCount - minXMargin;
         maxZMargin = zCellCount * zChunkCount - minZMargin;
-    }
-
-    private void SetContinentsCentres(int localXMin, int localXMax, int localZMin, int localZMax, int index)
-    {
-        int xPos = UnityEngine.Random.Range(localXMin, localXMax);
-        int zPos = UnityEngine.Random.Range(localZMin, localZMax);
-
-        continentsCentres[index] = GetCellIndex(xPos, zPos);
     }
 
     public int GetCellIndex(int xPos, int zPos)
@@ -378,6 +373,12 @@ public class MapManager : MonoBehaviour
 
     public void GenerateMap(HexCell[] gridCells)
     {
+        continentsCount = SetContinentsCount(mapSize);
+
+        continents = new Continent[continentsCount];
+
+        SetMaxMargin();
+
         SetContinentCellsAmound();
 
         SetContinentsInRegions();
@@ -407,8 +408,6 @@ public class MapManager : MonoBehaviour
         RandomStructures(gridCells);
 
         GroupSmoothEdges(gridCells);
-
-        //resetowanie marginesow
     }
 
     private void GenerateContinents(HexCell[] gridCells)

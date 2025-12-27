@@ -1,6 +1,14 @@
+using System.Collections;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+public enum GameState
+{
+    Playing,
+    Paused
+}
 
 public class GameManager : MonoBehaviour
 {
@@ -8,10 +16,10 @@ public class GameManager : MonoBehaviour
 
     private bool gamePaused = false;
 
-    private MapSize mapSize = MapSize.Medium;
+    public GameState State { get; private set; } = GameState.Playing;
 
-    private string seedString;
-    
+    public static event System.Action<GameState> OnGameStateChanged;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -19,48 +27,70 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
-    public void PauseGame()
+    private void Update()
     {
-        gamePaused = true;
-        Time.timeScale = 0f;
+        if (SceneManager.GetActiveScene().name != "GameplayScene") 
+            return;
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            TogglePause();
+        }
     }
 
-    public void ResumeGame()
+    private void TogglePause()
     {
-        gamePaused = false;
-        Time.timeScale = 1f;
+        if (State == GameState.Playing)
+            SetState(GameState.Paused);
+        else
+            SetState(GameState.Playing);
+    }
+
+    public void SetState(GameState newState)
+    {
+        State = newState;
+        OnGameStateChanged?.Invoke(State);
+        Time.timeScale = State == GameState.Paused ? 0f : 1f;
     }
 
     public void StartGame()
     {
-        SceneManager.LoadScene("GameplayScene");
+        StartCoroutine(LoadGameWithLoadingScreen());
     }
 
-    public void SetMapSize(int size)
+    private IEnumerator LoadGameWithLoadingScreen()
     {
-        mapSize = (MapSize)size;
+        Time.timeScale = 1f;
+
+        SceneManager.LoadScene("LoadingScene", LoadSceneMode.Single);
+
+        yield return null;
+        yield return null; 
+
+        AsyncOperation gameplayLoad =
+            SceneManager.LoadSceneAsync("GameplayScene", LoadSceneMode.Additive);
+
+        gameplayLoad.allowSceneActivation = false;
+
+        while (gameplayLoad.progress < 0.9f)
+        {
+            yield return null; 
+        }
+
+        gameplayLoad.allowSceneActivation = true;
+
+        while (!gameplayLoad.isDone)
+            yield return null;
+
+        SceneManager.UnloadSceneAsync("LoadingScene");
     }
 
-    public MapSize GetMapSize()
-    {
-        return mapSize;
-    }
-
-    public void SaveSeed(TMP_InputField seedInputField)
-    {
-        seedString = seedInputField.text;
-    }
-
-    public string GetSeedString()
-    {
-        return seedString;
-    }
-
-    public void Quit()
+    public void QuitGame()
     {
         Application.Quit();
     }

@@ -204,9 +204,6 @@ public class HexCell : MonoBehaviour
         if (level >= colors.Length)
            level = colors.Length - 1;
 
-        //if(level < 0)
-        //    level = 0;
-
         terrainLevelIndex = level;
         terrainLevel = terrainLevelIndex * HexData.levelStepHeight;
         centreTerrainlevel = terrainLevel;

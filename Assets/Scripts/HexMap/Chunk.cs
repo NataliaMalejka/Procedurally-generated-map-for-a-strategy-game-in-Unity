@@ -13,6 +13,8 @@ public class Chunk : MonoBehaviour
     private int posZ;
     private int indexInGrid;
 
+    private int level = 0;
+
     [SerializeField] private ChunkMesh chunkMesh;
 
     public HexCell[] GetCells()
@@ -33,6 +35,16 @@ public class Chunk : MonoBehaviour
     public int GetIndexInGrid()
     {
         return indexInGrid;
+    }
+
+    public void SetLevel(int l)
+    {
+        level = l;
+    }
+
+    public int GetLevel()
+    {
+        return level;
     }
 
     public void SetGridCoords(int x, int z, int index)
@@ -179,7 +191,7 @@ public class Chunk : MonoBehaviour
 
         Vector3 centre = new Vector3(
             pos.x + this.transform.position.x,
-            pos.y,
+            pos.y + this.transform.position.y,
             pos.z + this.transform.position.z
         );
 
@@ -201,6 +213,8 @@ public class Chunk : MonoBehaviour
     public void RefreshChunk()
     {
         chunkMesh.Clear();
+
+        chunkMesh.SetMeshData(level, transform.position);
 
         foreach (var cell in cells)
         {

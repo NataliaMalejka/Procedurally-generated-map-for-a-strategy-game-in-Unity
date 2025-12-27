@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -18,11 +19,21 @@ public class ChunkMesh : MonoBehaviour
     [SerializeField] private WaterMesh waterMesh;
     [SerializeField] private RiverMesh riverMesh;
 
+    private Vector3 chunkPos;
+    private int chunkLevel;
+
     private void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
         GetComponent<MeshRenderer>().sharedMaterial = MapManager.Instance.GetTerrainmaterial();
     }
+
+    public void SetMeshData(int level, Vector3 pos)
+    {
+        chunkLevel = level;
+        chunkPos = pos;
+    }
+
 
     public void Clear()
     {
@@ -67,9 +78,9 @@ public class ChunkMesh : MonoBehaviour
 
         if(cell.isOcean || cell.IsLake)
         {
-           waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), v1, AddNoise(m1, noiseStrengthNormal), cell.isOcean);
-           waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), cell.isOcean);
-           waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), v2, cell.isOcean);
+           waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), v1, AddNoise(m1, noiseStrengthNormal), cell.isOcean, chunkLevel);
+           waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), cell.isOcean, chunkLevel);
+           waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), v2, cell.isOcean, chunkLevel);
         }
     }
 
@@ -129,7 +140,7 @@ public class ChunkMesh : MonoBehaviour
 
             if (cell.isOcean || cell.IsLake)
             {
-                waterMesh.CreateTriangle(c, verticles[i], verticles[i + 1], cell.isOcean);
+                waterMesh.CreateTriangle(c, verticles[i], verticles[i + 1], cell.isOcean, chunkLevel);
             }
         }
     }
@@ -433,9 +444,10 @@ public class ChunkMesh : MonoBehaviour
                 coastM1.y = coastM1d.y;
                 coastM2.y = coastM2d.y;
             }
-            waterMesh.CreateRectangle(coastV1, coastV1d, coastM1, coastM1d, isOcean);
-            waterMesh.CreateRectangle(coastM1 , coastM1d ,coastM2,  coastM2d, isOcean);
-            waterMesh.CreateRectangle(coastM2, coastM2d, coastV2, coastV2d, isOcean);
+
+            waterMesh.CreateRectangle(coastV1, coastV1d, coastM1, coastM1d, isOcean, chunkLevel);
+            waterMesh.CreateRectangle(coastM1 , coastM1d ,coastM2,  coastM2d, isOcean, chunkLevel);
+            waterMesh.CreateRectangle(coastM2, coastM2d, coastV2, coastV2d, isOcean, chunkLevel);
         }
     }
 
@@ -552,7 +564,7 @@ public class ChunkMesh : MonoBehaviour
                     coastO2.y = ov2d.y;
                 }
 
-                waterMesh.CreateRectangle(coastO1, coastO1d, coastO2, coastO2d, isOcean);
+                waterMesh.CreateRectangle(coastO1, coastO1d, coastO2, coastO2d, isOcean, chunkLevel);
             }
 
             CreateRectangle(t, neighbourCell.TextureIndex, verticles[i], verticlesD[i], verticles[i + 1], verticlesD[i + 1], temp);
@@ -738,7 +750,7 @@ public class ChunkMesh : MonoBehaviour
                 coastV1d1.y = coastV1.y;
                 coastV1d2.y = coastV1.y;
 
-                waterMesh.CreateTriangle(v1, coastV1d1, coastV1d2, cell.isOcean);
+                waterMesh.CreateTriangle(v1, coastV1d1, coastV1d2, cell.isOcean, chunkLevel);
             }
             else if (!neighbourCell.isOcean && !neighbourCell.IsLake && (nextNeighbourCell.isOcean || nextNeighbourCell.IsLake))
             {
@@ -755,8 +767,8 @@ public class ChunkMesh : MonoBehaviour
                 coastV1d1.y = coastV1.y;
                 coastV1d2.y = coastV1.y;
 
-                waterMesh.CreateTriangle(v1, coastV1d1, v1d2, isOcean);
-                waterMesh.CreateTriangle(v1d2, coastV1d1, coastV1d2, isOcean);
+                waterMesh.CreateTriangle(v1, coastV1d1, v1d2, isOcean, chunkLevel);
+                waterMesh.CreateTriangle(v1d2, coastV1d1, coastV1d2, isOcean, chunkLevel);
             }
             else if ((neighbourCell.isOcean || neighbourCell.IsLake) && !nextNeighbourCell.isOcean && !nextNeighbourCell.IsLake)
             {
@@ -773,14 +785,14 @@ public class ChunkMesh : MonoBehaviour
                 coastV1d1.y = coastV1.y;
                 coastV1d2.y = coastV1.y;
 
-                waterMesh.CreateTriangle(v1, v1d1, coastV1d2, isOcean);
-                waterMesh.CreateTriangle(coastV1d2, v1d1, coastV1d1, isOcean);
+                waterMesh.CreateTriangle(v1, v1d1, coastV1d2, isOcean, chunkLevel);
+                waterMesh.CreateTriangle(coastV1d2, v1d1, coastV1d1, isOcean, chunkLevel);
 
             }
             else
             {
                 bool isOcean = cell.isOcean || neighbourCell.isOcean || nextNeighbourCell.isOcean;
-                waterMesh.CreateTriangle(v1, v1d1, v1d2,isOcean);
+                waterMesh.CreateTriangle(v1, v1d1, v1d2,isOcean, chunkLevel);
             }
         }
         else if (neighbourCell.isOcean || neighbourCell.IsLake)
@@ -798,7 +810,7 @@ public class ChunkMesh : MonoBehaviour
                 coastV1.y = coastV1d1.y;
                 coastV1d2.y = coastV1d1.y;
 
-                waterMesh.CreateTriangle(coastV1, v1d1, coastV1d2, neighbourCell.isOcean);
+                waterMesh.CreateTriangle(coastV1, v1d1, coastV1d2, neighbourCell.isOcean, chunkLevel);
             }
             else
             {
@@ -815,8 +827,8 @@ public class ChunkMesh : MonoBehaviour
                 coastV1.y = coastV1d1.y;
                 coastV1d2.y = coastV1d1.y;
 
-                waterMesh.CreateTriangle(coastV1, v1d1, v1d2, isOcean);
-                waterMesh.CreateTriangle(coastV1, v1d2, coastV1d2, isOcean);
+                waterMesh.CreateTriangle(coastV1, v1d1, v1d2, isOcean, chunkLevel);
+                waterMesh.CreateTriangle(coastV1, v1d2, coastV1d2, isOcean, chunkLevel);
             }
 
         }
@@ -833,7 +845,7 @@ public class ChunkMesh : MonoBehaviour
             coastV1.y = coastV1d2.y;
             coastV1d1.y = coastV1d2.y;
 
-            waterMesh.CreateTriangle(coastV1, coastV1d1, v1d2, nextNeighbourCell.isOcean);
+            waterMesh.CreateTriangle(coastV1, coastV1d1, v1d2, nextNeighbourCell.isOcean, chunkLevel);
         }
     }
 
@@ -868,19 +880,17 @@ public class ChunkMesh : MonoBehaviour
     private void AddTexture(int t1, int t2, int t3, float temp)
     {
         colors.Add(new Color(1f, 0f, 0f, temp));
-        uv3.Add(new Vector4(t1, t2, t3, 0f));
+        uv3.Add(new Vector4(t1, t2, t3, chunkLevel));
 
         colors.Add(new Color(0f, 1f, 0f, temp));
-        uv3.Add(new Vector4(t1, t2, t3, 0f));
+        uv3.Add(new Vector4(t1, t2, t3, chunkLevel));
 
         colors.Add(new Color(0f, 0f, 1f, temp));
-        uv3.Add(new Vector4(t1, t2, t3, 0f));
+        uv3.Add(new Vector4(t1, t2, t3, chunkLevel));
     }
 
     public Vector3 AddNoise(Vector3 v, float noiseStrength)
     {
-        Vector3 chunkPos = this.GetComponentInParent<Transform>().position;
-
         Vector4 noise = MapManager.Instance.GetHexMeshNoise().GetPixelBilinear(v.x + chunkPos.x, v.z + chunkPos.z);
 
         v.x += noise.x * noiseStrength;
