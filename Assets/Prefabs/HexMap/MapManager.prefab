@@ -44,8 +44,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9729f0f9cee5d1d4da1f351f8f0b1df9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
-  mapSize: 1
-  seed: 10
   perlinScale: 0.07
   distWeight: 0.4
   perlinWeight: 0.3
@@ -115,6 +113,13 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
   - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
   snowTexture: {fileID: 2800000, guid: de0dcc3b1c573324c9fd6ff86a5eadda, type: 3}
+  waterColors:
+  - {r: 0.0627451, g: 0.5647059, b: 0.8666667, a: 0}
+  - {r: 0.1882353, g: 0.8156863, b: 0.81960785, a: 0}
+  - {r: 0.8490566, g: 0.1802243, b: 0.1802243, a: 0}
+  - {r: 0.9245283, g: 0.45790315, b: 0.45790315, a: 0}
+  - {r: 0.0473923, g: 0.6698113, b: 0.5128047, a: 0}
+  - {r: 0.41960785, g: 0.8962264, b: 0.6661777, a: 0}
   biomeObjects:
   - biome: 3
     objects:

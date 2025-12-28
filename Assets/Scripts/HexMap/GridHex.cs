@@ -22,25 +22,25 @@ public class GridHex : MonoBehaviour
 
         if (GameSettings.Instance.IsHotBiome())
         {
-            CreateChunks(index, cellsHot);
+            CreateChunks(index, cellsHot, 1);
             index++;
         }
         if(GameSettings.Instance.IsEarthBiome())
         {
-            CreateChunks(index, cellsEarth);
+            CreateChunks(index, cellsEarth, 0);
             index++;
         }
         if (GameSettings.Instance.IsColdBiome())
         {
-            CreateChunks(index, cellsCold);
+            CreateChunks(index, cellsCold, 2);
         }
         if(!GameSettings.Instance.IsHotBiome() && !GameSettings.Instance.IsEarthBiome() && !GameSettings.Instance.IsColdBiome())
         {
-            CreateChunks(index, cellsEarth);
+            CreateChunks(index, cellsEarth, 0);
         }       
     }
 
-    private void CreateChunks(int level, HexCell[] cells)
+    private void CreateChunks(int level, HexCell[] cells, int waterColorIndex)
     {
         chunks = new Chunk[xChunks * zChunks];
         cells = new HexCell[xChunks * zChunks * MapManager.Instance.xCellCount * MapManager.Instance.zCellCount];
@@ -56,6 +56,7 @@ public class GridHex : MonoBehaviour
                 chunks[index] = chunk;
                 SetChunkPosition(chunk, index, level);
                 chunk.SetLevel(level);
+                chunk.SetWaterColorIndex(waterColorIndex);
                 chunk.SetGridCoords(x, z, index);
 
                 AddCells(chunk, index, cells);
@@ -63,7 +64,7 @@ public class GridHex : MonoBehaviour
             }
         }
 
-        MapManager.Instance.GenerateMap(cells);
+        MapManager.Instance.GenerateMap(cells, waterColorIndex);
 
         foreach (Chunk chunk in chunks)
         {

@@ -106,6 +106,10 @@ public class MapManager : MonoBehaviour
     [SerializeField] private Texture2D[] texturesRough;
     [SerializeField] private Texture2D snowTexture;
 
+    [SerializeField] private Color[] waterColors;
+    private Texture2D paletteTex;
+    private int paletteCount;
+
     public BiomeObjects[] biomeObjects;
 
     [SerializeField] private int structureChance;
@@ -171,6 +175,29 @@ public class MapManager : MonoBehaviour
         terrainMaterial.SetTexture("_TexSnow", snowTexture);
 
         terrainMaterial.SetFloat("_ColdMax", coldMax);
+    }
+
+    private void BuildPaletteTexture()
+    {
+        paletteCount = waterColors.Length / 2;
+
+        paletteTex = new Texture2D(paletteCount, 2, TextureFormat.RGBA32, false);
+        paletteTex.filterMode = FilterMode.Point;
+        paletteTex.wrapMode = TextureWrapMode.Clamp;
+
+        for (int i = 0; i < paletteCount; i++)
+        {
+            paletteTex.SetPixel(i, 0, waterColors[i * 2]);     
+            paletteTex.SetPixel(i, 1, waterColors[i * 2 + 1]); 
+        }
+
+        paletteTex.Apply();
+
+        waterMaterial.SetTexture("_ColorPalette", paletteTex);
+        riverMaterial.SetTexture("_ColorPalette", paletteTex);
+
+        waterMaterial.SetFloat("_PaletteSize", paletteCount);
+        riverMaterial.SetFloat("_PaletteSize", paletteCount);
     }
 
     private Texture2DArray SetTex(int w, int h, Texture2D[] texs)
@@ -371,8 +398,10 @@ public class MapManager : MonoBehaviour
         return chunkIndex * (xCellCount * zCellCount) + localCellIndex;
     }
 
-    public void GenerateMap(HexCell[] gridCells)
+    public void GenerateMap(HexCell[] gridCells, int waterColorIndex)
     {
+        BuildPaletteTexture();
+
         continentsCount = SetContinentsCount(mapSize);
 
         continents = new Continent[continentsCount];
@@ -1513,7 +1542,7 @@ public class MapManager : MonoBehaviour
         {
             safety++;
 
-            if (cell.isOcean)
+            if (cell.isOcean || cell.IsLake)
             {
                 endedInOcean = true;
                 break;

@@ -14,6 +14,7 @@ public class Chunk : MonoBehaviour
     private int indexInGrid;
 
     private int level = 0;
+    private int waterColorIndex = 1;
 
     [SerializeField] private ChunkMesh chunkMesh;
 
@@ -45,6 +46,16 @@ public class Chunk : MonoBehaviour
     public int GetLevel()
     {
         return level;
+    }
+
+    public void SetWaterColorIndex(int index)
+    {
+        waterColorIndex = index;
+    }
+
+    public int GetWaterColorIndex()
+    {
+        return waterColorIndex;
     }
 
     public void SetGridCoords(int x, int z, int index)
@@ -214,7 +225,7 @@ public class Chunk : MonoBehaviour
     {
         chunkMesh.Clear();
 
-        chunkMesh.SetMeshData(level, transform.position);
+        chunkMesh.SetMeshData(level, transform.position, waterColorIndex);
 
         foreach (var cell in cells)
         {
