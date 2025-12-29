@@ -13,6 +13,8 @@ public static class HexData
     public static float waterLevel = levelStepHeight * 0.5f;
     public static float oceanWaterLevel = -1;
 
+    public static float LayersDistance = 1000f;
+
     public static Vector3[] corners =
     {
         new Vector3(0f, 0f, distanceToCorner),                      //upper

@@ -18,29 +18,21 @@ public class GridHex : MonoBehaviour
         xChunks = MapManager.Instance.xChunkCount;
         zChunks = MapManager.Instance.zChunkCount;
 
-        int index = 0;
-
-        if (GameSettings.Instance.IsHotBiome())
+        if (GameSettings.Instance.IsHotBiome() > -1)
         {
-            CreateChunks(index, cellsHot, 1);
-            index++;
+            CreateChunks(GameSettings.Instance.IsHotBiome(), cellsHot,(int)Layers.Hot);
         }
-        if(GameSettings.Instance.IsEarthBiome())
+        if(GameSettings.Instance.IsEarthBiome() > -1)
         {
-            CreateChunks(index, cellsEarth, 0);
-            index++;
+            CreateChunks(GameSettings.Instance.IsEarthBiome(), cellsEarth, (int)Layers.Earth);
         }
-        if (GameSettings.Instance.IsColdBiome())
+        if (GameSettings.Instance.IsColdBiome() > -1)
         {
-            CreateChunks(index, cellsCold, 2);
-        }
-        if(!GameSettings.Instance.IsHotBiome() && !GameSettings.Instance.IsEarthBiome() && !GameSettings.Instance.IsColdBiome())
-        {
-            CreateChunks(index, cellsEarth, 0);
-        }       
+            CreateChunks(GameSettings.Instance.IsColdBiome(), cellsCold, (int)Layers.Cold);
+        }     
     }
 
-    private void CreateChunks(int level, HexCell[] cells, int waterColorIndex)
+    private void CreateChunks(int level, HexCell[] cells, int biomelayerIndex)
     {
         chunks = new Chunk[xChunks * zChunks];
         cells = new HexCell[xChunks * zChunks * MapManager.Instance.xCellCount * MapManager.Instance.zCellCount];
@@ -56,7 +48,7 @@ public class GridHex : MonoBehaviour
                 chunks[index] = chunk;
                 SetChunkPosition(chunk, index, level);
                 chunk.SetLevel(level);
-                chunk.SetWaterColorIndex(waterColorIndex);
+                chunk.SetWaterColorIndex(biomelayerIndex);
                 chunk.SetGridCoords(x, z, index);
 
                 AddCells(chunk, index, cells);
@@ -64,7 +56,7 @@ public class GridHex : MonoBehaviour
             }
         }
 
-        MapManager.Instance.GenerateMap(cells, waterColorIndex);
+        MapManager.Instance.GenerateMap(cells, biomelayerIndex);
 
         foreach (Chunk chunk in chunks)
         {

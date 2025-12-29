@@ -1,6 +1,4 @@
 using System.Collections;
-using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -34,11 +32,11 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (SceneManager.GetActiveScene().name != "GameplayScene") 
-            return;
-
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            if (SceneManager.GetActiveScene().name != "GameplayScene")
+                return;
+
             TogglePause();
         }
     }
@@ -60,6 +58,8 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        GameSettings.Instance.SetLayersIndex();
+
         StartCoroutine(LoadGameWithLoadingScreen());
     }
 
@@ -69,11 +69,7 @@ public class GameManager : MonoBehaviour
 
         SceneManager.LoadScene("LoadingScene", LoadSceneMode.Single);
 
-        yield return null;
-        yield return null; 
-
-        AsyncOperation gameplayLoad =
-            SceneManager.LoadSceneAsync("GameplayScene", LoadSceneMode.Additive);
+        AsyncOperation gameplayLoad = SceneManager.LoadSceneAsync("GameplayScene", LoadSceneMode.Additive);
 
         gameplayLoad.allowSceneActivation = false;
 

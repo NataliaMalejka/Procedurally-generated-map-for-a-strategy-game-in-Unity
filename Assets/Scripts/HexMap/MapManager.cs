@@ -155,8 +155,7 @@ public class MapManager : MonoBehaviour
 
     private void SetTextures()
     {
-        int w = texturesColor[0].width;
-        int h = texturesColor[0].height;
+        GetMaxSize(texturesColor, out int w, out int h);
 
         var texArrayColor = SetTex(w, h, texturesColor);
         texArrayColor.Apply();
@@ -171,33 +170,23 @@ public class MapManager : MonoBehaviour
         terrainMaterial.SetTexture("_TexRough", texArrayRough);
 
         snowTexture.wrapMode = TextureWrapMode.Repeat;
-        snowTexture.filterMode = FilterMode.Bilinear;      
+        snowTexture.filterMode = FilterMode.Bilinear;
         terrainMaterial.SetTexture("_TexSnow", snowTexture);
 
         terrainMaterial.SetFloat("_ColdMax", coldMax);
     }
 
-    private void BuildPaletteTexture()
+    private void GetMaxSize(Texture2D[] texs, out int maxW, out int maxH)
     {
-        paletteCount = waterColors.Length / 2;
+        maxW = 0;
+        maxH = 0;
 
-        paletteTex = new Texture2D(paletteCount, 2, TextureFormat.RGBA32, false);
-        paletteTex.filterMode = FilterMode.Point;
-        paletteTex.wrapMode = TextureWrapMode.Clamp;
-
-        for (int i = 0; i < paletteCount; i++)
+        foreach (var t in texs)
         {
-            paletteTex.SetPixel(i, 0, waterColors[i * 2]);     
-            paletteTex.SetPixel(i, 1, waterColors[i * 2 + 1]); 
+            if (t == null) continue;
+            maxW = Mathf.Max(maxW, t.width);
+            maxH = Mathf.Max(maxH, t.height);
         }
-
-        paletteTex.Apply();
-
-        waterMaterial.SetTexture("_ColorPalette", paletteTex);
-        riverMaterial.SetTexture("_ColorPalette", paletteTex);
-
-        waterMaterial.SetFloat("_PaletteSize", paletteCount);
-        riverMaterial.SetFloat("_PaletteSize", paletteCount);
     }
 
     private Texture2DArray SetTex(int w, int h, Texture2D[] texs)
@@ -214,14 +203,33 @@ public class MapManager : MonoBehaviour
 
         for (int i = 0; i < texs.Length; i++)
         {
-            Texture2D tex = texs[i];
-
-            Texture2D converted = ConvertToRGBA32(tex);
-
-            Graphics.CopyTexture(converted, 0, 0, texArray, i, 0);
+            Texture2D resized = ResizeToRGBA32(texs[i], w, h);
+            Graphics.CopyTexture(resized, 0, 0, texArray, i, 0);
         }
 
         return texArray;
+    }
+
+    private Texture2D ResizeToRGBA32(Texture2D source, int targetW, int targetH)
+    {
+        RenderTexture rt = RenderTexture.GetTemporary(
+            targetW,
+            targetH,
+            0,
+            RenderTextureFormat.ARGB32
+        );
+
+        Graphics.Blit(source, rt);
+
+        Texture2D tex = new Texture2D(targetW, targetH, TextureFormat.RGBA32, true);
+        RenderTexture.active = rt;
+        tex.ReadPixels(new Rect(0, 0, targetW, targetH), 0, 0);
+        tex.Apply();
+
+        RenderTexture.active = null;
+        RenderTexture.ReleaseTemporary(rt);
+
+        return tex;
     }
 
     private Texture2D ConvertToRGBA32(Texture2D source)
@@ -244,6 +252,29 @@ public class MapManager : MonoBehaviour
         RenderTexture.ReleaseTemporary(rt);
 
         return tex;
+    }
+
+    private void BuildPaletteTexture()
+    {
+        paletteCount = waterColors.Length / 2;
+
+        paletteTex = new Texture2D(paletteCount, 2, TextureFormat.RGBA32, false);
+        paletteTex.filterMode = FilterMode.Point;
+        paletteTex.wrapMode = TextureWrapMode.Clamp;
+
+        for (int i = 0; i < paletteCount; i++)
+        {
+            paletteTex.SetPixel(i, 0, waterColors[i * 2]);
+            paletteTex.SetPixel(i, 1, waterColors[i * 2 + 1]);
+        }
+
+        paletteTex.Apply();
+
+        waterMaterial.SetTexture("_ColorPalette", paletteTex);
+        riverMaterial.SetTexture("_ColorPalette", paletteTex);
+
+        waterMaterial.SetFloat("_PaletteSize", paletteCount);
+        riverMaterial.SetFloat("_PaletteSize", paletteCount);
     }
 
     public Material GetTerrainmaterial()
@@ -398,7 +429,7 @@ public class MapManager : MonoBehaviour
         return chunkIndex * (xCellCount * zCellCount) + localCellIndex;
     }
 
-    public void GenerateMap(HexCell[] gridCells, int waterColorIndex)
+    public void GenerateMap(HexCell[] gridCells, int biomeLayerIndex)
     {
         BuildPaletteTexture();
 
@@ -426,7 +457,7 @@ public class MapManager : MonoBehaviour
 
         CalculateMoisture(gridCells);
 
-        SetBiomes(gridCells);
+        SetBiomes(gridCells, biomeLayerIndex);
 
         DetectEdgeType(gridCells);
 
@@ -1018,7 +1049,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    private void SetBiomes(HexCell[] gridCells)
+    private void SetBiomes(HexCell[] gridCells, int biomeLayerIndex)
     {
         foreach (var cell in gridCells)
         {
@@ -1037,22 +1068,66 @@ public class MapManager : MonoBehaviour
 
             if (cell.Temperature < coldMax)
             {
-                cell.SetBiome(Biome.Tundra);
+                if(biomeLayerIndex == (int)Layers.Earth)
+                {
+                    cell.SetBiome(Biome.Tundra);
+                }
+                else if (biomeLayerIndex == (int)Layers.Hot)
+                {
+                    cell.SetBiome(Biome.HTundra);
+                }
+                else if (biomeLayerIndex == (int)Layers.Cold)
+                {
+                    cell.SetBiome(Biome.CTundra);
+                }
                 continue;
             }
             if (cell.Temperature < moderateTempMax)
             {
                 if (cell.Moisture < dryMax)
                 {
-                    cell.SetBiome(Biome.Grassland);
+                    if (biomeLayerIndex == (int)Layers.Earth)
+                    {
+                        cell.SetBiome(Biome.Grassland);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Hot)
+                    {
+                        cell.SetBiome(Biome.HGrassland);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Cold)
+                    {
+                        cell.SetBiome(Biome.CGrassland);
+                    }
                 }
                 else if (cell.Moisture < moderateMoistureMax)
                 {
-                    cell.SetBiome(Biome.ContinentalDry);
+                    if (biomeLayerIndex == (int)Layers.Earth)
+                    {
+                        cell.SetBiome(Biome.ContinentalDry);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Hot)
+                    {
+                        cell.SetBiome(Biome.HContinentalDry);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Cold)
+                    {
+                        cell.SetBiome(Biome.CContinentalDry);
+                    }
                 }
                 else
                 {
-                    cell.SetBiome(Biome.ContinentalWet);
+                    if (biomeLayerIndex == (int)Layers.Earth)
+                    {
+                        cell.SetBiome(Biome.ContinentalWet);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Hot)
+                    {
+                        cell.SetBiome(Biome.HContinentalWet);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Cold)
+                    {
+                        cell.SetBiome(Biome.CContinentalWet);
+                    }
                 }
                 continue;
             }
@@ -1060,15 +1135,48 @@ public class MapManager : MonoBehaviour
             {
                 if (cell.Moisture < dryMax)
                 {
-                    cell.SetBiome(Biome.Desert);
+                    if (biomeLayerIndex == (int)Layers.Earth)
+                    {
+                        cell.SetBiome(Biome.Desert);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Hot)
+                    {
+                        cell.SetBiome(Biome.HDesert);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Cold)
+                    {
+                        cell.SetBiome(Biome.CDesert);
+                    }
                 }
                 else if (cell.Moisture < moderateMoistureMax)
                 {
-                    cell.SetBiome(Biome.Savanna);
+                    if (biomeLayerIndex == (int)Layers.Earth)
+                    {
+                        cell.SetBiome(Biome.Savanna);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Hot)
+                    {
+                        cell.SetBiome(Biome.HSavanna);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Cold)
+                    {
+                        cell.SetBiome(Biome.CSavanna);
+                    }
                 }
                 else
                 {
-                    cell.SetBiome(Biome.RainForest);
+                    if (biomeLayerIndex == (int)Layers.Earth)
+                    {
+                        cell.SetBiome(Biome.RainForest);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Hot)
+                    {
+                        cell.SetBiome(Biome.HRainForest);
+                    }
+                    else if (biomeLayerIndex == (int)Layers.Cold)
+                    {
+                        cell.SetBiome(Biome.CRainForest);
+                    }
                 }
                 continue;
             }

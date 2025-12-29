@@ -1,6 +1,13 @@
 using TMPro;
 using UnityEngine;
 
+enum Layers
+{
+    Earth,
+    Hot,
+    Cold
+}
+
 public class GameSettings : MonoBehaviour
 {
     public static GameSettings Instance { get; private set; }
@@ -9,9 +16,11 @@ public class GameSettings : MonoBehaviour
 
     private string seedString;
 
-    private bool isEarth = true;
-    private bool isCold = false;
-    private bool isHot = false;
+    private int isEarth = -1;
+    private int isHot = 0;
+    private int isCold = -1;
+
+    private int maxlayerIndex = 0;
 
     private void Awake()
     {
@@ -45,33 +54,65 @@ public class GameSettings : MonoBehaviour
         return seedString;
     }
 
-    public void SetEarthBiome(bool value)
+    public void SetEarthBiome(int value)
     {
         isEarth = value;
     }
 
-    public bool IsEarthBiome()
+    public int IsEarthBiome()
     {
         return isEarth;
     }
 
-    public void SetColdBiome(bool value)
+    public void SetColdBiome(int value)
     {
         isCold = value;
     }
 
-    public bool IsColdBiome()
+    public int IsColdBiome()
     {
         return isCold;
     }
 
-    public void SetHotBiome(bool value)
+    public void SetHotBiome(int value)
     {
         isHot = value;
     }
 
-    public bool IsHotBiome()
+    public int IsHotBiome()
     {
         return isHot;
+    }
+
+    public int getMaxLayerIndex()
+    {
+        return maxlayerIndex;
+    }
+
+    public void SetLayersIndex()
+    {
+        int index = 0;
+
+        if (isHot > -1)
+        {
+            isHot = index;
+            index++;
+        }
+        if (isEarth > -1)
+        {
+            isEarth = index;
+            index++;
+        }
+        if (isCold > -1)
+        {
+            isCold = index;
+            index++;
+        }
+        if (isHot < 0 && isEarth < 0 && isCold < 0)
+        {
+            isEarth = 0;
+        }
+
+        maxlayerIndex = index;
     }
 }

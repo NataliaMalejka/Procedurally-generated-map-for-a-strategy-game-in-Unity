@@ -20,6 +20,13 @@ public class MapCamera : MonoBehaviour
     [SerializeField] private float rotationSpeed = 180;
     private float rotationAngle;
 
+    private int currentLayer = 0;
+
+    private void Start()
+    {
+        SetStartPos();
+    }
+
     private void Update()
     {
         float zoomDelta = Mouse.current.scroll.ReadValue().y * 0.01f;
@@ -38,6 +45,19 @@ public class MapCamera : MonoBehaviour
         }
 
         UpdatePosition();
+        UpdateLayer();
+    }
+
+    private void SetStartPos()
+    {
+        if (GameSettings.Instance.IsEarthBiome() > -1)
+        {
+            SetLayer(GameSettings.Instance.IsEarthBiome());
+        }
+        else
+        {
+            SetLayer(0);
+        }
     }
 
     private void AdjustZoom(float delta)
@@ -110,5 +130,46 @@ public class MapCamera : MonoBehaviour
 
         Vector3 move3D = new Vector3(move2D.x, 0f, move2D.y);
         transform.position += move3D * zoomSpeed * Time.deltaTime;
+    }
+
+    private void UpdateLayer()
+    {
+        if (Input.GetKey(KeyCode.W))
+        {
+            if (currentLayer < GameSettings.Instance.getMaxLayerIndex())
+                UpperLayer();
+        }
+        else if (Input.GetKey(KeyCode.S))
+        {
+            if(currentLayer > 0)
+                LowerLayer();
+        }
+    }
+
+    private void LowerLayer()
+    {
+        currentLayer--;
+
+        var pos = transform.position;
+        pos.y -= HexData.LayersDistance;
+        transform.position = pos;
+    }
+
+    private void UpperLayer()
+    {
+        currentLayer++;
+
+        var pos = transform.position;
+        pos.y += HexData.LayersDistance;
+        transform.position = pos;
+    }
+
+    private void SetLayer(int index)
+    {
+        currentLayer = index;
+
+        var pos = transform.position;
+        pos.y = index * HexData.LayersDistance;
+        transform.position = pos;
     }
 }

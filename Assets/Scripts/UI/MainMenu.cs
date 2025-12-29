@@ -16,17 +16,39 @@ public class MainMenu : MonoBehaviour
 
     public void ReadEarthBiome(Toggle toggle)
     {
-        GameSettings.Instance.SetEarthBiome(toggle.isOn);
+        if(toggle.isOn)
+        {
+            GameSettings.Instance.SetEarthBiome(0);
+        }
+        else
+        {
+            GameSettings.Instance.SetEarthBiome(-1);
+        }
+        
     }
 
     public void ReadColdBiome(Toggle toggle)
     {
-        GameSettings.Instance.SetColdBiome(toggle.isOn);
+        if(toggle.isOn)
+        {
+            GameSettings.Instance.SetColdBiome(0);
+        }
+        else
+        {
+            GameSettings.Instance.SetColdBiome(-1);
+        }     
     }
 
     public void ReadHotBiome(Toggle toggle)
     {
-        GameSettings.Instance.SetHotBiome(toggle.isOn);
+        if(toggle.isOn)
+        {
+            GameSettings.Instance.SetHotBiome(0);
+        }
+        else
+        {
+            GameSettings.Instance.SetHotBiome(-1);
+        }
     }
 
     public void OnStartButton()

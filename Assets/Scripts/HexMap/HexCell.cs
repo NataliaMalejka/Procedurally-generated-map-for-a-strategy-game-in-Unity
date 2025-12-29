@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -7,13 +6,30 @@ public enum Biome
 {
     Ocean,
     Mountain,
+
     Tundra,
     Grassland,
     ContinentalDry,
     ContinentalWet,
     RainForest,
     Savanna,
-    Desert
+    Desert,
+
+    HTundra,
+    HGrassland,
+    HContinentalDry,
+    HContinentalWet,
+    HRainForest,
+    HSavanna,
+    HDesert,
+
+    CTundra,
+    CGrassland,
+    CContinentalDry,
+    CContinentalWet,
+    CRainForest,
+    CSavanna,
+    CDesert
 }
 
 public class HexCell : MonoBehaviour
@@ -212,7 +228,6 @@ public class HexCell : MonoBehaviour
     public void SetBiome(Biome biome)
     {
         cellBiome = biome;
-        cellColor = colors[(int)cellBiome];
         textureIndex = (int)cellBiome;
     }
 
