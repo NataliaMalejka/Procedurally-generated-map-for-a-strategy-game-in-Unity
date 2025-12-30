@@ -16,8 +16,8 @@ public class GameSettings : MonoBehaviour
 
     private string seedString;
 
-    private int isEarth = -1;
-    private int isHot = 0;
+    private int isEarth = 0;
+    private int isHot = -1;
     private int isCold = -1;
 
     private int maxlayerIndex = 0;
