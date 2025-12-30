@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 public class MapCamera : MonoBehaviour
 {
+    [SerializeField] private Camera cam;
     [SerializeField] private Transform swivel;
     [SerializeField] private Transform stick;
 
@@ -22,9 +23,13 @@ public class MapCamera : MonoBehaviour
 
     private int currentLayer = 0;
 
+    private float UpBorder;
+    private float downBorder;
+
     private void Start()
     {
         SetStartPos();
+        SetBorders();
     }
 
     private void Update()
@@ -60,6 +65,12 @@ public class MapCamera : MonoBehaviour
         }
     }
 
+    private void SetBorders()
+    {
+        UpBorder = MapManager.Instance.zChunkCount * MapManager.Instance.zCellCount * 1.5f * HexData.distanceToCorner - HexData.distanceToCorner;
+        downBorder = 0;
+    }
+
     private void AdjustZoom(float delta)
     {
         zoom = Mathf.Clamp01(zoom + delta);
@@ -69,6 +80,8 @@ public class MapCamera : MonoBehaviour
 
         float angle = Mathf.Lerp(swivelMinZoom, swivelMaxZoom, zoom);
         swivel.localRotation = Quaternion.Euler(angle, 0f, 0f);
+
+        EnforceZBounds();
     }
 
     private void AdjustRotation(float delta)
@@ -84,6 +97,8 @@ public class MapCamera : MonoBehaviour
         }
 
         transform.localRotation = Quaternion.Euler(0f, rotationAngle, 0f);
+
+        EnforceZBounds();
     }
 
     private void UpdatePosition()
@@ -130,16 +145,106 @@ public class MapCamera : MonoBehaviour
 
         Vector3 move3D = new Vector3(move2D.x, 0f, move2D.y);
         transform.position += move3D * zoomSpeed * Time.deltaTime;
+
+        EnforceZBounds();
+    }
+
+    private float GetCameraZViewExtent()
+    {
+        Vector3 camPos = cam.transform.position;
+
+        Vector3 rayDir = Quaternion.Euler(cam.transform.eulerAngles.x + cam.fieldOfView * 0.5f,
+                                          cam.transform.eulerAngles.y,
+                                          0f) * Vector3.forward;
+
+        if (Mathf.Abs(rayDir.y) < 0.0001f)
+            return 0f;
+
+        float t = -camPos.y / rayDir.y;
+
+        if (t < 0f)
+            return 0f;
+
+        Vector3 hitPoint = camPos + rayDir * t;
+
+        return hitPoint.z - transform.position.z;
+    }
+
+    private void GetCameraZViewRange(out float viewMinZ, out float viewMaxZ)
+    {
+        Vector3 camPos = cam.transform.position;
+
+        float pitch = cam.transform.eulerAngles.x;
+        float yaw = cam.transform.eulerAngles.y;
+        float halfFov = cam.fieldOfView * 0.5f;
+
+        Vector3 topDir = Quaternion.Euler(pitch - halfFov, yaw, 0f) * Vector3.forward;
+        Vector3 bottomDir = Quaternion.Euler(pitch + halfFov, yaw, 0f) * Vector3.forward;
+
+        viewMinZ = float.PositiveInfinity;
+        viewMaxZ = float.NegativeInfinity;
+
+        if (Mathf.Abs(topDir.y) > 0.0001f)
+        {
+            float t = -camPos.y / topDir.y;
+            if (t > 0f)
+            {
+                float z = (camPos + topDir * t).z;
+                viewMinZ = Mathf.Min(viewMinZ, z);
+                viewMaxZ = Mathf.Max(viewMaxZ, z);
+            }
+        }
+
+        if (Mathf.Abs(bottomDir.y) > 0.0001f)
+        {
+            float t = -camPos.y / bottomDir.y;
+            if (t > 0f)
+            {
+                float z = (camPos + bottomDir * t).z;
+                viewMinZ = Mathf.Min(viewMinZ, z);
+                viewMaxZ = Mathf.Max(viewMaxZ, z);
+            }
+        }
+    }
+
+    private void EnforceZBounds()
+    {
+        GetCameraZViewRange(out float viewMinZ, out float viewMaxZ);
+
+        Vector3 pos = transform.position;
+
+        if (viewMinZ < downBorder)
+        {
+            pos.z += downBorder - viewMinZ;
+        }
+        else if (viewMaxZ > UpBorder)
+        {
+            pos.z -= viewMaxZ - UpBorder;
+        }
+
+        transform.position = pos;
+    }
+
+    private void ClampPositionZ()
+    {
+        Vector3 pos = transform.position;
+
+        float viewExtent = GetCameraZViewExtent();
+        float minZ = downBorder + viewExtent;
+        float maxZ = UpBorder - viewExtent;
+
+        pos.z = Mathf.Clamp(pos.z, minZ, maxZ);
+        transform.position = pos;
     }
 
     private void UpdateLayer()
     {
-        if (Input.GetKey(KeyCode.W))
+        if (Input.GetKeyUp(KeyCode.W))
         {
-            if (currentLayer < GameSettings.Instance.getMaxLayerIndex())
+            if (currentLayer < GameSettings.Instance.getMaxLayerIndex()-1)
                 UpperLayer();
         }
-        else if (Input.GetKey(KeyCode.S))
+        else if (Input.GetKeyUp(KeyCode.S))
         {
             if(currentLayer > 0)
                 LowerLayer();

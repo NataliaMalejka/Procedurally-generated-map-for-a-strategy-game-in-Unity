@@ -69,6 +69,9 @@ public class GameManager : MonoBehaviour
 
         SceneManager.LoadScene("LoadingScene", LoadSceneMode.Single);
 
+        yield return null;
+        yield return null;
+
         AsyncOperation gameplayLoad = SceneManager.LoadSceneAsync("GameplayScene", LoadSceneMode.Additive);
 
         gameplayLoad.allowSceneActivation = false;
