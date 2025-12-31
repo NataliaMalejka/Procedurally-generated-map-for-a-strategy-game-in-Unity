@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 public class Chunk : MonoBehaviour
 {
@@ -15,6 +14,8 @@ public class Chunk : MonoBehaviour
 
     private int level = 0;
     private int waterColorIndex = 1;
+
+    private int columnIndex = -1;
 
     [SerializeField] private ChunkMesh chunkMesh;
 
@@ -63,6 +64,16 @@ public class Chunk : MonoBehaviour
         posX = x;
         posZ = z;
         indexInGrid = index;
+    }
+
+    public void SetColumnIndex(int index)
+    {
+        columnIndex = index;
+    }
+
+    public int GetColumnIndex()
+    {
+        return columnIndex;
     }
 
     private void OnEnable()

@@ -23,10 +23,13 @@ public class ChunkMesh : MonoBehaviour
     private int chunkLevel;
     private int waterColorIndex;
 
+    private float maxPos;
+
     private void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
         GetComponent<MeshRenderer>().sharedMaterial = MapManager.Instance.GetTerrainmaterial();
+        maxPos = MapManager.Instance.xChunkCount * MapManager.Instance.xCellCount * HexData.distanceToEdge * 2;
     }
 
     public void SetMeshData(int level, Vector3 pos, int index)
@@ -306,6 +309,37 @@ public class ChunkMesh : MonoBehaviour
         m1d = transform.InverseTransformPoint(m1d);
         m2d = transform.InverseTransformPoint(m2d);
 
+        bool endmap = false;
+
+        if (v1d.x < v1.x)
+        {
+            var newX = (v1.x - v1d.x) - maxPos;
+            v1d = new Vector3(v1.x - newX, v1d.y, v1d.z);
+
+            endmap = true;
+        }
+        if (v2d.x < v2.x)
+        {
+            var newX = (v2.x - v2d.x) - maxPos;
+            v2d = new Vector3(v2.x - newX, v2d.y, v2d.z);
+
+            endmap = true;
+        }
+        if (m1d.x < m1.x)
+        {
+            var newX = (m1.x - m1d.x) - maxPos;
+            m1d = new Vector3(m1.x - newX, m1d.y, m1d.z);
+
+            endmap = true;
+        }
+        if (m2d.x < m2.x)
+        {
+            var newX = (m2.x - m2d.x) - maxPos;
+            m2d = new Vector3(m2.x - newX, m2d.y, m2d.z);
+
+            endmap = true;
+        }
+
         int t2 = neighbourCell.TextureIndex;
 
         if ((cell.GetEdge((index + 5) % 6).GetEdgeType() != EdgeType.Smooth))
@@ -320,10 +354,10 @@ public class ChunkMesh : MonoBehaviour
         if ((neighbourCell.GetEdge((index + 3) % 6).GetEdgeType() != EdgeType.Smooth))
         {
             if ((neighbourCell.GetEdge((index + 4) % 6).GetEdgeType() != EdgeType.Smooth))
-                v1d = AddNoise(v1d, noiseStrengthNormal);
+                v1d = AddNoise(v1d, noiseStrengthNormal, endmap);
 
             if ((neighbourCell.GetEdge((index + 2) % 6).GetEdgeType() != EdgeType.Smooth))
-                v2d = AddNoise(v2d, noiseStrengthNormal);
+                v2d = AddNoise(v2d, noiseStrengthNormal, endmap);
         }
 
         if(cell.GetEdge(index).GetEdgeType() == EdgeType.Cliff || cell.GetEdge(index).GetEdgeType() == EdgeType.Mountain)
@@ -352,9 +386,9 @@ public class ChunkMesh : MonoBehaviour
         }
         else
         {
-            CreateRectangle(t, t2, v1, v1d, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), temp);
-            CreateRectangle(t, t2, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), temp);
-            CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), v2, v2d, temp);
+            CreateRectangle(t, t2, v1, v1d, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal, endmap), temp);
+            CreateRectangle(t, t2, AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal, endmap), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal, endmap), temp);
+            CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal, endmap), v2, v2d, temp);
         }
 
         if((cell.GetEdge(index).InRiver && neighbourCell.GetEdge((index + 3) % 6).OutRiver) || (cell.GetEdge(index).OutRiver && neighbourCell.GetEdge((index + 3) % 6).InRiver))
@@ -400,8 +434,8 @@ public class ChunkMesh : MonoBehaviour
 
             m1 = AddNoise(m1, noiseStrengthNormal);
             m2 = AddNoise(m2, noiseStrengthNormal);
-            m1d = AddNoise(m1d, noiseStrengthNormal);
-            m2d = AddNoise(m2d, noiseStrengthNormal);
+            m1d = AddNoise(m1d, noiseStrengthNormal, endmap);
+            m2d = AddNoise(m2d, noiseStrengthNormal, endmap);
 
             var coastV1 = v1;
             var coastV2 = v2;
@@ -510,6 +544,27 @@ public class ChunkMesh : MonoBehaviour
         v2d = transform.InverseTransformPoint(v2d);
         m1d = transform.InverseTransformPoint(m1d);
         m2d = transform.InverseTransformPoint(m2d);
+
+        //if (v1d.x < v1.x)
+        //{
+        //    var newX = (v1.x - v1d.x) - maxPos;
+        //    v1d = new Vector3(v1.x - newX, v1d.y, v1d.z);
+        //}
+        //if (v2d.x < v2.x)
+        //{
+        //    var newX = (v2.x - v2d.x) - maxPos;
+        //    v2d = new Vector3(v2.x - newX, v2d.y, v2d.z);
+        //}
+        //if (m1d.x < m1.x)
+        //{
+        //    var newX = (m1.x - m1d.x) - maxPos;
+        //    m1d = new Vector3(m1.x - newX, m1d.y, m1d.z);
+        //}
+        //if (m2d.x < m2.x)
+        //{
+        //    var newX = (m2.x - m2d.x) - maxPos;
+        //    m2d = new Vector3(m2.x - newX, m2d.y, m2d.z);
+        //}
 
         List<Vector3> verticles = new List<Vector3>()
         {
@@ -638,6 +693,9 @@ public class ChunkMesh : MonoBehaviour
         if (cellEdge == EdgeType.Cliff || cellEdge2 == EdgeType.Cliff || cellEdge == EdgeType.Mountain|| cellEdge2 == EdgeType.Mountain)
             t = 1;
 
+        bool endmap = false;
+        bool doubleEndmap = false;
+
         if (index == 0) 
         {
             v1d1 = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge(3).GetLocalV1());
@@ -646,6 +704,22 @@ public class ChunkMesh : MonoBehaviour
             v1d1 = transform.InverseTransformPoint(v1d1);
             v1d2 = transform.InverseTransformPoint(v1d2);
 
+            if (v1d2.x < v1.x)
+            {
+                var newX2 = (v1.x - v1d2.x) - maxPos;
+                v1d2 = new Vector3(v1.x - newX2, v1d2.y, v1d2.z);
+
+                if (v1d1.x < v1.x)
+                {
+                    var newX = (v1.x - v1d1.x) - maxPos;
+                    v1d1 = new Vector3(v1.x - newX, v1d1.y, v1d1.z);
+
+                    doubleEndmap = true;
+                }
+
+                endmap = true;
+            }
+
             var edge2 = neighbourCell.GetEdge(2).GetEdgeType();
             var edge3 = neighbourCell.GetEdge(3).GetEdgeType();
             var edge4 = nextNeighbourCell.GetEdge(4).GetEdgeType();
@@ -653,7 +727,7 @@ public class ChunkMesh : MonoBehaviour
 
             if (edge2 != EdgeType.Smooth && edge3 != EdgeType.Smooth)
             {
-                v1d1 = AddNoise(v1d1, noiseStrengthNormal);
+                v1d1 = AddNoise(v1d1, noiseStrengthNormal, doubleEndmap);
             }
 
             if (edge2 == EdgeType.Cliff || edge3 == EdgeType.Cliff || edge2 == EdgeType.Mountain || edge3 == EdgeType.Mountain)
@@ -661,7 +735,7 @@ public class ChunkMesh : MonoBehaviour
 
             if (edge4 != EdgeType.Smooth && edge5 != EdgeType.Smooth)
             {
-                v1d2 = AddNoise(v1d2, noiseStrengthNormal);               
+                v1d2 = AddNoise(v1d2, noiseStrengthNormal, endmap);               
             }
 
             if (edge4 == EdgeType.Cliff || edge5 == EdgeType.Cliff || edge4 == EdgeType.Mountain || edge5 == EdgeType.Mountain)
@@ -675,6 +749,22 @@ public class ChunkMesh : MonoBehaviour
             v1d1 = transform.InverseTransformPoint(v1d1);
             v1d2 = transform.InverseTransformPoint(v1d2);
 
+            if (v1d1.x < v1.x)
+            {
+                var newX = (v1.x - v1d1.x) - maxPos;
+                v1d1 = new Vector3(v1.x - newX, v1d1.y, v1d1.z);
+
+                if (v1d2.x < v1.x)
+                {
+                    var newX2 = (v1.x - v1d2.x) - maxPos;
+                    v1d2 = new Vector3(v1.x - newX2, v1d2.y, v1d2.z);
+
+                    doubleEndmap = true;
+                }
+
+                endmap = true;
+            }
+
             var edge3 = neighbourCell.GetEdge(3).GetEdgeType();
             var edge4 = neighbourCell.GetEdge(4).GetEdgeType();
             var edge5 = nextNeighbourCell.GetEdge(5).GetEdgeType();
@@ -682,12 +772,12 @@ public class ChunkMesh : MonoBehaviour
 
             if (edge3 != EdgeType.Smooth && edge4 != EdgeType.Smooth)
             {
-                v1d1 = AddNoise(v1d1, noiseStrengthNormal);        
+                v1d1 = AddNoise(v1d1, noiseStrengthNormal, endmap);        
             }
 
             if (edge5 != EdgeType.Smooth && edge0 != EdgeType.Smooth)
             {
-                v1d2 = AddNoise(v1d2, noiseStrengthNormal);
+                v1d2 = AddNoise(v1d2, noiseStrengthNormal, doubleEndmap);
             }
 
             if (edge3 == EdgeType.Cliff || edge4 == EdgeType.Cliff || edge3 == EdgeType.Mountain || edge4 == EdgeType.Mountain)
@@ -722,7 +812,7 @@ public class ChunkMesh : MonoBehaviour
             temp = nextNeighbourCell.Temperature;
         }
 
-        CreateTriangle((v1), (v1d1), (v1d2));
+        CreateTriangle(v1, v1d1, v1d2);
         AddTexture(t, t2, t3, temp);
 
         if(cell.isOcean || cell.IsLake || neighbourCell.isOcean || neighbourCell.IsLake || nextNeighbourCell.isOcean || nextNeighbourCell.IsLake)
@@ -891,9 +981,16 @@ public class ChunkMesh : MonoBehaviour
         uv3.Add(new Vector4(t1, t2, t3, chunkLevel));
     }
 
-    public Vector3 AddNoise(Vector3 v, float noiseStrength)
+    public Vector3 AddNoise(Vector3 v, float noiseStrength, bool endMap = false)
     {
-        Vector4 noise = MapManager.Instance.GetHexMeshNoise().GetPixelBilinear(v.x + chunkPos.x, v.z + chunkPos.z);
+        Vector4 noise;
+
+        if (endMap)
+        {
+            noise = MapManager.Instance.GetHexMeshNoise().GetPixelBilinear(v.x - HexData.distanceToEdge * 2 * MapManager.Instance.xCellCount, v.z);
+        }
+        else
+            noise = MapManager.Instance.GetHexMeshNoise().GetPixelBilinear(v.x + chunkPos.x, v.z + chunkPos.z);
 
         v.x += noise.x * noiseStrength;
         v.z += noise.z * noiseStrength;

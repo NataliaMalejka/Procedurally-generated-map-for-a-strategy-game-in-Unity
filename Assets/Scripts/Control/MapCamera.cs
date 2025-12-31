@@ -1,11 +1,15 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
 
 public class MapCamera : MonoBehaviour
 {
     [SerializeField] private Camera cam;
     [SerializeField] private Transform swivel;
     [SerializeField] private Transform stick;
+
+    [SerializeField] private GridHex gridHex;
 
     [SerializeField] private float moveSpeedMin = 40f;
     [SerializeField] private float moveSpeedMax = 150f;
@@ -26,10 +30,14 @@ public class MapCamera : MonoBehaviour
     private float UpBorder;
     private float downBorder;
 
+    private float lastCameraX;
+
     private void Start()
     {
         SetStartPos();
         SetBorders();
+
+        lastCameraX = transform.position.x;
     }
 
     private void Update()
@@ -50,6 +58,10 @@ public class MapCamera : MonoBehaviour
         }
 
         UpdatePosition();
+
+        HandleHorizontalWrap();
+        lastCameraX = transform.position.x;
+
         UpdateLayer();
     }
 
@@ -149,13 +161,99 @@ public class MapCamera : MonoBehaviour
         EnforceZBounds();
     }
 
+    private void HandleHorizontalWrap()
+    {
+        float camX = transform.position.x;
+        float delta = camX - lastCameraX;
+
+        if (delta > 0f)
+        {
+            CheckMoveRight();
+        }
+        else if (delta < 0f)
+        {
+            CheckMoveLeft();
+        }
+    }
+
+    private void CheckMoveRight()
+    {
+        float cameraRightEdge = cam.transform.position.x + cam.orthographicSize * cam.aspect;
+
+        float rightmostX = GetColumnWorldX(gridHex.RightmostColumn);
+
+        if (cameraRightEdge > rightmostX - gridHex.ColumnWidth * 3) 
+        {
+            MoveLeftColumnToRight();
+        }
+    }
+
+    private void CheckMoveLeft()
+    {
+        float cameraLeftEdge = cam.transform.position.x - cam.orthographicSize * cam.aspect;
+
+        float leftmostX = GetColumnWorldX(gridHex.LeftmostColumn);
+
+        if (cameraLeftEdge < leftmostX + gridHex.ColumnWidth * 3) 
+        {
+            MoveRightColumnToLeft();
+        }
+    }
+
+    private void MoveLeftColumnToRight()
+    {
+        List<Chunk> column = gridHex.columns[gridHex.LeftmostColumn];
+        gridHex.columns.Remove(gridHex.LeftmostColumn);
+
+        int newColumnIndex = gridHex.RightmostColumn + 1;
+
+        foreach (Chunk chunk in column)
+        {
+            Vector3 pos = chunk.transform.position;
+            pos.x += gridHex.ColumnWidth * gridHex.xChunks;
+            chunk.transform.position = pos;
+
+            chunk.SetColumnIndex(newColumnIndex);
+        }
+
+        gridHex.columns[newColumnIndex] = column;
+
+        gridHex.LeftmostColumn++;
+        gridHex.RightmostColumn = newColumnIndex;
+    }
+
+    private void MoveRightColumnToLeft()
+    {
+        List<Chunk> column = gridHex.columns[gridHex.RightmostColumn];
+        gridHex.columns.Remove(gridHex.RightmostColumn);
+
+        int newColumnIndex = gridHex.LeftmostColumn - 1;
+
+        foreach (Chunk chunk in column)
+        {
+            Vector3 pos = chunk.transform.position;
+            pos.x -= gridHex.ColumnWidth * gridHex.xChunks;
+            chunk.transform.position = pos;
+
+            chunk.SetColumnIndex(newColumnIndex);
+        }
+
+        gridHex.columns[newColumnIndex] = column;
+
+        gridHex.RightmostColumn--;
+        gridHex.LeftmostColumn = newColumnIndex;
+    }
+
+    private float GetColumnWorldX(int columnIndex)
+    {
+        return columnIndex * gridHex.ColumnWidth;
+    }
+
     private float GetCameraZViewExtent()
     {
         Vector3 camPos = cam.transform.position;
 
-        Vector3 rayDir = Quaternion.Euler(cam.transform.eulerAngles.x + cam.fieldOfView * 0.5f,
-                                          cam.transform.eulerAngles.y,
-                                          0f) * Vector3.forward;
+        Vector3 rayDir = Quaternion.Euler(cam.transform.eulerAngles.x + cam.fieldOfView * 0.5f,  cam.transform.eulerAngles.y, 0f) * Vector3.forward;
 
         if (Mathf.Abs(rayDir.y) < 0.0001f)
             return 0f;
