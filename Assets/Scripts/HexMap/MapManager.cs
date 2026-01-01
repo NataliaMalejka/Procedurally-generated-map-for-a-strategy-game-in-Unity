@@ -110,9 +110,13 @@ public class MapManager : MonoBehaviour
     private Texture2D paletteTex;
     private int paletteCount;
 
-    public BiomeObjects[] biomeObjects;
 
+    [Header("Structures")]
+    public BiomeObjects[] biomeObjects;
     [SerializeField] private int structureChance;
+
+    [Header("Units")]
+    [SerializeField] private GameObject UnitPrefab;
 
     public GameObject[] GetObjects(Biome biome)
     {
@@ -459,6 +463,8 @@ public class MapManager : MonoBehaviour
 
         SetBiomes(gridCells, biomeLayerIndex);
 
+        SmoothBiomes(gridCells);
+
         DetectEdgeType(gridCells);
 
         CreateRivers();
@@ -466,6 +472,8 @@ public class MapManager : MonoBehaviour
         SetOceanDeep(gridCells);
 
         RandomStructures(gridCells);
+
+        RandomUnits(gridCells);
 
         GroupSmoothEdges(gridCells);
     }
@@ -505,7 +513,7 @@ public class MapManager : MonoBehaviour
 
                     if (AdjacentToOtherContinent(neighborCell, i)) continue;
 
-                    if (NearContinentCentre(currentCell, i, gridCells)) continue;
+                    //if (NearContinentCentre(currentCell, i, gridCells)) continue;
 
                     if (CheckNoise(neighborCell, centreCell, i)) continue;
 
@@ -1180,6 +1188,67 @@ public class MapManager : MonoBehaviour
                 }
                 continue;
             }
+        }
+    }
+
+    private void SmoothBiomes(HexCell[] gridCells)
+    {
+        Dictionary<HexCell, Biome> newBiomes = new Dictionary<HexCell, Biome>();
+
+        foreach (var cell in gridCells)
+        {
+            if (cell.isOcean || cell.IsMountain || cell.IsLake)
+                continue;
+
+            Biome currentBiome = cell.GetBiome();
+
+            bool hasSameBiomeNeighbour = false;
+            Dictionary<Biome, int> biomeCount = new Dictionary<Biome, int>();
+
+            for (int j = 0; j < 6; j++)
+            {
+                HexCell neighbour = cell.GetNeighbor((HexDirection)j);
+                if (neighbour == null)
+                    continue;
+
+                if (neighbour.isOcean || neighbour.IsMountain || neighbour.IsLake)
+                    continue;
+
+                Biome neighbourBiome = neighbour.GetBiome();
+
+                if (neighbourBiome == currentBiome)
+                {
+                    hasSameBiomeNeighbour = true;
+                    break;
+                }
+
+                if (!biomeCount.ContainsKey(neighbourBiome))
+                    biomeCount[neighbourBiome] = 0;
+
+                biomeCount[neighbourBiome]++;
+            }
+
+            if (hasSameBiomeNeighbour || biomeCount.Count == 0)
+                continue;
+
+            Biome mostCommonBiome = currentBiome;
+            int maxCount = 0;
+
+            foreach (var kvp in biomeCount)
+            {
+                if (kvp.Value > maxCount)
+                {
+                    maxCount = kvp.Value;
+                    mostCommonBiome = kvp.Key;
+                }
+            }
+
+            newBiomes[cell] = mostCommonBiome;
+        }
+
+        foreach (var kvp in newBiomes)
+        {
+            kvp.Key.SetBiome(kvp.Value);
         }
     }
 
@@ -1967,5 +2036,21 @@ public class MapManager : MonoBehaviour
                 cell.StructureIndex = UnityEngine.Random.Range(0, structures);
             }
         }
+    }
+
+    private void RandomUnits(HexCell[] gridCells)
+    {
+        List<HexCell> potentialCells = new List<HexCell>();
+
+        foreach (var cell in gridCells)
+        {
+            if (cell.isOcean || cell.IsMountain || cell.IsLake || cell.IsRiver || cell.StructureIndex != -1 || cell.GetBiome() == Biome.Tundra || cell.GetBiome() == Biome.CTundra || cell.GetBiome() == Biome.HTundra) 
+                continue;
+
+            potentialCells.Add(cell);
+        }
+
+        int index = UnityEngine.Random.Range(0, potentialCells.Count);
+        potentialCells[index].IsUnit = true;
     }
 }

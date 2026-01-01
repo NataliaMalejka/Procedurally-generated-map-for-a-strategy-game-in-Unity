@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
 
 public class MapCamera : MonoBehaviour
 {
-    [SerializeField] private Camera cam;
+    [SerializeField] private Camera mainCam;
     [SerializeField] private Transform swivel;
     [SerializeField] private Transform stick;
 
@@ -23,6 +22,8 @@ public class MapCamera : MonoBehaviour
     [SerializeField] private float swivelMaxZoom = 45;
 
     [SerializeField] private float rotationSpeed = 180;
+    [SerializeField] private float virtualCameraHeight = 200f;
+
     private float rotationAngle;
 
     private int currentLayer = 0;
@@ -92,6 +93,8 @@ public class MapCamera : MonoBehaviour
 
         float angle = Mathf.Lerp(swivelMinZoom, swivelMaxZoom, zoom);
         swivel.localRotation = Quaternion.Euler(angle, 0f, 0f);
+
+        virtualCameraHeight = -distance;
 
         EnforceZBounds();
     }
@@ -178,11 +181,11 @@ public class MapCamera : MonoBehaviour
 
     private void CheckMoveRight()
     {
-        float cameraRightEdge = cam.transform.position.x + cam.orthographicSize * cam.aspect;
+        float cameraRightEdge = mainCam.transform.position.x + mainCam.orthographicSize * mainCam.aspect;
 
         float rightmostX = GetColumnWorldX(gridHex.RightmostColumn);
 
-        if (cameraRightEdge > rightmostX - gridHex.ColumnWidth * 3) 
+        if (cameraRightEdge > rightmostX - gridHex.ColumnWidth * 3)
         {
             MoveLeftColumnToRight();
         }
@@ -190,11 +193,11 @@ public class MapCamera : MonoBehaviour
 
     private void CheckMoveLeft()
     {
-        float cameraLeftEdge = cam.transform.position.x - cam.orthographicSize * cam.aspect;
+        float cameraLeftEdge = mainCam.transform.position.x - mainCam.orthographicSize * mainCam.aspect;
 
         float leftmostX = GetColumnWorldX(gridHex.LeftmostColumn);
 
-        if (cameraLeftEdge < leftmostX + gridHex.ColumnWidth * 3) 
+        if (cameraLeftEdge < leftmostX + gridHex.ColumnWidth * 3)
         {
             MoveRightColumnToLeft();
         }
@@ -249,59 +252,27 @@ public class MapCamera : MonoBehaviour
         return columnIndex * gridHex.ColumnWidth;
     }
 
-    private float GetCameraZViewExtent()
-    {
-        Vector3 camPos = cam.transform.position;
-
-        Vector3 rayDir = Quaternion.Euler(cam.transform.eulerAngles.x + cam.fieldOfView * 0.5f,  cam.transform.eulerAngles.y, 0f) * Vector3.forward;
-
-        if (Mathf.Abs(rayDir.y) < 0.0001f)
-            return 0f;
-
-        float t = -camPos.y / rayDir.y;
-
-        if (t < 0f)
-            return 0f;
-
-        Vector3 hitPoint = camPos + rayDir * t;
-
-        return hitPoint.z - transform.position.z;
-    }
-
     private void GetCameraZViewRange(out float viewMinZ, out float viewMaxZ)
     {
-        Vector3 camPos = cam.transform.position;
-
-        float pitch = cam.transform.eulerAngles.x;
-        float yaw = cam.transform.eulerAngles.y;
-        float halfFov = cam.fieldOfView * 0.5f;
-
-        Vector3 topDir = Quaternion.Euler(pitch - halfFov, yaw, 0f) * Vector3.forward;
-        Vector3 bottomDir = Quaternion.Euler(pitch + halfFov, yaw, 0f) * Vector3.forward;
+        Plane groundPlane = new Plane(Vector3.up, new Vector3(0f, transform.position.y, 0f));
 
         viewMinZ = float.PositiveInfinity;
         viewMaxZ = float.NegativeInfinity;
 
-        if (Mathf.Abs(topDir.y) > 0.0001f)
+        Ray bottomRay = mainCam.ViewportPointToRay(new Vector3(0.5f, 0f, 0f));
+        if (groundPlane.Raycast(bottomRay, out float bottomDist))
         {
-            float t = -camPos.y / topDir.y;
-            if (t > 0f)
-            {
-                float z = (camPos + topDir * t).z;
-                viewMinZ = Mathf.Min(viewMinZ, z);
-                viewMaxZ = Mathf.Max(viewMaxZ, z);
-            }
+            float z = bottomRay.GetPoint(bottomDist).z;
+            viewMinZ = Mathf.Min(viewMinZ, z);
+            viewMaxZ = Mathf.Max(viewMaxZ, z);
         }
 
-        if (Mathf.Abs(bottomDir.y) > 0.0001f)
+        Ray topRay = mainCam.ViewportPointToRay(new Vector3(0.5f, 1f, 0f));
+        if (groundPlane.Raycast(topRay, out float topDist))
         {
-            float t = -camPos.y / bottomDir.y;
-            if (t > 0f)
-            {
-                float z = (camPos + bottomDir * t).z;
-                viewMinZ = Mathf.Min(viewMinZ, z);
-                viewMaxZ = Mathf.Max(viewMaxZ, z);
-            }
+            float z = topRay.GetPoint(topDist).z;
+            viewMinZ = Mathf.Min(viewMinZ, z);
+            viewMaxZ = Mathf.Max(viewMaxZ, z);
         }
     }
 
@@ -323,48 +294,40 @@ public class MapCamera : MonoBehaviour
         transform.position = pos;
     }
 
-    private void ClampPositionZ()
-    {
-        Vector3 pos = transform.position;
-
-        float viewExtent = GetCameraZViewExtent();
-        float minZ = downBorder + viewExtent;
-        float maxZ = UpBorder - viewExtent;
-
-        pos.z = Mathf.Clamp(pos.z, minZ, maxZ);
-        transform.position = pos;
-    }
-
     private void UpdateLayer()
     {
         if (Input.GetKeyUp(KeyCode.W))
         {
-            if (currentLayer < GameSettings.Instance.getMaxLayerIndex()-1)
-                UpperLayer();
+            UpperLayer();
         }
         else if (Input.GetKeyUp(KeyCode.S))
         {
-            if(currentLayer > 0)
-                LowerLayer();
+            LowerLayer();
         }
     }
 
-    private void LowerLayer()
+    public void UpperLayer()
     {
-        currentLayer--;
+        if (currentLayer < GameSettings.Instance.getMaxLayerIndex() - 1 && GameManager.Instance.State == GameState.Playing)
+        {
+            currentLayer++;
 
-        var pos = transform.position;
-        pos.y -= HexData.LayersDistance;
-        transform.position = pos;
+            var pos = transform.position;
+            pos.y += HexData.LayersDistance;
+            transform.position = pos;
+        }
     }
 
-    private void UpperLayer()
+    public void LowerLayer()
     {
-        currentLayer++;
+        if (currentLayer > 0 && GameManager.Instance.State == GameState.Playing)
+        {
+            currentLayer--;
 
-        var pos = transform.position;
-        pos.y += HexData.LayersDistance;
-        transform.position = pos;
+            var pos = transform.position;
+            pos.y -= HexData.LayersDistance;
+            transform.position = pos;
+        }
     }
 
     private void SetLayer(int index)

@@ -203,6 +203,11 @@ public class Chunk : MonoBehaviour
         {
             CreateStructure(cell, centre);
         }
+
+        if(cell.IsUnit)
+        {
+            CreateUnits(cell, centre);
+        }
     }
 
     private void CreateStructure(HexCell cell, Vector3 pos)
@@ -232,11 +237,22 @@ public class Chunk : MonoBehaviour
         Instantiate(cellStructure, centre, finalRotation, cell.transform);
     }
 
+    private void CreateUnits(HexCell cell, Vector3 pos)
+    {
+        pos = chunkMesh.AddNoise(pos, 3);
+
+        Vector3 centre = new Vector3(
+            pos.x + this.transform.position.x,
+            pos.y + this.transform.position.y,
+            pos.z + this.transform.position.z
+        );
+    }
+
     public void RefreshChunk()
     {
         chunkMesh.Clear();
 
-        chunkMesh.SetMeshData(level, transform.position, waterColorIndex);
+        chunkMesh.SetMeshData(level, transform.position, waterColorIndex, columnIndex == MapManager.Instance.xChunkCount-1);
 
         foreach (var cell in cells)
         {

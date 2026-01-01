@@ -116,7 +116,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 1
+  m_RenderPostProcessing: 0
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -182,9 +182,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ed6dd4a90bbcb5478d12de652c38c36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Camera
-  cam: {fileID: 4280597392230201329}
+  mainCam: {fileID: 4280597392230201329}
   swivel: {fileID: 7474131530829185331}
   stick: {fileID: 2357357728600808993}
+  gridHex: {fileID: 0}
   moveSpeedMin: 40
   moveSpeedMax: 150
   edgeSize: 20

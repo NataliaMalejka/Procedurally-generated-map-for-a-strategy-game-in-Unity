@@ -12,8 +12,6 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    private bool gamePaused = false;
-
     public GameState State { get; private set; } = GameState.Playing;
 
     public static event System.Action<GameState> OnGameStateChanged;
@@ -28,6 +26,8 @@ public class GameManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+       Application.targetFrameRate = 60;
     }
 
     private void Update()

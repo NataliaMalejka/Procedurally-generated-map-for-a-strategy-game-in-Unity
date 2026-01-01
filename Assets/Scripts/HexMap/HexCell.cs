@@ -121,6 +121,13 @@ public class HexCell : MonoBehaviour
         set { structureIndex = value; }
     }
 
+    private bool isUnit = false;
+    public bool IsUnit
+    {
+        get { return isUnit; }
+        set { isUnit = value; }
+    }
+
     private bool isMountain = false;
     public bool IsMountain
     {

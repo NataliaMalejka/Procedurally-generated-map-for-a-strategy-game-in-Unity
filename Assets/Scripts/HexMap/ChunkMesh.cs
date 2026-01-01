@@ -24,6 +24,7 @@ public class ChunkMesh : MonoBehaviour
     private int waterColorIndex;
 
     private float maxPos;
+    private bool lastColumn = false;
 
     private void Awake()
     {
@@ -32,11 +33,12 @@ public class ChunkMesh : MonoBehaviour
         maxPos = MapManager.Instance.xChunkCount * MapManager.Instance.xCellCount * HexData.distanceToEdge * 2;
     }
 
-    public void SetMeshData(int level, Vector3 pos, int index)
+    public void SetMeshData(int level, Vector3 pos, int index, bool last)
     {
         chunkLevel = level;
         chunkPos = pos;
         waterColorIndex = index;
+        lastColumn = last;
     }
 
 
@@ -311,28 +313,28 @@ public class ChunkMesh : MonoBehaviour
 
         bool endmap = false;
 
-        if (v1d.x < v1.x)
+        if (v1d.x < v1.x &&lastColumn)
         {
             var newX = (v1.x - v1d.x) - maxPos;
             v1d = new Vector3(v1.x - newX, v1d.y, v1d.z);
 
             endmap = true;
         }
-        if (v2d.x < v2.x)
+        if (v2d.x < v2.x && lastColumn)
         {
             var newX = (v2.x - v2d.x) - maxPos;
             v2d = new Vector3(v2.x - newX, v2d.y, v2d.z);
 
             endmap = true;
         }
-        if (m1d.x < m1.x)
+        if (m1d.x < m1.x && lastColumn)
         {
             var newX = (m1.x - m1d.x) - maxPos;
             m1d = new Vector3(m1.x - newX, m1d.y, m1d.z);
 
             endmap = true;
         }
-        if (m2d.x < m2.x)
+        if (m2d.x < m2.x && lastColumn)
         {
             var newX = (m2.x - m2d.x) - maxPos;
             m2d = new Vector3(m2.x - newX, m2d.y, m2d.z);
@@ -545,27 +547,6 @@ public class ChunkMesh : MonoBehaviour
         m1d = transform.InverseTransformPoint(m1d);
         m2d = transform.InverseTransformPoint(m2d);
 
-        //if (v1d.x < v1.x)
-        //{
-        //    var newX = (v1.x - v1d.x) - maxPos;
-        //    v1d = new Vector3(v1.x - newX, v1d.y, v1d.z);
-        //}
-        //if (v2d.x < v2.x)
-        //{
-        //    var newX = (v2.x - v2d.x) - maxPos;
-        //    v2d = new Vector3(v2.x - newX, v2d.y, v2d.z);
-        //}
-        //if (m1d.x < m1.x)
-        //{
-        //    var newX = (m1.x - m1d.x) - maxPos;
-        //    m1d = new Vector3(m1.x - newX, m1d.y, m1d.z);
-        //}
-        //if (m2d.x < m2.x)
-        //{
-        //    var newX = (m2.x - m2d.x) - maxPos;
-        //    m2d = new Vector3(m2.x - newX, m2d.y, m2d.z);
-        //}
-
         List<Vector3> verticles = new List<Vector3>()
         {
             (v1), AddNoise(m1, noiseStrengthSmooth), AddNoise(m2, noiseStrengthSmooth), (v2)
@@ -704,7 +685,7 @@ public class ChunkMesh : MonoBehaviour
             v1d1 = transform.InverseTransformPoint(v1d1);
             v1d2 = transform.InverseTransformPoint(v1d2);
 
-            if (v1d2.x < v1.x)
+            if (v1d2.x < v1.x && lastColumn)
             {
                 var newX2 = (v1.x - v1d2.x) - maxPos;
                 v1d2 = new Vector3(v1.x - newX2, v1d2.y, v1d2.z);
@@ -730,13 +711,14 @@ public class ChunkMesh : MonoBehaviour
                 v1d1 = AddNoise(v1d1, noiseStrengthNormal, doubleEndmap);
             }
 
-            if (edge2 == EdgeType.Cliff || edge3 == EdgeType.Cliff || edge2 == EdgeType.Mountain || edge3 == EdgeType.Mountain)
-                t2 = 1;
-
             if (edge4 != EdgeType.Smooth && edge5 != EdgeType.Smooth)
             {
                 v1d2 = AddNoise(v1d2, noiseStrengthNormal, endmap);               
             }
+
+            if (edge2 == EdgeType.Cliff || edge3 == EdgeType.Cliff || edge2 == EdgeType.Mountain || edge3 == EdgeType.Mountain)
+                t2 = 1;
+
 
             if (edge4 == EdgeType.Cliff || edge5 == EdgeType.Cliff || edge4 == EdgeType.Mountain || edge5 == EdgeType.Mountain)
                 t3 = 1;
@@ -749,7 +731,7 @@ public class ChunkMesh : MonoBehaviour
             v1d1 = transform.InverseTransformPoint(v1d1);
             v1d2 = transform.InverseTransformPoint(v1d2);
 
-            if (v1d1.x < v1.x)
+            if (v1d1.x < v1.x && lastColumn)
             {
                 var newX = (v1.x - v1d1.x) - maxPos;
                 v1d1 = new Vector3(v1.x - newX, v1d1.y, v1d1.z);
