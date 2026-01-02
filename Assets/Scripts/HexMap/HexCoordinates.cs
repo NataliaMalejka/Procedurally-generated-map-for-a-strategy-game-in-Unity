@@ -24,6 +24,38 @@ public struct HexCoordinates
         indexInGrid = MapManager.Instance.GetCellIndex(globalX, globalZ);
     }
 
+    public static Vector2Int FromPosition(Vector3 position)
+    {
+        float x = position.x / (HexData.distanceToCorner * 2f);
+        float y = -x;
+
+        float offset = position.z / (HexData.distanceToEdge * 3f);
+        x -= offset;
+        y -= offset;
+
+        int iX = Mathf.RoundToInt(x);
+        int iY = Mathf.RoundToInt(y);
+        int iZ = Mathf.RoundToInt(-x - y);
+
+        if (iX + iY + iZ != 0)
+        {
+            float dX = Mathf.Abs(x - iX);
+            float dY = Mathf.Abs(y - iY);
+            float dZ = Mathf.Abs(-x - y - iZ);
+
+            if (dX > dY && dX > dZ)
+            {
+                iX = -iY - iZ;
+            }
+            else if (dZ > dY)
+            {
+                iZ = -iX - iY;
+            }
+        }
+
+        return new Vector2Int(iX, iZ);
+    }
+
     public Vector3Int Neighbor(HexDirection direction)
     {
         var (dq, dr, ds) = FindHexDirection.hexDirections[(int)direction];

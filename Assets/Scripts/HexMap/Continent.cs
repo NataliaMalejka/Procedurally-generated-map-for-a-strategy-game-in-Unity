@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 
-public class Continent : MonoBehaviour
+public class Continent
 {
     private int continetIndex = -1;
     public int ContinetIndex

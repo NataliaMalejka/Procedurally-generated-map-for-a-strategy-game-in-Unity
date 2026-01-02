@@ -22,6 +22,13 @@ public class GameSettings : MonoBehaviour
 
     private int maxlayerIndex = 0;
 
+    private int currentLayer;
+    public int CurrentLayer
+    {
+        get { return currentLayer; }
+        set { currentLayer = value; }
+    }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)

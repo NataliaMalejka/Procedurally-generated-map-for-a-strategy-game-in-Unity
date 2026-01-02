@@ -51,6 +51,13 @@ public class HexCell : MonoBehaviour
         set { coordinates = value; }
     }
 
+    private int layerIndex = -1;
+    public int LayerIndex
+    {
+        get { return layerIndex; }
+        set { layerIndex = value; }
+    }
+
     private Biome cellBiome;
 
     private Color[] colors = new Color[] { Color.turquoise, Color.black, Color.white, Color.yellowGreen, Color.limeGreen, Color.forestGreen, Color.darkGreen, Color.orange, Color.yellow, Color.pink};
@@ -97,7 +104,6 @@ public class HexCell : MonoBehaviour
     public int TerrainLevel
     {
         get { return terrainLevel; }
-        set { terrainLevel = value; }
     }
 
     private float centreTerrainlevel = -4;
@@ -111,7 +117,6 @@ public class HexCell : MonoBehaviour
     public int TerrainLevelIndex
     {
         get { return terrainLevelIndex; }
-        set { terrainLevelIndex = value; }
     }
 
     private int structureIndex = -1;
@@ -178,10 +183,9 @@ public class HexCell : MonoBehaviour
 
     public void AddEdge(EdgeType edgeType, HexDirection direction)
     {
-        Edge edge = Instantiate<Edge>(edgePrefab);
+        Edge edge = new Edge();
         edge.SetData(edgeType, direction, terrainLevel, transform.localPosition, hexChunk.transform.position, this);
         edges[(int)direction] = edge;
-        edge.transform.SetParent(transform);
     }
 
     public void UpdateEdge(int index, EdgeType type)
@@ -224,12 +228,22 @@ public class HexCell : MonoBehaviour
 
     public void SetTerrainLevel(int level)
     {
-        if (level >= colors.Length)
-           level = colors.Length - 1;
-
         terrainLevelIndex = level;
         terrainLevel = terrainLevelIndex * HexData.levelStepHeight;
         centreTerrainlevel = terrainLevel;
+    }
+
+    public void SetTextPos()
+    {
+        var pos = coordinateText.transform.localPosition;
+        pos.y = centreTerrainlevel + 4.1f;
+
+        if(isOcean)
+        {
+            pos.y = HexData.waterLevel + 3.1f;
+        }
+
+        coordinateText.transform.localPosition = pos;
     }
 
     public void SetBiome(Biome biome)
@@ -251,5 +265,10 @@ public class HexCell : MonoBehaviour
     public void SetGlobalCoordinateText()
     {
         coordinateText.text = coordinates.GlobalX.ToString() + "\n" + coordinates.GlobalZ.ToString() + "\n" + coordinates.IndexInGrid;
+    }
+
+    public void SetText(string text)
+    {
+        coordinateText.text = text;
     }
 }

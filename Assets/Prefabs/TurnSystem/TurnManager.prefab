@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4098396813048713912}
   - component: {fileID: 2591445497198313793}
+  - component: {fileID: 8798859149647608173}
   m_Layer: 0
   m_Name: TurnManager
   m_TagString: Untagged
@@ -44,3 +45,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd611a1a2f6b7e44f953ca23fdc1a093, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnManager
+--- !u!114 &8798859149647608173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2570932246072760564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f539298afd42ae44bb131fc951e5d55c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SelectObject
+  grid: {fileID: 0}

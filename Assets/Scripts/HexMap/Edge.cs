@@ -10,7 +10,7 @@ public enum EdgeType
     None
 }
 
-public class Edge : MonoBehaviour
+public class Edge
 {
     EdgeType edgeType;
 

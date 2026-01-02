@@ -346,10 +346,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 6631043231349289463, guid: 1ac0bea78946fc04185ea222b205c516, type: 3}
-      propertyPath: UnitPrefab
-      value: 
-      objectReference: {fileID: 5781676385643429418, guid: eb19db7a04fceba4e8a81ff542236571, type: 3}
     - target: {fileID: 7574026885498595833, guid: 1ac0bea78946fc04185ea222b205c516, type: 3}
       propertyPath: m_Name
       value: MapManager
@@ -736,6 +732,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8798859149647608173, guid: 464c6e363eb36f6479ea466355a5ae11, type: 3}
+      propertyPath: grid
+      value: 
+      objectReference: {fileID: 460132500}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -748,8 +748,8 @@ SceneRoots:
   - {fileID: 1905946011}
   - {fileID: 1219894069}
   - {fileID: 1707679913}
-  - {fileID: 383700551569133962}
   - {fileID: 1623182820}
   - {fileID: 460132499}
+  - {fileID: 383700551569133962}
   - {fileID: 1910188115}
   - {fileID: 1466073178}

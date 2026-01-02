@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class GridHex : MonoBehaviour
@@ -13,6 +12,8 @@ public class GridHex : MonoBehaviour
     public HexCell[] cellsEarth { get; private set; }
     public HexCell[] cellsCold { get; private set; }
     public HexCell[] cellsHot { get; private set; }
+
+    private List<HexCell[]> gridLayers = new List<HexCell[]>();
 
     public Dictionary<int, List<Chunk>> columns = new Dictionary<int, List<Chunk>>();
 
@@ -45,14 +46,17 @@ public class GridHex : MonoBehaviour
         if (GameSettings.Instance.IsHotBiome() > -1)
         {
             CreateChunks(GameSettings.Instance.IsHotBiome(), cellsHot,(int)Layers.Hot);
+            gridLayers.Add(cellsHot);
         }
         if(GameSettings.Instance.IsEarthBiome() > -1)
         {
             CreateChunks(GameSettings.Instance.IsEarthBiome(), cellsEarth, (int)Layers.Earth);
+            gridLayers.Add(cellsEarth);
         }
         if (GameSettings.Instance.IsColdBiome() > -1)
         {
             CreateChunks(GameSettings.Instance.IsColdBiome(), cellsCold, (int)Layers.Cold);
+            gridLayers.Add(cellsCold);
         }     
     }
 
@@ -172,5 +176,30 @@ public class GridHex : MonoBehaviour
     {
         int width = MapManager.Instance.xChunkCount * MapManager.Instance.xCellCount;
         return (x % width + width) % width;
+    }
+
+    public HexCell GetCell(Vector3 position)
+    {
+        position = transform.InverseTransformPoint(position);
+        position.y = 0f;
+
+        int globalZ = Mathf.RoundToInt(
+            position.z / (HexData.distanceToCorner * 1.5f)
+        );
+
+        float xOffset = (globalZ & 1) == 1 ? HexData.distanceToEdge : 0f;
+
+        int globalX = Mathf.RoundToInt(
+            (position.x - xOffset) / (HexData.distanceToEdge * 2f)
+        );
+
+        int index = MapManager.Instance.GetCellIndex(globalX, globalZ);
+
+        var grid = gridLayers[GameSettings.Instance.CurrentLayer];
+
+        if (index < 0 || index >= grid.Length)
+            return null;
+
+        return grid[index];
     }
 }

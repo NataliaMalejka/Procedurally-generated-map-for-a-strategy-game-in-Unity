@@ -26,8 +26,6 @@ public class MapCamera : MonoBehaviour
 
     private float rotationAngle;
 
-    private int currentLayer = 0;
-
     private float UpBorder;
     private float downBorder;
 
@@ -308,9 +306,9 @@ public class MapCamera : MonoBehaviour
 
     public void UpperLayer()
     {
-        if (currentLayer < GameSettings.Instance.getMaxLayerIndex() - 1 && GameManager.Instance.State == GameState.Playing)
+        if (GameSettings.Instance.CurrentLayer < GameSettings.Instance.getMaxLayerIndex() - 1 && GameManager.Instance.State == GameState.Playing)
         {
-            currentLayer++;
+            GameSettings.Instance.CurrentLayer++;
 
             var pos = transform.position;
             pos.y += HexData.LayersDistance;
@@ -320,9 +318,9 @@ public class MapCamera : MonoBehaviour
 
     public void LowerLayer()
     {
-        if (currentLayer > 0 && GameManager.Instance.State == GameState.Playing)
+        if (GameSettings.Instance.CurrentLayer > 0 && GameManager.Instance.State == GameState.Playing)
         {
-            currentLayer--;
+            GameSettings.Instance.CurrentLayer--;
 
             var pos = transform.position;
             pos.y -= HexData.LayersDistance;
@@ -332,7 +330,7 @@ public class MapCamera : MonoBehaviour
 
     private void SetLayer(int index)
     {
-        currentLayer = index;
+        GameSettings.Instance.CurrentLayer = index;
 
         var pos = transform.position;
         pos.y = index * HexData.LayersDistance;

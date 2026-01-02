@@ -291,3 +291,4 @@ MonoBehaviour:
     - {fileID: 6769168596914929413, guid: 41cda6bd24f40984492f163e22f10d9a, type: 3}
     - {fileID: 308588320052702124, guid: 3343b1144b19eca40b9080cdf8524249, type: 3}
   structureChance: 1
+  UnitPrefab: {fileID: 2434731741904886950, guid: eb19db7a04fceba4e8a81ff542236571, type: 3}

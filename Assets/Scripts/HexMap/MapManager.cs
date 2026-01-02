@@ -116,7 +116,7 @@ public class MapManager : MonoBehaviour
     [SerializeField] private int structureChance;
 
     [Header("Units")]
-    [SerializeField] private GameObject UnitPrefab;
+    [SerializeField] private Unit UnitPrefab;
 
     public GameObject[] GetObjects(Biome biome)
     {
@@ -301,6 +301,11 @@ public class MapManager : MonoBehaviour
         return hexMeshNoise;
     }
 
+    public Unit GetUnitPrefab()
+    {
+        return UnitPrefab;
+    }
+
     private (int x, int z) SetChunkCounts(MapSize size)
     {
         return size switch
@@ -453,7 +458,7 @@ public class MapManager : MonoBehaviour
 
         SetOceans(gridCells);
 
-        RemoveLakes();
+        RemoveLakes(biomeLayerIndex);
 
         CalculateDistancToOcean(gridCells);
 
@@ -476,6 +481,8 @@ public class MapManager : MonoBehaviour
         RandomUnits(gridCells);
 
         GroupSmoothEdges(gridCells);
+
+        SetTextPos(gridCells, biomeLayerIndex);
     }
 
     private void GenerateContinents(HexCell[] gridCells)
@@ -668,7 +675,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    private void RemoveLakes()
+    private void RemoveLakes(int biomeLayerIndex)
     {    
         for (int i = 0; i < continentsCount; i++)
         {
@@ -1332,9 +1339,9 @@ public class MapManager : MonoBehaviour
         {
             for (int i = 0; i < 6; i++)
             {
-                Edge edge = cell.GetEdge(i);
+                 Edge edge = cell.GetEdge(i);
 
-                if (edge == null)
+                if (edge == null) 
                     continue;
 
                 if (edge.GetEdgeType() == EdgeType.Smooth)
@@ -2044,7 +2051,7 @@ public class MapManager : MonoBehaviour
 
         foreach (var cell in gridCells)
         {
-            if (cell.isOcean || cell.IsMountain || cell.IsLake || cell.IsRiver || cell.StructureIndex != -1 || cell.GetBiome() == Biome.Tundra || cell.GetBiome() == Biome.CTundra || cell.GetBiome() == Biome.HTundra) 
+            if (cell.isOcean || cell.IsMountain || cell.IsLake || cell.IsRiver || cell.StructureIndex != -1 || cell.Temperature < coldMax) 
                 continue;
 
             potentialCells.Add(cell);
@@ -2052,5 +2059,14 @@ public class MapManager : MonoBehaviour
 
         int index = UnityEngine.Random.Range(0, potentialCells.Count);
         potentialCells[index].IsUnit = true;
+    }
+
+    private void SetTextPos(HexCell[] gridCells, int biomeLayerIndex)
+    {
+        foreach (var cell in gridCells)
+        {
+            cell.LayerIndex = biomeLayerIndex;
+            cell.SetTextPos();
+        }
     }
 }
