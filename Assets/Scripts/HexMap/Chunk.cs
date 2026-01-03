@@ -247,9 +247,9 @@ public class Chunk : MonoBehaviour
             pos.z + this.transform.position.z
         );
 
-        Unit unitPrefab = MapManager.Instance.GetUnitPrefab();
+        Unit prefab = MapManager.Instance.GetUnitPrefab();
 
-        Vector3 baseEuler = unitPrefab.transform.eulerAngles;
+        Vector3 baseEuler = prefab.transform.eulerAngles;
 
         Quaternion finalRotation = Quaternion.Euler(
             baseEuler.x,
@@ -257,9 +257,10 @@ public class Chunk : MonoBehaviour
             baseEuler.z
         );
 
-        Instantiate(unitPrefab, centre, finalRotation, cell.transform);
+        Unit unitInstance = Instantiate(prefab, centre, finalRotation,cell.transform);
 
-        TurnManager.Instance.RegisterUnit(unitPrefab);
+        unitInstance.SetCurrentCell(cell);
+        TurnManager.Instance.RegisterUnit(unitInstance);
     }
 
     public void RefreshChunk()

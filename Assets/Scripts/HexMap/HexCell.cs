@@ -35,7 +35,7 @@ public enum Biome
 public class HexCell : MonoBehaviour
 {
     [SerializeField] private TextMeshPro coordinateText;
-    [SerializeField] private Edge edgePrefab;
+    [SerializeField] private SpriteRenderer hexSprite;
 
     private Chunk hexChunk;
     public Chunk HexChunk
@@ -233,7 +233,7 @@ public class HexCell : MonoBehaviour
         centreTerrainlevel = terrainLevel;
     }
 
-    public void SetTextPos()
+    public void SetCellUIPos()
     {
         var pos = coordinateText.transform.localPosition;
         pos.y = centreTerrainlevel + 4.1f;
@@ -244,6 +244,7 @@ public class HexCell : MonoBehaviour
         }
 
         coordinateText.transform.localPosition = pos;
+        hexSprite.transform.localPosition = pos;
     }
 
     public void SetBiome(Biome biome)
@@ -270,5 +271,10 @@ public class HexCell : MonoBehaviour
     public void SetText(string text)
     {
         coordinateText.text = text;
+    }
+
+    public void SetSpriteColor(Color color)
+    {
+        hexSprite.color = color;
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -45,25 +45,25 @@ public class GridHex : MonoBehaviour
 
         if (GameSettings.Instance.IsHotBiome() > -1)
         {
-            CreateChunks(GameSettings.Instance.IsHotBiome(), cellsHot,(int)Layers.Hot);
+            cellsHot = CreateChunks(GameSettings.Instance.IsHotBiome(), (int)Layers.Hot);
             gridLayers.Add(cellsHot);
         }
         if(GameSettings.Instance.IsEarthBiome() > -1)
         {
-            CreateChunks(GameSettings.Instance.IsEarthBiome(), cellsEarth, (int)Layers.Earth);
+            cellsEarth = CreateChunks(GameSettings.Instance.IsEarthBiome(), (int)Layers.Earth);
             gridLayers.Add(cellsEarth);
         }
         if (GameSettings.Instance.IsColdBiome() > -1)
         {
-            CreateChunks(GameSettings.Instance.IsColdBiome(), cellsCold, (int)Layers.Cold);
+            cellsCold = CreateChunks(GameSettings.Instance.IsColdBiome(), (int)Layers.Cold);
             gridLayers.Add(cellsCold);
         }     
     }
 
-    private void CreateChunks(int level, HexCell[] cells, int biomelayerIndex)
+    private HexCell[] CreateChunks(int level, int biomelayerIndex)
     {
         chunks = new Chunk[xChunks * zChunks];
-        cells = new HexCell[xChunks * zChunks * MapManager.Instance.xCellCount * MapManager.Instance.zCellCount];
+        HexCell[] cells = new HexCell[xChunks * zChunks * MapManager.Instance.xCellCount * MapManager.Instance.zCellCount];
 
         int index = 0;
 
@@ -74,6 +74,7 @@ public class GridHex : MonoBehaviour
                 Chunk chunk = Instantiate(chunkPrefab);
                 chunk.transform.SetParent(transform);
                 chunks[index] = chunk;
+
                 SetChunkPosition(chunk, index, level);
                 chunk.SetLevel(level);
                 chunk.SetWaterColorIndex(biomelayerIndex);
@@ -99,6 +100,8 @@ public class GridHex : MonoBehaviour
         {
             chunk.RefreshChunk();
         }
+
+        return cells;
     }
 
     private void SetChunkPosition(Chunk chunk, int index, int level)
@@ -178,25 +181,27 @@ public class GridHex : MonoBehaviour
         return (x % width + width) % width;
     }
 
-    public HexCell GetCell(Vector3 position)
+    public HexCell GetCell(Vector3 worldPos)
     {
-        position = transform.InverseTransformPoint(position);
-        position.y = 0f;
+        Vector3 pos = transform.InverseTransformPoint(worldPos);
+        pos.y = 0f;
 
-        int globalZ = Mathf.RoundToInt(
-            position.z / (HexData.distanceToCorner * 1.5f)
-        );
+        HexCoordinates cube = HexCoordinates.FromWorld(pos);
 
-        float xOffset = (globalZ & 1) == 1 ? HexData.distanceToEdge : 0f;
+        int globalZ = cube.R;
 
-        int globalX = Mathf.RoundToInt(
-            (position.x - xOffset) / (HexData.distanceToEdge * 2f)
-        );
+        int maxZ = MapManager.Instance.zChunkCount * MapManager.Instance.zCellCount;
+        if (globalZ < 0 || globalZ >= maxZ)
+            return null;
+
+        int globalX = cube.Q + globalZ / 2;
+
+        int mapWidth = MapManager.Instance.xChunkCount * MapManager.Instance.xCellCount;
+        globalX = ((globalX % mapWidth) + mapWidth) % mapWidth;
 
         int index = MapManager.Instance.GetCellIndex(globalX, globalZ);
 
         var grid = gridLayers[GameSettings.Instance.CurrentLayer];
-
         if (index < 0 || index >= grid.Length)
             return null;
 

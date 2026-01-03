@@ -8,6 +8,8 @@ public class Unit : MonoBehaviour
 
     public bool HasActionsRemaining => currentMovementPoints > 0;
 
+    private HexCell currentCell;
+
     public void OnTurnStart()
     {
         currentMovementPoints = maxMovementPoints;
@@ -19,5 +21,15 @@ public class Unit : MonoBehaviour
             return;
 
         currentMovementPoints--;
+    }
+
+    public HexCell GetCurrentCell()
+    {
+        return currentCell;
+    }
+
+    public void SetCurrentCell(HexCell cell)
+    {
+        currentCell = cell;
     }
 }

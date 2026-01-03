@@ -318,6 +318,10 @@ PrefabInstance:
       propertyPath: gridHex
       value: 
       objectReference: {fileID: 460132500}
+    - target: {fileID: 1475108534847446318, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
+      propertyPath: swivelMaxZoom
+      value: 60
+      objectReference: {fileID: 0}
     - target: {fileID: 3670122680639957534, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
       propertyPath: m_Name
       value: HexMapCamera

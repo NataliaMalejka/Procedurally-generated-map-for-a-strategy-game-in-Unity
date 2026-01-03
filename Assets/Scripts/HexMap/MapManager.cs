@@ -2051,7 +2051,7 @@ public class MapManager : MonoBehaviour
 
         foreach (var cell in gridCells)
         {
-            if (cell.isOcean || cell.IsMountain || cell.IsLake || cell.IsRiver || cell.StructureIndex != -1 || cell.Temperature < coldMax) 
+            if (cell.isOcean || cell.IsMountain || cell.IsLake || cell.IsRiver || cell.StructureIndex != -1 || cell.Temperature < coldMax || cell.IsUnit) 
                 continue;
 
             potentialCells.Add(cell);
@@ -2066,7 +2066,7 @@ public class MapManager : MonoBehaviour
         foreach (var cell in gridCells)
         {
             cell.LayerIndex = biomeLayerIndex;
-            cell.SetTextPos();
+            cell.SetCellUIPos();
         }
     }
 }

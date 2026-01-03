@@ -19,7 +19,7 @@ public class MapCamera : MonoBehaviour
     [SerializeField] private float stickMaxZoom = -45;
 
     [SerializeField] private float swivelMinZoom = 90;
-    [SerializeField] private float swivelMaxZoom = 45;
+    [SerializeField] private float swivelMaxZoom = 70;
 
     [SerializeField] private float rotationSpeed = 180;
     [SerializeField] private float virtualCameraHeight = 200f;

@@ -58,3 +58,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectObject
   grid: {fileID: 0}
+  unitLayer:
+    serializedVersion: 2
+    m_Bits: 8

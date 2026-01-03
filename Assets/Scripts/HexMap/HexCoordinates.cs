@@ -56,6 +56,45 @@ public struct HexCoordinates
         return new Vector2Int(iX, iZ);
     }
 
+    public static HexCoordinates FromWorld(Vector3 position)
+    {
+        float q = (position.x / (HexData.distanceToEdge * 2f))
+                  - (position.z / (HexData.distanceToCorner * 3f));
+
+        float r = position.z / (HexData.distanceToCorner * 1.5f);
+        float s = -q - r;
+
+        int rq = Mathf.RoundToInt(q);
+        int rr = Mathf.RoundToInt(r);
+        int rs = Mathf.RoundToInt(s);
+
+        float dq = Mathf.Abs(q - rq);
+        float dr = Mathf.Abs(r - rr);
+        float ds = Mathf.Abs(s - rs);
+
+        if (dq > dr && dq > ds)
+            rq = -rr - rs;
+        else if (dr > ds)
+            rr = -rq - rs;
+
+        return new HexCoordinates(rq, rr); 
+    }
+
+    public HexCoordinates(int q, int r)
+    {
+        this.q = q;
+        this.r = r;
+        this.s = -q - r;
+
+        globalZ = r;
+        globalX = q + r / 2;
+
+        localX = 0;
+        localZ = 0;
+
+        indexInGrid = MapManager.Instance.GetCellIndex(globalX, globalZ);
+    }
+
     public Vector3Int Neighbor(HexDirection direction)
     {
         var (dq, dr, ds) = FindHexDirection.hexDirections[(int)direction];
