@@ -5,6 +5,8 @@ using UnityEngine.EventSystems;
 
 public class SelectObject : MonoBehaviour
 {
+    public static SelectObject Instance { get; private set; }
+
     [SerializeField] private GridHex grid;
     [SerializeField] private LayerMask unitLayer;
 
@@ -14,23 +16,45 @@ public class SelectObject : MonoBehaviour
     private HexCell hoveredCell = null;
     private List<HexCell> currentPath = new List<HexCell>();
 
+    private PathVisual pathVisual = new();
+
+    private void Awake()
+    {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
+
     private void Update()
     {
+        if(GameManager.Instance.State != GameState.Playing)
+            return;
+
         if (EventSystem.current.IsPointerOverGameObject())
             return;
 
         HandleHover();
 
         if (Input.GetMouseButtonUp(0))
-            SelectUnitClick();
+            HandleLeftClick();
 
         if (Input.GetMouseButtonUp(1))
-            Deselect();
+            HandleRightClick();
     }
 
     private void HandleHover()
     {
         if (selectedUnit == null)
+            return;
+
+        if (selectedUnit.IsMoving)
+            return;
+
+        if (selectedUnit.Path.Accepted)
             return;
 
         HexCell cell = GetCellUnderCursor();
@@ -39,49 +63,6 @@ public class SelectObject : MonoBehaviour
 
         hoveredCell = cell;
         PreviewPath(cell);
-    }
-
-    private void PreviewPath(HexCell targetCell)
-    {
-        ClearPath();
-
-        HexCell start = selectedUnit.GetCurrentCell();
-        if (start == null)
-            return;
-
-        currentPath = FindPath(start, targetCell);
-
-        if (currentPath == null || currentPath.Count == 0)
-            return;
-
-        for (int i = 0; i < currentPath.Count; i++)
-        {
-            currentPath[i].SetSpriteColor(Color.white);
-        }
-
-        HexCell goal = currentPath[^1];
-        goal.SetText((currentPath.Count - 1).ToString());
-    }
-
-    private void SelectUnitClick()
-    {
-        Unit unit = GetUnitUnderCursor();
-        if (unit == null)
-            return;
-
-        if (selectedUnit == unit)
-            return;
-
-        ClearPath();
-        hoveredCell = null;
-        selectedUnit = unit;
-    }
-
-    private void Deselect()
-    {
-        ClearPath();
-        hoveredCell = null;
-        selectedUnit = null;
     }
 
     private Unit GetUnitUnderCursor()
@@ -113,35 +94,127 @@ public class SelectObject : MonoBehaviour
         return null;
     }
 
-    private void SelectCell(HexCell cell)
+    private void HandleLeftClick()
     {
-        if (selectedCell == cell)
-            return;
-
-        ClearPath();
-
-        if (selectedCell != null)
-            DeselectCell();
-
-        selectedCell = cell;
-
-        HexCell unitCell = selectedUnit.GetCurrentCell();
-
-        if (unitCell != null)
+        Unit unit = GetUnitUnderCursor();
+        if (unit != null)
         {
-            currentPath = FindPath(unitCell, selectedCell);
-
-            selectedCell.SetText("X");
-            selectedCell.SetSpriteColor(Color.white);
+            SelectUnit(unit);
             return;
+        }
+
+        if (selectedUnit != null && currentPath.Count > 0 && !selectedUnit.Path.Accepted)
+        {
+            AcceptPath();
         }
     }
 
-    private void DeselectCell()
+    private void HandleRightClick()
     {
-        ClearPath();
-        selectedCell.SetText("");
-        selectedCell.SetSpriteColor(new Vector4(0, 0, 0, 0));
+        if (selectedUnit == null)
+            return;
+
+        if (selectedUnit.IsMoving)
+            return;
+
+        if (selectedUnit.Path.Accepted)
+        {
+            ClearUnitPathVisual(selectedUnit);
+            selectedUnit.Path.Clear();
+
+            pathVisual.Clear(currentPath);
+            hoveredCell = null;
+            return;
+        }
+
+        pathVisual.Clear(currentPath);
+        selectedUnit = null;
+    }
+
+    private void SelectUnit(Unit unit)
+    {
+        if (selectedUnit == unit)
+            return;
+
+        if (selectedUnit != null)
+            selectedUnit.OnCellPassed -= HandleUnitPassedCell;
+
+        pathVisual.Clear(currentPath);
+        hoveredCell = null;
+
+        selectedUnit = unit;
+        selectedUnit.Path.Accepted = false;
+
+        selectedUnit.OnCellPassed += HandleUnitPassedCell;
+    }
+
+    private void AcceptPath()
+    {
+        if (currentPath == null || currentPath.Count == 0)
+            return;
+
+        selectedUnit.Path.MovementAtCommit = selectedUnit.CurrentMovementPoints;
+
+        selectedUnit.Path.SetPath(
+        currentPath,
+        selectedUnit.MaxMovementPoints,
+        selectedUnit.Path.MovementAtCommit,
+        GetMoveCost
+        );
+
+        selectedUnit.Path.Accepted = true;
+
+        pathVisual.Clear(currentPath);
+        pathVisual.DrawCommitted(selectedUnit);
+
+        selectedUnit.StartMoveThisTurnOnly();
+    }
+
+    private void PreviewPath(HexCell target)
+    {
+        pathVisual.Clear(currentPath);
+
+        HexCell start = selectedUnit.CurrentCell;
+        if (start == null)
+            return;
+
+        currentPath = FindPath(start, target);
+        if (currentPath == null || currentPath.Count == 0)
+            return;
+
+        pathVisual.DrawPreview(selectedUnit);
+    }
+
+    private void HandleUnitPassedCell(HexCell cell)
+    {
+        cell.SetText("");
+        cell.SetSpriteColor(new Color(0, 0, 0, 0));
+
+        selectedUnit.Path.CellTurn.Remove(cell);
+
+        if (selectedUnit.Path.FullPath.Count > 0 &&
+            selectedUnit.Path.FullPath[0] == cell)
+        {
+            selectedUnit.Path.FullPath.RemoveAt(0);
+        }
+    }
+
+    private void ClearUnitPathVisual(Unit unit)
+    {
+        if (unit.Path.FullPath == null)
+            return;
+
+        foreach (var cell in unit.Path.FullPath)
+        {
+            cell.SetText("");
+            cell.SetSpriteColor(new Color(0, 0, 0, 0));
+        }
+    }
+
+
+    public void DrawUnitPath(Unit unit)
+    {
+        pathVisual.DrawCommitted(selectedUnit);
     }
 
     public List<HexCell> FindPath(HexCell start, HexCell goal)
@@ -153,50 +226,41 @@ public class SelectObject : MonoBehaviour
 
         while (open.Count > 0)
         {
-            open.Sort((a, b) => a.f.CompareTo(b.f));
+            open.Sort((a, b) => a.F.CompareTo(b.F));
             PathNode current = open[0];
             open.RemoveAt(0);
 
-            if (current.cell == goal)
+            if (current.Cell == goal)
                 return ReconstructPath(current);
 
-            closed.Add(current.cell);
+            closed.Add(current.Cell);
 
             foreach (HexDirection dir in Enum.GetValues(typeof(HexDirection)))
             {
-                HexCell neighbor = current.cell.GetNeighbor(dir);
-                if (neighbor == null)
+                HexCell n = current.Cell.GetNeighbor(dir);
+                if (n == null || n.IsMountain || closed.Contains(n))
                     continue;
 
-                if (neighbor.IsMountain)
+                if (Mathf.Abs(n.TerrainLevelIndex - current.Cell.TerrainLevelIndex) > 1)
                     continue;
 
-                if (closed.Contains(neighbor))
-                    continue;
+                int moveCost = GetMoveCost(current.Cell, n);
+                int g = current.G + moveCost;
 
-                int heightDiff = Mathf.Abs(
-                    neighbor.TerrainLevelIndex - current.cell.TerrainLevelIndex
-                );
+                PathNode existing = open.Find(p => p.Cell == n);
 
-                if (heightDiff > 1)
-                    continue;
-
-                int tentativeG = current.g + 1;
-
-                PathNode existing = open.Find(n => n.cell == neighbor);
                 if (existing == null)
                 {
                     open.Add(new PathNode(
-                        neighbor,
+                        n,
                         current,
-                        tentativeG,
-                        HexData.HexDistance(neighbor, goal)
+                        g,
+                        HexData.HexDistance(n, goal) * 2
                     ));
                 }
-                else if (tentativeG < existing.g)
+                else if (g < existing.G)
                 {
-                    existing.g = tentativeG;
-                    existing.parent = current;
+                    existing.Update(current, g);
                 }
             }
         }
@@ -206,51 +270,175 @@ public class SelectObject : MonoBehaviour
 
     private List<HexCell> ReconstructPath(PathNode node)
     {
-        List<HexCell> path = new List<HexCell>();
-        int index = 0;    
-
+        List<HexCell> path = new();
         while (node != null)
         {
-            path.Add(node.cell);
-            node = node.parent;
+            path.Add(node.Cell);
+            node = node.Parent;
         }
-
         path.Reverse();
-
-        foreach (HexCell cell in path)
-        {
-            cell.SetSpriteColor(Color.white);
-            cell.SetText(index.ToString());
-            index++;
-        }
-
         return path;
     }
 
-    private void ClearPath()
+    public int GetMoveCost(HexCell from, HexCell to)
     {
-        foreach (HexCell cell in currentPath)
-        {
-            cell.SetText("");
-            cell.SetSpriteColor(new Vector4(0, 0, 0, 0));
-        }
-        currentPath.Clear();
+        int cost;
+
+        if (to.TerrainLevelIndex == from.TerrainLevelIndex)
+            cost = 2;
+        else if (to.TerrainLevelIndex > from.TerrainLevelIndex)
+            cost = 3;
+        else
+            cost = 1;
+
+        if (from.IsRiver != to.IsRiver)
+            cost += 1;
+
+        if (from.IsOcean != to.IsOcean)
+            cost += 1;
+
+        if (from.IsLake != to.IsLake)
+            cost += 1;
+
+        return cost;
     }
 }
 
 class PathNode
 {
-    public HexCell cell;
-    public PathNode parent;
-    public int g; 
-    public int h; 
-    public int f => g + h;
+    public HexCell Cell;
+    public PathNode Parent;
+    public int G;
+    public int H;
+    public int F => G + H;
 
     public PathNode(HexCell cell, PathNode parent, int g, int h)
     {
-        this.cell = cell;
-        this.parent = parent;
-        this.g = g;
-        this.h = h;
+        Cell = cell;
+        Parent = parent;
+        G = g;
+        H = h;
+    }
+
+    public void Update(PathNode parent, int g)
+    {
+        Parent = parent;
+        G = g;
+    }
+}
+
+public class PathData
+{
+    public readonly Queue<HexCell> PlannedPath = new();
+    public readonly List<HexCell> FullPath = new();
+    public readonly Dictionary<HexCell, int> CellTurn = new();
+    public readonly Dictionary<HexCell, int> StepCost = new();
+
+    public bool Accepted { get; set; }
+    public int MovementAtCommit;
+
+    public void SetPath(
+    List<HexCell> path,
+    int movementPerTurn,
+    int remainingMovement,
+    Func<HexCell, HexCell, int> costFunc)
+    {
+        FullPath.Clear();
+        FullPath.AddRange(path);
+
+        PlannedPath.Clear();
+        StepCost.Clear();
+        CellTurn.Clear();
+
+        for (int i = 1; i < path.Count; i++)
+        {
+            PlannedPath.Enqueue(path[i]);
+            StepCost[path[i]] = costFunc(path[i - 1], path[i]);
+        }
+
+        int turn = 1;
+        int mp = remainingMovement;
+
+        for (int i = 1; i < path.Count; i++)
+        {
+            int cost = StepCost[path[i]];
+
+            if (cost > mp)
+            {
+                turn++;
+                mp = movementPerTurn;
+            }
+
+            mp -= cost;
+
+            CellTurn[path[i]] = turn;
+
+            Debug.Log(
+                $"[SetPath] Cell={path[i].name} Cost={cost} Turn={turn} MP_left={mp}"
+            );
+        }
+    }
+
+    public void Clear()
+    {
+        PlannedPath.Clear();
+        FullPath.Clear();
+        CellTurn.Clear();
+        Accepted = false;
+    }
+
+    public void RemoveFirst()
+    {
+        if (FullPath.Count > 0)
+            FullPath.RemoveAt(0);
+    }
+}
+
+public class PathVisual
+{
+    public void Clear(IEnumerable<HexCell> path)
+    {
+        if (path == null) return;
+
+        foreach (var cell in path)
+        {
+            cell.SetText("");
+            cell.SetSpriteColor(new Color(0, 0, 0, 0));
+        }
+    }
+
+    public void DrawPreview(Unit unit)
+    {
+        var path = unit.Path.FullPath;
+        var cellTurn = unit.Path.CellTurn;
+
+        foreach (HexCell cell in path)
+        {
+            if (!cellTurn.TryGetValue(cell, out int turn))
+                continue;
+
+            cell.SetSpriteColor(turn == 1 ? Color.gold : Color.white);
+            cell.SetText(turn.ToString());
+        }
+    }
+
+    public void DrawCommitted(Unit unit)
+    {
+        var path = unit.Path.FullPath;
+        var cellTurn = unit.Path.CellTurn;
+
+        foreach (HexCell cell in path)
+        {
+            cell.SetSpriteColor(Color.white);
+            cell.SetText("");
+
+            if (cell == unit.CurrentCell)
+                continue;
+
+            if (cellTurn.TryGetValue(cell, out int turn))
+            {
+                cell.SetText(turn.ToString());
+            }
+        }
     }
 }

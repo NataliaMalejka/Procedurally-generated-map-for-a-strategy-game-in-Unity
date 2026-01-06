@@ -648,7 +648,7 @@ public class MapManager : MonoBehaviour
         var cellsToCheck = new Queue<HexCell>();
 
         HexCell startCell = gridCells[0];
-        startCell.isOcean = true;
+        startCell.IsOcean = true;
         startCell.DistanceFromOcean = 0;
         startCell.Moisture = 1f;
         cellsToCheck.Enqueue(startCell);
@@ -664,9 +664,9 @@ public class MapManager : MonoBehaviour
 
                 if (neighborCell.ContinentIndex != -1) continue;
 
-                if (neighborCell.isOcean) continue;
+                if (neighborCell.IsOcean) continue;
 
-                neighborCell.isOcean = true;
+                neighborCell.IsOcean = true;
                 neighborCell.DistanceFromOcean = 0;
                 neighborCell.Moisture = 1f;
 
@@ -685,7 +685,7 @@ public class MapManager : MonoBehaviour
             {
                 foreach (var cell in chunk.GetCells())
                 {
-                    if (cell.TerrainLevelIndex == -2 && !cell.isOcean)
+                    if (cell.TerrainLevelIndex == -2 && !cell.IsOcean)
                         SetContinentPart(cell, i);
                 }
             }
@@ -700,7 +700,7 @@ public class MapManager : MonoBehaviour
         {
             HexCell cell = gridCells[i];
 
-            if (cell.isOcean)
+            if (cell.IsOcean)
                 queue.Enqueue(cell);
         }
 
@@ -728,7 +728,7 @@ public class MapManager : MonoBehaviour
     {
         foreach (var cell in gridCells)
         {
-            if (!cell.isOcean)
+            if (!cell.IsOcean)
             {
                 SetTerrainLevel(cell);
                 SetTemperature(cell);
@@ -829,7 +829,7 @@ public class MapManager : MonoBehaviour
         {
             HexCell neighbourCell = gridCells[GetCellIndex(cell.Coordinates.GlobalX, zCellCount * zChunkCount - 3)];
 
-            if (UnityEngine.Random.value < 0.8f || (cell.Coordinates.GlobalZ == (zCellCount * zChunkCount - 2) && !neighbourCell.isOcean))
+            if (UnityEngine.Random.value < 0.8f || (cell.Coordinates.GlobalZ == (zCellCount * zChunkCount - 2) && !neighbourCell.IsOcean))
             {
                 SetArcticCell(cell);
             }
@@ -840,7 +840,7 @@ public class MapManager : MonoBehaviour
             {
                 HexCell neighbourCell = gridCells[GetCellIndex(cell.Coordinates.GlobalX, 1)];
 
-                if ((cell.Coordinates.GlobalZ == 2 && !neighbourCell.isOcean) || cell.Coordinates.GlobalZ == (zCellCount * zChunkCount - 3))
+                if ((cell.Coordinates.GlobalZ == 2 && !neighbourCell.IsOcean) || cell.Coordinates.GlobalZ == (zCellCount * zChunkCount - 3))
                 {
                     SetArcticCell(cell);
                 }
@@ -850,7 +850,7 @@ public class MapManager : MonoBehaviour
 
     private void SetArcticCell(HexCell cell)
     {
-        cell.isOcean = false;
+        cell.IsOcean = false;
         cell.SetTerrainLevel(2);
         SetTemperature(cell);
     }
@@ -916,7 +916,7 @@ public class MapManager : MonoBehaviour
     {
         foreach (var cell in gridCells)
         {
-            if (!cell.isOcean)
+            if (!cell.IsOcean)
             {
                 cell.Moisture = Mathf.Max(0f, 1f - 0.1f * cell.DistanceFromOcean);
             }
@@ -1068,7 +1068,7 @@ public class MapManager : MonoBehaviour
     {
         foreach (var cell in gridCells)
         {
-            if (cell.isOcean)
+            if (cell.IsOcean)
             {
                 cell.SetBiome(Biome.Ocean);
                 continue;
@@ -1204,7 +1204,7 @@ public class MapManager : MonoBehaviour
 
         foreach (var cell in gridCells)
         {
-            if (cell.isOcean || cell.IsMountain || cell.IsLake)
+            if (cell.IsOcean || cell.IsMountain || cell.IsLake)
                 continue;
 
             Biome currentBiome = cell.GetBiome();
@@ -1218,7 +1218,7 @@ public class MapManager : MonoBehaviour
                 if (neighbour == null)
                     continue;
 
-                if (neighbour.isOcean || neighbour.IsMountain || neighbour.IsLake)
+                if (neighbour.IsOcean || neighbour.IsMountain || neighbour.IsLake)
                     continue;
 
                 Biome neighbourBiome = neighbour.GetBiome();
@@ -1346,7 +1346,7 @@ public class MapManager : MonoBehaviour
 
                 if (edge.GetEdgeType() == EdgeType.Smooth)
                 {
-                    bool oceanEdge = cell.isOcean || (cell.GetNeighbor((HexDirection)i) != null && cell.GetNeighbor((HexDirection)i).isOcean);
+                    bool oceanEdge = cell.IsOcean || (cell.GetNeighbor((HexDirection)i) != null && cell.GetNeighbor((HexDirection)i).IsOcean);
 
                     edge.SetOceanEdge(oceanEdge);
                     smoothEdges.Add(edge);
@@ -1726,7 +1726,7 @@ public class MapManager : MonoBehaviour
         {
             safety++;
 
-            if (cell.isOcean || cell.IsLake)
+            if (cell.IsOcean || cell.IsLake)
             {
                 endedInOcean = true;
                 break;
@@ -1953,9 +1953,9 @@ public class MapManager : MonoBehaviour
                 lakeTerrainIndex = neighbour.TerrainLevelIndex;
             }
 
-            if(neighbour.isOcean)
+            if(neighbour.IsOcean)
             {
-                lake.isOcean = true;
+                lake.IsOcean = true;
                 SetNeighbourEdges(lake, neighbour.TerrainLevelIndex);
                 break;
             }
@@ -1977,7 +1977,7 @@ public class MapManager : MonoBehaviour
     {
         foreach(var cell in gridCells)
         {
-            if (cell.isOcean)
+            if (cell.IsOcean)
             {
                 bool coast = false;
 
@@ -1988,7 +1988,7 @@ public class MapManager : MonoBehaviour
                     if (neighbour == null)
                         continue;
 
-                    if(!neighbour.isOcean && neighbour.TerrainLevelIndex==0)
+                    if(!neighbour.IsOcean && neighbour.TerrainLevelIndex==0)
                     {
                         coast = true;
                         break;
@@ -2007,7 +2007,7 @@ public class MapManager : MonoBehaviour
     {
         foreach (var cell in gridCells)
         {
-            if(!cell.isOcean && !cell.IsMountain && !cell.IsLake && !cell.IsRiver)
+            if(!cell.IsOcean && !cell.IsMountain && !cell.IsLake && !cell.IsRiver)
             {
                 bool noNeighbourStructure = true;
 
@@ -2051,7 +2051,7 @@ public class MapManager : MonoBehaviour
 
         foreach (var cell in gridCells)
         {
-            if (cell.isOcean || cell.IsMountain || cell.IsLake || cell.IsRiver || cell.StructureIndex != -1 || cell.Temperature < coldMax || cell.IsUnit) 
+            if (cell.IsOcean || cell.IsMountain || cell.IsLake || cell.IsRiver || cell.StructureIndex != -1 || cell.Temperature < coldMax || cell.IsUnit) 
                 continue;
 
             potentialCells.Add(cell);

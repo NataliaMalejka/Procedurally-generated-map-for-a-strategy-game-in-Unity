@@ -79,11 +79,11 @@ public class HexCell : MonoBehaviour
     private HexCell[] neighbors = new HexCell[6];
     private Edge[] edges = new Edge[6];
 
-    private bool ocean = false;
-    public bool isOcean
+    private bool isOcean = false;
+    public bool IsOcean
     {
-        get { return ocean; }
-        set { ocean = value; }
+        get { return isOcean; }
+        set { isOcean = value; }
     }
 
     private int distanceFromOcean = -1;
@@ -238,7 +238,7 @@ public class HexCell : MonoBehaviour
         var pos = coordinateText.transform.localPosition;
         pos.y = centreTerrainlevel + 4.1f;
 
-        if(isOcean)
+        if(IsOcean)
         {
             pos.y = HexData.waterLevel + 3.1f;
         }

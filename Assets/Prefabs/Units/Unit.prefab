@@ -6531,7 +6531,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f19875e264c3eaf4792894df9e327ea7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Unit
-  maxMovementPoints: 100
+  maxMovementPoints: 6
 --- !u!1 &5818016241758426281
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class TurnManager : MonoBehaviour
 {
     public static TurnManager Instance { get; private set; }
 
-    public int CurrentTurn { get; private set; } = 1;
+    public int CurrentTurn { get; private set; } = 0;
 
     private readonly List<Unit> units = new List<Unit>();
 
@@ -26,11 +27,6 @@ public class TurnManager : MonoBehaviour
             units.Add(unit);
     }
 
-    public void UnregisterUnit(Unit unit)
-    {
-        units.Remove(unit);
-    }
-
     public void EndTurn()
     {
         if(GameManager.Instance.State == GameState.Playing)
@@ -44,17 +40,9 @@ public class TurnManager : MonoBehaviour
         foreach (var unit in units)
         {
             unit.OnTurnStart();
-        }
-    }
 
-    public bool AreAllUnitsDone()
-    {
-        foreach (var unit in units)
-        {
-            if (unit.HasActionsRemaining)
-                return false;
+            if (unit.Path.Accepted && unit.Path.FullPath.Count > 0)
+                SelectObject.Instance.DrawUnitPath(unit);
         }
-
-        return true;
     }
 }
