@@ -7,6 +7,9 @@ public class Unit : MonoBehaviour
 {
     [SerializeField] private Animator unitAnimator;
 
+    [SerializeField] private GameObject LandPart;
+    [SerializeField] private GameObject OceanPart;
+
     [SerializeField] private int maxMovementPoints = 6;
     [SerializeField] private float moveSpeed = 3f;
     [SerializeField] private float rotationSpeed = 720f;
@@ -89,6 +92,17 @@ public class Unit : MonoBehaviour
     {
         if (currentCell != null)
             currentCell.IsUnit = false;
+
+        if(!currentCell.IsOcean && next.IsOcean)
+        {
+            OceanPart.SetActive(true);
+            LandPart.SetActive(false);
+        }
+        else if (currentCell.IsOcean && !next.IsOcean)
+        {
+            LandPart.SetActive(true);
+            OceanPart.SetActive(false);
+        }
 
         currentCell = next;
         currentCell.IsUnit = true;

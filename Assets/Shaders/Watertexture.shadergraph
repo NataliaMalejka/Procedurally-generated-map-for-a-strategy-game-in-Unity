@@ -2361,7 +2361,7 @@
     "m_RenderFace": 2,
     "m_AlphaClip": false,
     "m_CastShadows": false,
-    "m_ReceiveShadows": true,
+    "m_ReceiveShadows": false,
     "m_DisableTint": false,
     "m_AdditionalMotionVectorMode": 0,
     "m_AlembicMotionVectors": false,
