@@ -153,21 +153,15 @@ public class SelectObject : MonoBehaviour
         if (currentPath == null || currentPath.Count == 0)
             return;
 
-        selectedUnit.Path.MovementAtCommit = selectedUnit.CurrentMovementPoints;
+        selectedUnit.Path.SetPath(currentPath, selectedUnit.MaxMovementPoints, selectedUnit.CurrentMovementPoints, GetMoveCost);
 
-        selectedUnit.Path.SetPath(
-        currentPath,
-        selectedUnit.MaxMovementPoints,
-        selectedUnit.Path.MovementAtCommit,
-        GetMoveCost
-        );
-
+        selectedUnit.Path.CommitTurn = TurnManager.Instance.CurrentTurn;
         selectedUnit.Path.Accepted = true;
 
         pathVisual.Clear(currentPath);
-        pathVisual.DrawCommitted(selectedUnit);
+        pathVisual.DrawPreview(selectedUnit);
 
-        selectedUnit.StartMoveThisTurnOnly();
+        selectedUnit.StartMove();
     }
 
     private void PreviewPath(HexCell target)
@@ -182,6 +176,8 @@ public class SelectObject : MonoBehaviour
         if (currentPath == null || currentPath.Count == 0)
             return;
 
+        selectedUnit.Path.SetPath(currentPath, selectedUnit.MaxMovementPoints, selectedUnit.CurrentMovementPoints, GetMoveCost);
+
         pathVisual.DrawPreview(selectedUnit);
     }
 
@@ -192,8 +188,7 @@ public class SelectObject : MonoBehaviour
 
         selectedUnit.Path.CellTurn.Remove(cell);
 
-        if (selectedUnit.Path.FullPath.Count > 0 &&
-            selectedUnit.Path.FullPath[0] == cell)
+        if (selectedUnit.Path.FullPath.Count > 0 && selectedUnit.Path.FullPath[0] == cell)
         {
             selectedUnit.Path.FullPath.RemoveAt(0);
         }
@@ -210,7 +205,6 @@ public class SelectObject : MonoBehaviour
             cell.SetSpriteColor(new Color(0, 0, 0, 0));
         }
     }
-
 
     public void DrawUnitPath(Unit unit)
     {
@@ -329,19 +323,15 @@ class PathNode
 
 public class PathData
 {
-    public readonly Queue<HexCell> PlannedPath = new();
-    public readonly List<HexCell> FullPath = new();
-    public readonly Dictionary<HexCell, int> CellTurn = new();
-    public readonly Dictionary<HexCell, int> StepCost = new();
+    public Queue<HexCell> PlannedPath = new();
+    public List<HexCell> FullPath = new();
+    public Dictionary<HexCell, int> CellTurn = new();
+    public Dictionary<HexCell, int> StepCost = new();
 
     public bool Accepted { get; set; }
-    public int MovementAtCommit;
+    public int CommitTurn;
 
-    public void SetPath(
-    List<HexCell> path,
-    int movementPerTurn,
-    int remainingMovement,
-    Func<HexCell, HexCell, int> costFunc)
+    public void SetPath(List<HexCell> path, int movementPerTurn, int remainingMovement, Func<HexCell, HexCell, int> costFunc)
     {
         FullPath.Clear();
         FullPath.AddRange(path);
@@ -357,6 +347,7 @@ public class PathData
         }
 
         int turn = 1;
+        int lastTurn = 1;
         int mp = remainingMovement;
 
         for (int i = 1; i < path.Count; i++)
@@ -371,11 +362,10 @@ public class PathData
 
             mp -= cost;
 
-            CellTurn[path[i]] = turn;
+            if ((turn != lastTurn || i==path.Count-1) && turn!=1) 
+                CellTurn[path[i]] = turn;
 
-            Debug.Log(
-                $"[SetPath] Cell={path[i].name} Cost={cost} Turn={turn} MP_left={mp}"
-            );
+            lastTurn = turn;
         }
     }
 
@@ -410,35 +400,66 @@ public class PathVisual
     public void DrawPreview(Unit unit)
     {
         var path = unit.Path.FullPath;
+        var stepCost = unit.Path.StepCost;
         var cellTurn = unit.Path.CellTurn;
 
-        foreach (HexCell cell in path)
+        int mp = unit.CurrentMovementPoints;
+        bool canMoveThisTurn = true;
+
+        for (int i = 1; i < path.Count; i++)
         {
-            if (!cellTurn.TryGetValue(cell, out int turn))
-                continue;
+            HexCell cell = path[i];
 
-            cell.SetSpriteColor(turn == 1 ? Color.gold : Color.white);
-            cell.SetText(turn.ToString());
-        }
-    }
-
-    public void DrawCommitted(Unit unit)
-    {
-        var path = unit.Path.FullPath;
-        var cellTurn = unit.Path.CellTurn;
-
-        foreach (HexCell cell in path)
-        {
-            cell.SetSpriteColor(Color.white);
             cell.SetText("");
+            cell.SetSpriteColor(Color.white);
 
-            if (cell == unit.CurrentCell)
-                continue;
+            if (canMoveThisTurn)
+            {
+                int cost = stepCost[cell];
 
-            if (cellTurn.TryGetValue(cell, out int turn))
+                if (cost <= mp)
+                {
+                    cell.SetSpriteColor(Color.gold);
+                    mp -= cost;
+                }
+                else
+                {
+                    canMoveThisTurn = false;
+                }
+            }
+
+            if (cellTurn.TryGetValue(cell, out int turn) && turn > 1)
             {
                 cell.SetText(turn.ToString());
             }
         }
     }
+
+    public void DrawCommitted(Unit unit)
+    { 
+        var path = unit.Path.FullPath; 
+        var cellTurn = unit.Path.CellTurn; 
+
+        int passedTurns = TurnManager.Instance.CurrentTurn - unit.Path.CommitTurn; 
+
+        for (int i = 0; i < path.Count; i++) 
+        { 
+            if (i > 0) 
+                path[i].SetSpriteColor(Color.white); path[i].SetText("");
+            
+            if (path[i] == unit.CurrentCell) 
+                continue; 
+
+            if (!cellTurn.TryGetValue(path[i], out int absoluteTurn)) 
+                continue; 
+
+            int remainingTurns = absoluteTurn - passedTurns; 
+
+            if (remainingTurns <= 0) 
+                continue; 
+
+            path[i].SetText(remainingTurns.ToString());
+        } 
+    }
 }
+

@@ -45,4 +45,17 @@ public class TurnManager : MonoBehaviour
                 SelectObject.Instance.DrawUnitPath(unit);
         }
     }
+
+    public Unit GetUnit(int index)
+    {
+        if (index < 0 || index >= units.Count) 
+            return null;
+
+        return units[index];
+    }
+
+    public int GetUnitCount()
+    {
+        return units.Count;
+    }
 }

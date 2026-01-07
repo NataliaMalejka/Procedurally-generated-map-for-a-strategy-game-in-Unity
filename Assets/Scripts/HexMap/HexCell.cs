@@ -233,20 +233,6 @@ public class HexCell : MonoBehaviour
         centreTerrainlevel = terrainLevel;
     }
 
-    public void SetCellUIPos()
-    {
-        var pos = coordinateText.transform.localPosition;
-        pos.y = centreTerrainlevel + 4.1f;
-
-        if(IsOcean)
-        {
-            pos.y = HexData.waterLevel + 3.1f;
-        }
-
-        coordinateText.transform.localPosition = pos;
-        hexSprite.transform.localPosition = pos;
-    }
-
     public void SetBiome(Biome biome)
     {
         cellBiome = biome;
@@ -257,6 +243,22 @@ public class HexCell : MonoBehaviour
     {
         return cellBiome;
     }
+
+    public void SetCellUIPos()
+    {
+        var pos = coordinateText.transform.localPosition;
+
+        if (IsOcean)
+        {
+            pos.y = HexData.waterLevel + 3.1f;
+        }
+        else
+            pos.y = centreTerrainlevel + 4.1f;
+
+        coordinateText.transform.localPosition = pos;
+        hexSprite.transform.localPosition = pos;
+    }
+
 
     public void SetCoordinateText()
     {

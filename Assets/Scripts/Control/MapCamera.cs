@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -30,6 +31,13 @@ public class MapCamera : MonoBehaviour
     private float downBorder;
 
     private float lastCameraX;
+
+    private int unitIndex = 0;
+    public int UnitIndex
+    {
+        get { return unitIndex; }
+        set { unitIndex = value; }
+    }
 
     private void Start()
     {
@@ -73,6 +81,19 @@ public class MapCamera : MonoBehaviour
         else
         {
             SetLayer(0);
+        }
+
+        Unit unit = TurnManager.Instance.GetUnit(GameSettings.Instance.CurrentLayer);
+        SetCameraUnitPos(unit, GameSettings.Instance.CurrentLayer);
+    }
+
+    public void SetCameraUnitPos(Unit unit, int index)
+    {
+        if (unit != null)
+        {
+            unitIndex = index;
+            SetLayer(unit.LayerIndex);
+            transform.position = new Vector3(unit.transform.position.x, transform.position.y, unit.transform.position.z);
         }
     }
 

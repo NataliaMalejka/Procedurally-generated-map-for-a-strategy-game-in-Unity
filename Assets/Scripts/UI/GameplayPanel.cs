@@ -21,6 +21,13 @@ public class GameplayPanel : MonoBehaviour
 
     public void NextUnit()
     {
+        int index = mapCamera.UnitIndex + 1;
 
+        if (index >= TurnManager.Instance.GetUnitCount() || index < 0) 
+            index = 0;
+
+        Unit unit = TurnManager.Instance.GetUnit(index);
+
+        mapCamera.SetCameraUnitPos(unit, index);
     }
 }

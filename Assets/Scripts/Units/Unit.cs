@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 public class Unit : MonoBehaviour
 {
+    [SerializeField] private Animator unitAnimator;
+
     [SerializeField] private int maxMovementPoints = 6;
     [SerializeField] private float moveSpeed = 3f;
     [SerializeField] private float rotationSpeed = 720f;
@@ -13,33 +16,43 @@ public class Unit : MonoBehaviour
     private bool isMoving;
 
     public readonly PathData Path = new();
+    public event Action<HexCell> OnCellPassed;
 
     public bool IsMoving => isMoving;
     public int MaxMovementPoints => maxMovementPoints;
     public HexCell CurrentCell => currentCell;
-    public event Action<HexCell> OnCellPassed;
     public int CurrentMovementPoints => currentMovementPoints;
+
+    private int layerIndex = 0;
+    public int LayerIndex
+    {
+        get { return layerIndex; }
+        set { layerIndex = value; }
+    }
 
     public void OnTurnStart()
     {
         currentMovementPoints = maxMovementPoints;
 
-        if (Path.Accepted && Path.PlannedPath.Count > 0)
-            StartCoroutine(MoveRoutine(true));
+        StartMove();
     }
 
-    //public void StartMove()
-    //{
-    //    if (Path.Accepted && Path.PlannedPath.Count > 0 && !isMoving)
-    //        StartCoroutine(MoveRoutine(SelectObject.Instance.GetMoveCost));
-    //}
+    public void StartMove()
+    {
+        if (Path.Accepted && Path.PlannedPath.Count > 0)
+        {
+            unitAnimator.SetBool("Walk", true);
+            Debug.Log("true");
+            StartCoroutine(MoveRoutine());
+        }
+    }
 
     public void SetCurrentCell(HexCell cell)
     {
         currentCell = cell;
     }
 
-    private IEnumerator MoveRoutine(bool fullTurn)
+    private IEnumerator MoveRoutine()
     {
         isMoving = true;
 
@@ -63,6 +76,9 @@ public class Unit : MonoBehaviour
             OnCellPassed?.Invoke(passed);
         }
 
+
+        unitAnimator.SetBool("Walk", false);
+        Debug.Log("false");
         isMoving = false;
 
         if (Path.PlannedPath.Count == 0)
@@ -78,21 +94,23 @@ public class Unit : MonoBehaviour
         currentCell.IsUnit = true;
 
         transform.SetParent(next.transform, true);
-        transform.localPosition = Vector3.zero;
-    }
 
-    public void StartMoveThisTurnOnly()
-    {
-        if (Path.Accepted && Path.PlannedPath.Count > 0 && !isMoving)
-            StartCoroutine(MoveRoutine(false));
+        var pos = Vector3.zero;
+
+        if (next.IsOcean)
+        {
+            pos.y = HexData.waterLevel + 3f;
+        }
+        else
+            pos.y = next.CentreTerrainLevel + 4f;
+
+        transform.localPosition = pos;
     }
 
     private IEnumerator MoveToCell(HexCell target)
     {
         Vector3 start = transform.position;
         Vector3 end = target.transform.position;
-        //end.y += target.CentreTerrainLevel+4;
-
 
         Quaternion targetRot = Quaternion.LookRotation((end - start).normalized);
 
@@ -101,6 +119,13 @@ public class Unit : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
             yield return null;
         }
+
+        if (target.IsOcean)
+        {
+            end.y += HexData.waterLevel + 3f;
+        }
+        else
+            end.y += target.CentreTerrainLevel + 4f;
 
         float t = 0f;
         while (t < 1f)

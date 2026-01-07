@@ -260,6 +260,7 @@ public class Chunk : MonoBehaviour
         Unit unitInstance = Instantiate(prefab, centre, finalRotation,cell.transform);
 
         unitInstance.SetCurrentCell(cell);
+        unitInstance.LayerIndex = level;
         TurnManager.Instance.RegisterUnit(unitInstance);
     }
 
