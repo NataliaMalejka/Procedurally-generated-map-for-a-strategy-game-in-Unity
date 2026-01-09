@@ -42,12 +42,13 @@ public class Unit : MonoBehaviour
 
     public void StartMove()
     {
-        if (Path.Accepted && Path.PlannedPath.Count > 0)
-        {
-            unitAnimator.SetBool("Walk", true);
-            Debug.Log("true");
-            StartCoroutine(MoveRoutine());
-        }
+        if (isMoving)
+            return;
+
+        if (!Path.Accepted || Path.PlannedPath.Count == 0)
+            return;
+
+        StartCoroutine(MoveRoutine());
     }
 
     public void SetCurrentCell(HexCell cell)
@@ -58,6 +59,8 @@ public class Unit : MonoBehaviour
     private IEnumerator MoveRoutine()
     {
         isMoving = true;
+
+        unitAnimator.SetBool("Walk", true);
 
         while (Path.PlannedPath.Count > 0)
         {
@@ -79,9 +82,7 @@ public class Unit : MonoBehaviour
             OnCellPassed?.Invoke(passed);
         }
 
-
         unitAnimator.SetBool("Walk", false);
-        Debug.Log("false");
         isMoving = false;
 
         if (Path.PlannedPath.Count == 0)
@@ -113,7 +114,7 @@ public class Unit : MonoBehaviour
 
         if (next.IsOcean)
         {
-            pos.y = HexData.waterLevel + 3f;
+            pos.y = HexData.waterLevel +1f;
         }
         else
             pos.y = next.CentreTerrainLevel + 4f;
@@ -126,18 +127,26 @@ public class Unit : MonoBehaviour
         Vector3 start = transform.position;
         Vector3 end = target.transform.position;
 
-        Quaternion targetRot = Quaternion.LookRotation((end - start).normalized);
+        Vector3 dir = end - start;
+        dir.y = 0f;
 
-        while (Quaternion.Angle(transform.rotation, targetRot) > 0.5f)
+        if (dir.sqrMagnitude > 0.001f)
         {
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
-            yield return null;
+            Quaternion targetRot = Quaternion.LookRotation(dir.normalized);
+
+            while (Quaternion.Angle(transform.rotation, targetRot) > 0.5f)
+            {
+                transform.rotation = Quaternion.RotateTowards(
+                    transform.rotation,
+                    targetRot,
+                    rotationSpeed * Time.deltaTime
+                );
+                yield return null;
+            }
         }
 
         if (target.IsOcean)
-        {
-            end.y += HexData.waterLevel + 3f;
-        }
+            end.y += HexData.waterLevel + 1f;
         else
             end.y += target.CentreTerrainLevel + 4f;
 
@@ -148,5 +157,8 @@ public class Unit : MonoBehaviour
             transform.position = Vector3.Lerp(start, end, t);
             yield return null;
         }
+
+        Vector3 euler = transform.eulerAngles;
+        transform.eulerAngles = new Vector3(0f, euler.y, 0f);
     }
 }

@@ -103,7 +103,7 @@ public class MapManager : MonoBehaviour
     [SerializeField] private Material riverMaterial;
     [SerializeField] private Texture2D[] texturesColor;
     [SerializeField] private Texture2D[] texturesNormal;
-    [SerializeField] private Texture2D[] texturesRough;
+    //[SerializeField] private Texture2D[] texturesRough;
     [SerializeField] private Texture2D snowTexture;
 
     [SerializeField] private Color[] waterColors;
@@ -169,9 +169,9 @@ public class MapManager : MonoBehaviour
         texArrayNormal.Apply();
         terrainMaterial.SetTexture("_TexNormal", texArrayNormal);
 
-        var texArrayRough = SetTex(w, h, texturesRough);
-        texArrayRough.Apply();
-        terrainMaterial.SetTexture("_TexRough", texArrayRough);
+        //var texArrayRough = SetTex(w, h, texturesRough);
+        //texArrayRough.Apply();
+        //terrainMaterial.SetTexture("_TexRough", texArrayRough);
 
         snowTexture.wrapMode = TextureWrapMode.Repeat;
         snowTexture.filterMode = FilterMode.Bilinear;
