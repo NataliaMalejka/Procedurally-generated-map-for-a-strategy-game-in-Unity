@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -280,10 +279,10 @@ public class ChunkMesh : MonoBehaviour
             }
         }
 
-        if (isEnd)
-        {
-            //CreateRiverSourceOrEnd(m1i, m2i, cell, isSmooth, c);
-        }
+        //if (isEnd)
+        //{
+        //    //CreateRiverSourceOrEnd(m1i, m2i, cell, isSmooth, c);
+        //}
     }
 
     private void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
@@ -393,7 +392,12 @@ public class ChunkMesh : MonoBehaviour
             CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal, endmap), v2, v2d, temp);
         }
 
-        if((cell.GetEdge(index).InRiver && neighbourCell.GetEdge((index + 3) % 6).OutRiver) || (cell.GetEdge(index).OutRiver && neighbourCell.GetEdge((index + 3) % 6).InRiver))
+        if (cell.GetEdge(index).InRiver || cell.GetEdge(index).OutRiver)
+        {
+            Debug.Log("is River");
+        }
+
+        if ((cell.GetEdge(index).InRiver && neighbourCell.GetEdge((index + 3) % 6).OutRiver) || (cell.GetEdge(index).OutRiver && neighbourCell.GetEdge((index + 3) % 6).InRiver))
         {
             foreach(var river in cell.GetRivers())
             {
@@ -405,6 +409,8 @@ public class ChunkMesh : MonoBehaviour
                     m2d.y += 0.1f;
 
                     riverMesh.CreateRectangle(AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), waterColorIndex);
+
+                    Debug.Log("Create river");
 
                     if (cell.GetEdge(index).InRiver)
                     {

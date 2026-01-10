@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class Chunk : MonoBehaviour
@@ -34,29 +33,14 @@ public class Chunk : MonoBehaviour
         return zCells;
     }
 
-    public int GetIndexInGrid()
-    {
-        return indexInGrid;
-    }
-
     public void SetLevel(int l)
     {
         level = l;
     }
 
-    public int GetLevel()
-    {
-        return level;
-    }
-
     public void SetWaterColorIndex(int index)
     {
         waterColorIndex = index;
-    }
-
-    public int GetWaterColorIndex()
-    {
-        return waterColorIndex;
     }
 
     public void SetGridCoords(int x, int z, int index)
@@ -71,22 +55,12 @@ public class Chunk : MonoBehaviour
         columnIndex = index;
     }
 
-    public int GetColumnIndex()
-    {
-        return columnIndex;
-    }
-
     private void OnEnable()
     {
         xCells = MapManager.Instance.xCellCount;
         zCells = MapManager.Instance.zCellCount;
 
         cells = new HexCell[xCells * zCells];
-    }
-
-    public ChunkMesh GetChunkMesh()
-    {
-        return chunkMesh;
     }
 
     public HexCell CreateCell(int cellGlobalIndex, int chunkIndex)

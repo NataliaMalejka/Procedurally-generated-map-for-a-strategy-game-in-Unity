@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 public class Unit : MonoBehaviour
 {

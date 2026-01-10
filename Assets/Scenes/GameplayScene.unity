@@ -319,12 +319,44 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 460132500}
     - target: {fileID: 1475108534847446318, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
+      propertyPath: moveSpeedMax
+      value: 80
+      objectReference: {fileID: 0}
+    - target: {fileID: 1475108534847446318, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
+      propertyPath: stickMaxZoom
+      value: -45
+      objectReference: {fileID: 0}
+    - target: {fileID: 1475108534847446318, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
+      propertyPath: stickMinZoom
+      value: -100
+      objectReference: {fileID: 0}
+    - target: {fileID: 1475108534847446318, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
+      propertyPath: rotationSpeed
+      value: 250
+      objectReference: {fileID: 0}
+    - target: {fileID: 1475108534847446318, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
       propertyPath: swivelMaxZoom
-      value: 60
+      value: 45
+      objectReference: {fileID: 0}
+    - target: {fileID: 2087041040654463764, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
+      propertyPath: m_RenderShadows
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2087041040654463764, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
+      propertyPath: m_RenderPostProcessing
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3670122680639957534, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
       propertyPath: m_Name
       value: HexMapCamera
+      objectReference: {fileID: 0}
+    - target: {fileID: 4280597392230201329, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
+      propertyPath: far clip plane
+      value: 10000
+      objectReference: {fileID: 0}
+    - target: {fileID: 4280597392230201329, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
+      propertyPath: near clip plane
+      value: 0.3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

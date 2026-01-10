@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -144,7 +143,7 @@ public class MapManager : MonoBehaviour
 
     private void ApplySeed()
     {
-        int seed = 10;
+        int seed = UnityEngine.Random.Range(0, int.MaxValue);
 
         if (int.TryParse(GameSettings.Instance.GetSeedString(), out int parsedSeed))
         {
@@ -154,6 +153,7 @@ public class MapManager : MonoBehaviour
             }
         }
 
+        Debug.Log(seed);
         UnityEngine.Random.InitState(seed);
     }
 

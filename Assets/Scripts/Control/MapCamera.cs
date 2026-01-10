@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -23,7 +22,7 @@ public class MapCamera : MonoBehaviour
     [SerializeField] private float swivelMaxZoom = 70;
 
     [SerializeField] private float rotationSpeed = 180;
-    [SerializeField] private float virtualCameraHeight = 200f;
+    [SerializeField] private float virtualCameraHeight = 10f;
 
     private float rotationAngle;
 

@@ -10,7 +10,6 @@ public class SelectObject : MonoBehaviour
     [SerializeField] private GridHex grid;
     [SerializeField] private LayerMask unitLayer;
 
-    private HexCell selectedCell = null;
     private Unit selectedUnit = null;
 
     private HexCell hoveredCell = null;

@@ -1,4 +1,3 @@
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public enum EdgeType
@@ -65,11 +64,6 @@ public class Edge
         this.chunkPos = chunkPos;
 
         this.cell = cell;
-    }
-
-    public Direction GetDirection()
-    {
-        return (Direction)hexDirection;
     }
 
     public Vector3 GetGlobalV1()
