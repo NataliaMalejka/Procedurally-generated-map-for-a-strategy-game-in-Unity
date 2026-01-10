@@ -16,6 +16,8 @@ public class GameplayPanel : MonoBehaviour
 
     public void NextTurn()
     {
+        SoundsManager.Instance.PlaySounds(SoundsManager.Sounds.NextTurn);
+
         TurnManager.Instance.EndTurn();
     }
 

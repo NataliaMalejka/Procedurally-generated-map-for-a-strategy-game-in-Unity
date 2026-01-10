@@ -24,7 +24,10 @@ public class TurnManager : MonoBehaviour
     public void RegisterUnit(Unit unit)
     {
         if (!units.Contains(unit))
+        {
             units.Add(unit);
+            unit.OnCellPassed += SelectObject.Instance.HandleUnitPassedCell;
+        }
     }
 
     public void EndTurn()
@@ -41,8 +44,21 @@ public class TurnManager : MonoBehaviour
         {
             unit.OnTurnStart();
 
+            //if (unit.Path.Accepted && unit.Path.FullPath.Count > 0)
+            //    SelectObject.Instance.DrawUnitPath(unit);
+
+            RedrawAllAcceptedPaths();
+        }
+    }
+
+    public void RedrawAllAcceptedPaths()
+    {
+        foreach (var unit in units)
+        {
             if (unit.Path.Accepted && unit.Path.FullPath.Count > 0)
+            {
                 SelectObject.Instance.DrawUnitPath(unit);
+            }
         }
     }
 

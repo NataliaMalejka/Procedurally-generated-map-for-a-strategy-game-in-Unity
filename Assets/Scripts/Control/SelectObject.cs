@@ -121,31 +121,39 @@ public class SelectObject : MonoBehaviour
         {
             ClearUnitPathVisual(selectedUnit);
             selectedUnit.Path.Clear();
-
+            selectedUnit.Path.Accepted = false;
             pathVisual.Clear(currentPath);
             hoveredCell = null;
             return;
         }
-
+        else
+            selectedUnit = null;
         pathVisual.Clear(currentPath);
-        selectedUnit = null;
     }
 
-    private void SelectUnit(Unit unit)
+    public void UnselectUnit()
     {
-        if (selectedUnit == unit)
+        if (selectedUnit == null)
             return;
 
-        if (selectedUnit != null)
-            selectedUnit.OnCellPassed -= HandleUnitPassedCell;
+        if (selectedUnit.Path.Accepted)
+        {
+            //ClearUnitPathVisual(selectedUnit);
+            //selectedUnit.Path.Clear();
 
-        pathVisual.Clear(currentPath);
-        hoveredCell = null;
+            //pathVisual.Clear(currentPath);
+            hoveredCell = null;
+            return;
+        }
 
+        //pathVisual.Clear(currentPath);
+        selectedUnit = null;
+
+    }
+
+    public void SelectUnit(Unit unit)
+    {
         selectedUnit = unit;
-        selectedUnit.Path.Accepted = false;
-
-        selectedUnit.OnCellPassed += HandleUnitPassedCell;
     }
 
     private void AcceptPath()
@@ -158,8 +166,10 @@ public class SelectObject : MonoBehaviour
         selectedUnit.Path.CommitTurn = TurnManager.Instance.CurrentTurn;
         selectedUnit.Path.Accepted = true;
 
-        pathVisual.Clear(currentPath);
+        //pathVisual.Clear(currentPath);
         pathVisual.DrawPreview(selectedUnit);
+
+        TurnManager.Instance.RedrawAllAcceptedPaths();
 
         selectedUnit.StartMove();
     }
@@ -181,17 +191,15 @@ public class SelectObject : MonoBehaviour
         pathVisual.DrawPreview(selectedUnit);
     }
 
-    private void HandleUnitPassedCell(HexCell cell)
+    public void HandleUnitPassedCell(Unit unit, HexCell cell)
     {
         cell.SetText("");
         cell.SetSpriteColor(new Color(0, 0, 0, 0));
 
-        selectedUnit.Path.CellTurn.Remove(cell);
+        unit.Path.CellTurn.Remove(cell);
 
-        if (selectedUnit.Path.FullPath.Count > 0 && selectedUnit.Path.FullPath[0] == cell)
-        {
-            selectedUnit.Path.FullPath.RemoveAt(0);
-        }
+        if (unit.Path.FullPath.Count > 0 && unit.Path.FullPath[0] == cell)
+            unit.Path.FullPath.RemoveAt(0);
     }
 
     private void ClearUnitPathVisual(Unit unit)
@@ -208,7 +216,7 @@ public class SelectObject : MonoBehaviour
 
     public void DrawUnitPath(Unit unit)
     {
-        pathVisual.DrawCommitted(selectedUnit);
+        pathVisual.DrawCommitted(unit);
     }
 
     public List<HexCell> FindPath(HexCell start, HexCell goal)
@@ -411,7 +419,7 @@ public class PathVisual
             HexCell cell = path[i];
 
             cell.SetText("");
-            cell.SetSpriteColor(Color.white);
+            cell.SetSpriteColor(Color.gray5);
 
             if (canMoveThisTurn)
             {
@@ -445,7 +453,9 @@ public class PathVisual
         for (int i = 0; i < path.Count; i++) 
         { 
             if (i > 0) 
-                path[i].SetSpriteColor(Color.white); path[i].SetText("");
+                path[i].SetSpriteColor(Color.gray5); 
+
+            //path[i].SetText("");
             
             if (path[i] == unit.CurrentCell) 
                 continue; 

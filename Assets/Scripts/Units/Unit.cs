@@ -19,7 +19,7 @@ public class Unit : MonoBehaviour
     private bool isMoving;
 
     public readonly PathData Path = new();
-    public event Action<HexCell> OnCellPassed;
+    public event Action<Unit, HexCell> OnCellPassed;
 
     public bool IsMoving => isMoving;
     public int MaxMovementPoints => maxMovementPoints;
@@ -79,7 +79,7 @@ public class Unit : MonoBehaviour
             FinalizeCellChange(next);
 
             Path.RemoveFirst();
-            OnCellPassed?.Invoke(passed);
+            OnCellPassed?.Invoke(this, passed);
         }
 
         unitAnimator.SetBool("Walk", false);

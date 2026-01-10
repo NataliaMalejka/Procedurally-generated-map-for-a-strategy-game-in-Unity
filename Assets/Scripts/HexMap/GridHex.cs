@@ -35,6 +35,11 @@ public class GridHex : MonoBehaviour
 
     private void Start()
     {
+        GenerateLayers();
+    }
+
+    private void GenerateLayers()
+    {
         xChunks = MapManager.Instance.xChunkCount;
         zChunks = MapManager.Instance.zChunkCount;
 
@@ -48,7 +53,7 @@ public class GridHex : MonoBehaviour
             cellsHot = CreateChunks(GameSettings.Instance.IsHotBiome(), (int)Layers.Hot);
             gridLayers.Add(cellsHot);
         }
-        if(GameSettings.Instance.IsEarthBiome() > -1)
+        if (GameSettings.Instance.IsEarthBiome() > -1)
         {
             cellsEarth = CreateChunks(GameSettings.Instance.IsEarthBiome(), (int)Layers.Earth);
             gridLayers.Add(cellsEarth);
@@ -57,7 +62,7 @@ public class GridHex : MonoBehaviour
         {
             cellsCold = CreateChunks(GameSettings.Instance.IsColdBiome(), (int)Layers.Cold);
             gridLayers.Add(cellsCold);
-        }     
+        }
     }
 
     private HexCell[] CreateChunks(int level, int biomelayerIndex)

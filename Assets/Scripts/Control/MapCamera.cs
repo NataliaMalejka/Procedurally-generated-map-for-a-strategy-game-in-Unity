@@ -90,10 +90,13 @@ public class MapCamera : MonoBehaviour
     public void SetCameraUnitPos(Unit unit, int index)
     {
         if (unit != null)
-        {
+        {           
+            SelectObject.Instance.UnselectUnit();
             unitIndex = index;
             SetLayer(unit.LayerIndex);
             transform.position = new Vector3(unit.transform.position.x, transform.position.y, unit.transform.position.z);
+            SelectObject.Instance.SelectUnit(unit);
+            TurnManager.Instance.RedrawAllAcceptedPaths();
         }
     }
 
@@ -331,6 +334,8 @@ public class MapCamera : MonoBehaviour
         {
             GameSettings.Instance.CurrentLayer++;
 
+            SelectObject.Instance.UnselectUnit();
+
             var pos = transform.position;
             pos.y += HexData.LayersDistance;
             transform.position = pos;
@@ -342,6 +347,8 @@ public class MapCamera : MonoBehaviour
         if (GameSettings.Instance.CurrentLayer > 0 && GameManager.Instance.State == GameState.Playing)
         {
             GameSettings.Instance.CurrentLayer--;
+
+            SelectObject.Instance.UnselectUnit();
 
             var pos = transform.position;
             pos.y -= HexData.LayersDistance;
