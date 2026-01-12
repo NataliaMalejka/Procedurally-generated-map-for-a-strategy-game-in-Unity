@@ -21,12 +21,12 @@ public class River : MonoBehaviour
 
     public bool AreNeighboursInRiver(HexCell a, HexCell b)
     {
-        int indexA = riverCells.IndexOf(a);
-        int indexB = riverCells.IndexOf(b);
+        int dir = HexDirectionUtils.GetDirectionIndex(a, b);
+        if (dir == -1) return false;
 
-        if (indexA == -1 || indexB == -1)
-            return false;
+        Edge ea = a.GetEdge(dir);
+        Edge eb = b.GetEdge((dir + 3) % 6);
 
-        return Mathf.Abs(indexA - indexB) == 1;
+        return (ea.OutRiver && eb.InRiver) || (ea.InRiver && eb.OutRiver);
     }
 }
