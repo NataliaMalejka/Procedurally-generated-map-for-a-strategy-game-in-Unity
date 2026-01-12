@@ -102,13 +102,12 @@ public class MapManager : MonoBehaviour
     [SerializeField] private Material riverMaterial;
     [SerializeField] private Texture2D[] texturesColor;
     [SerializeField] private Texture2D[] texturesNormal;
-    //[SerializeField] private Texture2D[] texturesRough;
     [SerializeField] private Texture2D snowTexture;
 
     [SerializeField] private Color[] waterColors;
     private Texture2D paletteTex;
     private int paletteCount;
-
+    private const int MAX_TEXTURE_SIZE = 256;
 
     [Header("Structures")]
     public BiomeObjects[] biomeObjects;
@@ -153,7 +152,6 @@ public class MapManager : MonoBehaviour
             }
         }
 
-        Debug.Log(seed);
         UnityEngine.Random.InitState(seed);
     }
 
@@ -168,10 +166,6 @@ public class MapManager : MonoBehaviour
         var texArrayNormal = SetTex(w, h, texturesNormal);
         texArrayNormal.Apply();
         terrainMaterial.SetTexture("_TexNormal", texArrayNormal);
-
-        //var texArrayRough = SetTex(w, h, texturesRough);
-        //texArrayRough.Apply();
-        //terrainMaterial.SetTexture("_TexRough", texArrayRough);
 
         snowTexture.wrapMode = TextureWrapMode.Repeat;
         snowTexture.filterMode = FilterMode.Bilinear;
@@ -188,15 +182,20 @@ public class MapManager : MonoBehaviour
         foreach (var t in texs)
         {
             if (t == null) continue;
+
             maxW = Mathf.Max(maxW, t.width);
             maxH = Mathf.Max(maxH, t.height);
         }
+
+        maxW = Mathf.Min(maxW, MAX_TEXTURE_SIZE);
+        maxH = Mathf.Min(maxH, MAX_TEXTURE_SIZE);
     }
 
     private Texture2DArray SetTex(int w, int h, Texture2D[] texs)
     {
         var texArray = new Texture2DArray(
-            w, h,
+            w,
+            h,
             texs.Length,
             TextureFormat.RGBA32,
             true
@@ -207,7 +206,12 @@ public class MapManager : MonoBehaviour
 
         for (int i = 0; i < texs.Length; i++)
         {
-            Texture2D resized = ResizeToRGBA32(texs[i], w, h);
+            if (texs[i] == null) continue;
+
+            int targetW = Mathf.Min(texs[i].width, w);
+            int targetH = Mathf.Min(texs[i].height, h);
+
+            Texture2D resized = ResizeToRGBA32(texs[i], targetW, targetH);
             Graphics.CopyTexture(resized, 0, 0, texArray, i, 0);
         }
 
@@ -228,28 +232,6 @@ public class MapManager : MonoBehaviour
         Texture2D tex = new Texture2D(targetW, targetH, TextureFormat.RGBA32, true);
         RenderTexture.active = rt;
         tex.ReadPixels(new Rect(0, 0, targetW, targetH), 0, 0);
-        tex.Apply();
-
-        RenderTexture.active = null;
-        RenderTexture.ReleaseTemporary(rt);
-
-        return tex;
-    }
-
-    private Texture2D ConvertToRGBA32(Texture2D source)
-    {
-        RenderTexture rt = RenderTexture.GetTemporary(
-            source.width,
-            source.height,
-            0,
-            RenderTextureFormat.ARGB32
-        );
-
-        Graphics.Blit(source, rt);
-
-        Texture2D tex = new Texture2D(source.width, source.height, TextureFormat.RGBA32, true);
-        RenderTexture.active = rt;
-        tex.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0);
         tex.Apply();
 
         RenderTexture.active = null;

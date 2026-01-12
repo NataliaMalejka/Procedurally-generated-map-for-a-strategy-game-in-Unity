@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -21,10 +22,10 @@ public class MapCamera : MonoBehaviour
     [SerializeField] private float swivelMinZoom = 90;
     [SerializeField] private float swivelMaxZoom = 70;
 
-    [SerializeField] private float rotationSpeed = 180;
     [SerializeField] private float virtualCameraHeight = 10f;
 
-    private float rotationAngle;
+    [SerializeField] private float cameraMoveSpeed = 50f;
+    private Coroutine moveCameraCoroutine;
 
     private float UpBorder;
     private float downBorder;
@@ -32,6 +33,7 @@ public class MapCamera : MonoBehaviour
     private float lastCameraX;
 
     private int unitIndex = 0;
+
     public int UnitIndex
     {
         get { return unitIndex; }
@@ -44,31 +46,6 @@ public class MapCamera : MonoBehaviour
         SetBorders();
 
         lastCameraX = transform.position.x;
-    }
-
-    private void Update()
-    {
-        float zoomDelta = Mouse.current.scroll.ReadValue().y * 0.01f;
-        if (zoomDelta != 0f)
-        {
-            AdjustZoom(zoomDelta);
-        }
-
-        float rotationDelta = 0f;
-        if (Keyboard.current.aKey.isPressed) rotationDelta = -1f;
-        if (Keyboard.current.dKey.isPressed) rotationDelta = 1f;
-
-        if (rotationDelta != 0f)
-        {
-            AdjustRotation(rotationDelta);
-        }
-
-        UpdatePosition();
-
-        HandleHorizontalWrap();
-        lastCameraX = transform.position.x;
-
-        UpdateLayer();
     }
 
     private void SetStartPos()
@@ -88,21 +65,56 @@ public class MapCamera : MonoBehaviour
 
     public void SetCameraUnitPos(Unit unit, int index)
     {
-        if (unit != null)
-        {           
-            SelectObject.Instance.UnselectUnit();
-            unitIndex = index;
-            SetLayer(unit.LayerIndex);
-            transform.position = new Vector3(unit.transform.position.x, transform.position.y, unit.transform.position.z);
-            SelectObject.Instance.SelectUnit(unit);
-            TurnManager.Instance.RedrawAllAcceptedPaths();
+        if (unit == null) 
+            return;
+
+        SelectObject.Instance.UnselectUnit();
+        unitIndex = index;
+        SetLayer(unit.LayerIndex);
+
+        Vector3 targetPos = new Vector3(unit.transform.position.x, transform.position.y, unit.transform.position.z);
+
+        if (moveCameraCoroutine != null)
+            StopCoroutine(moveCameraCoroutine);
+
+        moveCameraCoroutine = StartCoroutine(MoveCameraSmooth(targetPos));
+
+        SelectObject.Instance.SelectUnit(unit);
+        TurnManager.Instance.RedrawAllAcceptedPaths();
+    }
+
+    private IEnumerator MoveCameraSmooth(Vector3 targetPosition)
+    {
+        while (Vector3.Distance(transform.position, targetPosition) > 0.01f)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, cameraMoveSpeed * Time.deltaTime);
+
+            yield return null;
         }
+
+        transform.position = targetPosition;
     }
 
     private void SetBorders()
     {
         UpBorder = MapManager.Instance.zChunkCount * MapManager.Instance.zCellCount * 1.5f * HexData.distanceToCorner - HexData.distanceToCorner;
         downBorder = 0;
+    }
+
+    private void LateUpdate()
+    {
+        float zoomDelta = Mouse.current.scroll.ReadValue().y * 0.01f;
+        if (zoomDelta != 0f)
+        {
+            AdjustZoom(zoomDelta);
+        }
+
+        UpdatePosition();
+
+        HandleHorizontalWrap();
+        lastCameraX = transform.position.x;
+
+        UpdateLayer();
     }
 
     private void AdjustZoom(float delta)
@@ -116,23 +128,6 @@ public class MapCamera : MonoBehaviour
         swivel.localRotation = Quaternion.Euler(angle, 0f, 0f);
 
         virtualCameraHeight = -distance;
-
-        EnforceZBounds();
-    }
-
-    private void AdjustRotation(float delta)
-    {
-        rotationAngle += delta * rotationSpeed * Time.deltaTime;
-        if (rotationAngle < 0f)
-        {
-            rotationAngle += 360f;
-        }
-        else if (rotationAngle >= 360f)
-        {
-            rotationAngle -= 360f;
-        }
-
-        transform.localRotation = Quaternion.Euler(0f, rotationAngle, 0f);
 
         EnforceZBounds();
     }

@@ -179,13 +179,13 @@ public class ChunkMesh : MonoBehaviour
 
     public void CreateHexRiver(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c, int index)
     {
-        bool isEnd = true;
+        //bool isEnd = true;
 
         for (int i = 0; i < 6; i++)
         {
             if (cell.GetEdge(i).OutRiver)
             {
-                isEnd = false;
+                //isEnd = false;
 
                 if (!isSmooth)
                 {
@@ -392,11 +392,6 @@ public class ChunkMesh : MonoBehaviour
             CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal, endmap), v2, v2d, temp);
         }
 
-        if (cell.GetEdge(index).InRiver || cell.GetEdge(index).OutRiver)
-        {
-            Debug.Log("is River");
-        }
-
         if ((cell.GetEdge(index).InRiver && neighbourCell.GetEdge((index + 3) % 6).OutRiver) || (cell.GetEdge(index).OutRiver && neighbourCell.GetEdge((index + 3) % 6).InRiver))
         {
             foreach(var river in cell.GetRivers())
@@ -409,8 +404,6 @@ public class ChunkMesh : MonoBehaviour
                     m2d.y += 0.1f;
 
                     riverMesh.CreateRectangle(AddNoise(m1, noiseStrengthNormal), AddNoise(m1d, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal), waterColorIndex);
-
-                    Debug.Log("Create river");
 
                     if (cell.GetEdge(index).InRiver)
                     {

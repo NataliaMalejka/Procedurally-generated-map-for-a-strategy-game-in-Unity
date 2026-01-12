@@ -31,3 +31,25 @@ public static class FindHexDirection
         return direction == HexDirection.NW ? HexDirection.NE : (direction + 1);
     }
 }
+
+public static class HexDirectionUtils
+{
+    public static int GetDirectionIndex(HexCell a, HexCell b)
+    {
+        int dq = b.Coordinates.Q - a.Coordinates.Q;
+        int dr = b.Coordinates.R - a.Coordinates.R;
+        int ds = b.Coordinates.S - a.Coordinates.S;
+
+        for (int i = 0; i < FindHexDirection.hexDirections.Length; i++)
+        {
+            var dir = FindHexDirection.hexDirections[i];
+            if (dir.dq == dq && dir.dr == dr && dir.ds == ds)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+}
+
