@@ -103,6 +103,8 @@ public class MapManager : MonoBehaviour
     [SerializeField] private Texture2D[] texturesColor;
     [SerializeField] private Texture2D[] texturesNormal;
     [SerializeField] private Texture2D snowTexture;
+    [SerializeField] private Texture2DArray terrainTextureAlbedo;
+    [SerializeField] private Texture2DArray terrainTextureNormal;
 
     [SerializeField] private Color[] waterColors;
     private Texture2D paletteTex;
@@ -157,15 +159,15 @@ public class MapManager : MonoBehaviour
 
     private void SetTextures()
     {
-        GetMaxSize(texturesColor, out int w, out int h);
+        //GetMaxSize(texturesColor, out int w, out int h);
 
-        var texArrayColor = SetTex(w, h, texturesColor);
-        texArrayColor.Apply();
-        terrainMaterial.SetTexture("_TexColor", texArrayColor);
+       // var texArrayColor = SetTex(w, h, texturesColor);
+        //texArrayColor.Apply();
+        terrainMaterial.SetTexture("_TexColor", terrainTextureAlbedo);
 
-        var texArrayNormal = SetTex(w, h, texturesNormal);
-        texArrayNormal.Apply();
-        terrainMaterial.SetTexture("_TexNormal", texArrayNormal);
+        //var texArrayNormal = SetTex(w, h, texturesNormal);
+        //texArrayNormal.Apply();
+        terrainMaterial.SetTexture("_TexNormal", terrainTextureNormal);
 
         snowTexture.wrapMode = TextureWrapMode.Repeat;
         snowTexture.filterMode = FilterMode.Bilinear;
@@ -174,71 +176,71 @@ public class MapManager : MonoBehaviour
         terrainMaterial.SetFloat("_ColdMax", coldMax);
     }
 
-    private void GetMaxSize(Texture2D[] texs, out int maxW, out int maxH)
-    {
-        maxW = 0;
-        maxH = 0;
+    //private void GetMaxSize(Texture2D[] texs, out int maxW, out int maxH)
+    //{
+    //    maxW = 0;
+    //    maxH = 0;
 
-        foreach (var t in texs)
-        {
-            if (t == null) continue;
+    //    foreach (var t in texs)
+    //    {
+    //        if (t == null) continue;
 
-            maxW = Mathf.Max(maxW, t.width);
-            maxH = Mathf.Max(maxH, t.height);
-        }
+    //        maxW = Mathf.Max(maxW, t.width);
+    //        maxH = Mathf.Max(maxH, t.height);
+    //    }
 
-        maxW = Mathf.Min(maxW, MAX_TEXTURE_SIZE);
-        maxH = Mathf.Min(maxH, MAX_TEXTURE_SIZE);
-    }
+    //    maxW = Mathf.Min(maxW, MAX_TEXTURE_SIZE);
+    //    maxH = Mathf.Min(maxH, MAX_TEXTURE_SIZE);
+    //}
 
-    private Texture2DArray SetTex(int w, int h, Texture2D[] texs)
-    {
-        var texArray = new Texture2DArray(
-            w,
-            h,
-            texs.Length,
-            TextureFormat.RGBA32,
-            true
-        );
+    //private Texture2DArray SetTex(int w, int h, Texture2D[] texs)
+    //{
+    //    var texArray = new Texture2DArray(
+    //        w,
+    //        h,
+    //        texs.Length,
+    //        TextureFormat.RGBA32,
+    //        true
+    //    );
 
-        texArray.wrapMode = TextureWrapMode.Repeat;
-        texArray.filterMode = FilterMode.Bilinear;
+    //    texArray.wrapMode = TextureWrapMode.Repeat;
+    //    texArray.filterMode = FilterMode.Bilinear;
 
-        for (int i = 0; i < texs.Length; i++)
-        {
-            if (texs[i] == null) continue;
+    //    for (int i = 0; i < texs.Length; i++)
+    //    {
+    //        if (texs[i] == null) continue;
 
-            int targetW = Mathf.Min(texs[i].width, w);
-            int targetH = Mathf.Min(texs[i].height, h);
+    //        int targetW = Mathf.Min(texs[i].width, w);
+    //        int targetH = Mathf.Min(texs[i].height, h);
 
-            Texture2D resized = ResizeToRGBA32(texs[i], targetW, targetH);
-            Graphics.CopyTexture(resized, 0, 0, texArray, i, 0);
-        }
+    //        Texture2D resized = ResizeToRGBA32(texs[i], targetW, targetH);
+    //        Graphics.CopyTexture(resized, 0, 0, texArray, i, 0);
+    //    }
 
-        return texArray;
-    }
+    //    return texArray;
+    //}
 
-    private Texture2D ResizeToRGBA32(Texture2D source, int targetW, int targetH)
-    {
-        RenderTexture rt = RenderTexture.GetTemporary(
-            targetW,
-            targetH,
-            0,
-            RenderTextureFormat.ARGB32
-        );
+    //private Texture2D ResizeToRGBA32(Texture2D source, int targetW, int targetH)
+    //{
+    //    RenderTexture rt = RenderTexture.GetTemporary(
+    //        targetW,
+    //        targetH,
+    //        0,
+    //        RenderTextureFormat.ARGB32
+    //    );
 
-        Graphics.Blit(source, rt);
+    //    Graphics.Blit(source, rt);
 
-        Texture2D tex = new Texture2D(targetW, targetH, TextureFormat.RGBA32, true);
-        RenderTexture.active = rt;
-        tex.ReadPixels(new Rect(0, 0, targetW, targetH), 0, 0);
-        tex.Apply();
+    //    Texture2D tex = new Texture2D(targetW, targetH, TextureFormat.RGBA32, true);
+    //    RenderTexture.active = rt;
+    //    tex.ReadPixels(new Rect(0, 0, targetW, targetH), 0, 0);
+    //    tex.Apply();
 
-        RenderTexture.active = null;
-        RenderTexture.ReleaseTemporary(rt);
+    //    RenderTexture.active = null;
+    //    RenderTexture.ReleaseTemporary(rt);
 
-        return tex;
-    }
+    //    return tex;
+    //}
 
     private void BuildPaletteTexture()
     {
@@ -293,9 +295,9 @@ public class MapManager : MonoBehaviour
         return size switch
         {
             MapSize.Small => (15, 10),
-            MapSize.Medium => (21, 14),
-            MapSize.Large => (27, 18),
-            _ => (21, 14)
+            MapSize.Medium => (18, 12),
+            MapSize.Large => (21, 14),
+            _ => (18, 12)
         };
     }
 
@@ -306,14 +308,14 @@ public class MapManager : MonoBehaviour
             MapSize.Small => (UnityEngine.Random.Range(2, 4)),
             MapSize.Medium => (UnityEngine.Random.Range(3, 6)),
             MapSize.Large => (UnityEngine.Random.Range(4, 7)),
-            _ => (UnityEngine.Random.Range(2, 4))
+            _ => (UnityEngine.Random.Range(3, 6))
         };
     }
 
     private void SetMaxMargin()
     {
-        minXMargin *= (int)mapSize + 1;
-        minZMargin *= (int)mapSize + 1;
+        minXMargin = 3 * (int)mapSize + 1;
+        minZMargin = 4 * (int)mapSize + 1;
 
         maxXMargin = xCellCount * xChunkCount - minXMargin;
         maxZMargin = zCellCount * zChunkCount - minZMargin;

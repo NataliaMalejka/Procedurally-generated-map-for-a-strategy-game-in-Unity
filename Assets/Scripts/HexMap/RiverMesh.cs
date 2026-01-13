@@ -11,10 +11,19 @@ public class RiverMesh : MonoBehaviour
     private List<Vector2> uvs = new List<Vector2>();
     private List<Color> colors = new List<Color>();
 
+    private int chunkLevel = 0;
+    private int waterIndex = 0;
+
     private void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
         GetComponent<MeshRenderer>().sharedMaterial = MapManager.Instance.GetRivermaterial();
+    }
+
+    public void SetChunkLevel(int level, int index)
+    {
+        chunkLevel = level;
+        waterIndex = index;
     }
 
     public void Clear()
@@ -26,7 +35,7 @@ public class RiverMesh : MonoBehaviour
         colors.Clear();
     }
 
-    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3, int waterColorIndex)
+    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3, int Index)
     {
         int index = vertices.Count;
 
@@ -34,9 +43,9 @@ public class RiverMesh : MonoBehaviour
         vertices.Add(v2);
         vertices.Add(v3);
 
-        colors.Add(new Color(waterColorIndex, 0f, 0f, 0f));
-        colors.Add(new Color(waterColorIndex, 0f, 0f, 0f));
-        colors.Add(new Color(waterColorIndex, 0f, 0f, 0f));
+        colors.Add(new Color(waterIndex, 0f, 0f, 0f));
+        colors.Add(new Color(waterIndex, 0f, 0f, 0f));
+        colors.Add(new Color(waterIndex, 0f, 0f, 0f));
 
         triangles.Add(index);
         triangles.Add(index + 1);
@@ -56,6 +65,8 @@ public class RiverMesh : MonoBehaviour
 
     public void Apply()
     {
+        gameObject.layer = LayerMask.NameToLayer($"Layer_{chunkLevel}");
+
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.uv = uvs.ToArray();

@@ -36,6 +36,7 @@ public class Chunk : MonoBehaviour
     public void SetLevel(int l)
     {
         level = l;
+        gameObject.layer = LayerMask.NameToLayer($"Layer_{level}");
     }
 
     public void SetWaterColorIndex(int index)

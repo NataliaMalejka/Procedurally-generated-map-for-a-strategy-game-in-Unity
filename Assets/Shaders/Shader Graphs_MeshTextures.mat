@@ -29,11 +29,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TexColor:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 3309022112169717114, guid: a38b8a6d31074e34589d03b46d6b552e, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TexNormal:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: -3669591124811956594, guid: 1b9c5c872f0a5c842a4e3ed865ab13cc, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TexRough:

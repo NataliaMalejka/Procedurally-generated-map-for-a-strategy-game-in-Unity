@@ -59,8 +59,8 @@ public class MapCamera : MonoBehaviour
             SetLayer(0);
         }
 
-        Unit unit = TurnManager.Instance.GetUnit(GameSettings.Instance.CurrentLayer);
-        SetCameraUnitPos(unit, GameSettings.Instance.CurrentLayer);
+       // Unit unit = TurnManager.Instance.GetUnit(GameSettings.Instance.CurrentLayer);
+       // SetCameraUnitPos(unit, GameSettings.Instance.CurrentLayer);
     }
 
     public void SetCameraUnitPos(Unit unit, int index)
@@ -333,6 +333,8 @@ public class MapCamera : MonoBehaviour
             var pos = transform.position;
             pos.y += HexData.LayersDistance;
             transform.position = pos;
+
+            UpdateCullingMask();
         }
     }
 
@@ -347,6 +349,8 @@ public class MapCamera : MonoBehaviour
             var pos = transform.position;
             pos.y -= HexData.LayersDistance;
             transform.position = pos;
+
+            UpdateCullingMask();
         }
     }
 
@@ -357,5 +361,17 @@ public class MapCamera : MonoBehaviour
         var pos = transform.position;
         pos.y = index * HexData.LayersDistance;
         transform.position = pos;
+
+        UpdateCullingMask();
+    }
+
+    private void UpdateCullingMask()
+    {
+        int mapLayer = LayerMask.NameToLayer($"Layer_{GameSettings.Instance.CurrentLayer}");
+        int unitLayer = LayerMask.NameToLayer("Unit");
+
+        int mask = (1 << mapLayer) | (1 << unitLayer);
+
+        mainCam.cullingMask = mask;
     }
 }

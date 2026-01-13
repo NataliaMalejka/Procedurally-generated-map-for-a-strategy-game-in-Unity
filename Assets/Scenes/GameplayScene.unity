@@ -328,7 +328,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1475108534847446318, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
       propertyPath: stickMinZoom
-      value: -100
+      value: -200
       objectReference: {fileID: 0}
     - target: {fileID: 1475108534847446318, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
       propertyPath: rotationSpeed
@@ -340,11 +340,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1475108534847446318, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
       propertyPath: cameraMoveSpeed
-      value: 500
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 2087041040654463764, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
       propertyPath: m_Antialiasing
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2087041040654463764, guid: 5c3b3ea980d373d449c451759b6b83e3, type: 3}
       propertyPath: m_RenderShadows
@@ -394,6 +394,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6631043231349289463, guid: 1ac0bea78946fc04185ea222b205c516, type: 3}
+      propertyPath: terrainTextureAlbedo
+      value: 
+      objectReference: {fileID: 3309022112169717114, guid: a38b8a6d31074e34589d03b46d6b552e, type: 2}
+    - target: {fileID: 6631043231349289463, guid: 1ac0bea78946fc04185ea222b205c516, type: 3}
+      propertyPath: terrainTextureNormal
+      value: 
+      objectReference: {fileID: -3669591124811956594, guid: 1b9c5c872f0a5c842a4e3ed865ab13cc, type: 2}
     - target: {fileID: 7574026885498595833, guid: 1ac0bea78946fc04185ea222b205c516, type: 3}
       propertyPath: m_Name
       value: MapManager

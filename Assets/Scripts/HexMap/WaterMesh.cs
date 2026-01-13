@@ -10,10 +10,17 @@ public class WaterMesh : MonoBehaviour
     private List<int> triangles = new List<int>();
     private List<Color> colors = new List<Color>();
 
+    private int chunkLevel = 0;
+
     private void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
         GetComponent<MeshRenderer>().sharedMaterial = MapManager.Instance.GetWatermaterial();
+    }
+
+    public void SetChunkLevel(int level)
+    {
+        chunkLevel = level;
     }
 
     public void Clear()
@@ -24,7 +31,7 @@ public class WaterMesh : MonoBehaviour
         colors.Clear();
     }
 
-    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3, bool isOcean, int chunlLevel, int waterColor)
+    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3, bool isOcean, int level, int waterColor)
     {
         int index = vertices.Count;
 
@@ -45,9 +52,9 @@ public class WaterMesh : MonoBehaviour
         vertices.Add(v2);
         vertices.Add(v3);
 
-        colors.Add(new Color(waterColor, chunlLevel, 0f, 0f));
-        colors.Add(new Color(waterColor, chunlLevel, 0f, 0f));
-        colors.Add(new Color(waterColor, chunlLevel, 0f, 0f));
+        colors.Add(new Color(waterColor, chunkLevel, 0f, 0f));
+        colors.Add(new Color(waterColor, chunkLevel, 0f, 0f));
+        colors.Add(new Color(waterColor, chunkLevel, 0f, 0f));
 
         triangles.Add(index);
         triangles.Add(index + 1);
@@ -73,6 +80,8 @@ public class WaterMesh : MonoBehaviour
 
     public void Apply()
     {
+        gameObject.layer = LayerMask.NameToLayer($"Layer_{chunkLevel}");
+
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.colors = colors.ToArray();

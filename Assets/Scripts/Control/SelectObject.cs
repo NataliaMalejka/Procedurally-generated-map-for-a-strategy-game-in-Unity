@@ -453,8 +453,6 @@ public class PathVisual
         { 
             if (i > 0) 
                 path[i].SetSpriteColor(Color.gray5); 
-
-            //path[i].SetText("");
             
             if (path[i] == unit.CurrentCell) 
                 continue; 

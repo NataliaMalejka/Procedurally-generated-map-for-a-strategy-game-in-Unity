@@ -11,7 +11,7 @@ public class ChunkMesh : MonoBehaviour
     private List<Vector4> uv3 = new List<Vector4>();
     private List<Color> colors = new List<Color>();
 
-    private int iterations = 2;
+    private int iterations = 1;
     private float noiseStrengthNormal = 3f;
     private float noiseStrengthSmooth = 0.3f;
 
@@ -38,6 +38,14 @@ public class ChunkMesh : MonoBehaviour
         chunkPos = pos;
         waterColorIndex = index;
         lastColumn = last;
+
+        ApplyChuunkLevel(chunkLevel, waterColorIndex);
+    }
+
+    public void ApplyChuunkLevel(int level, int waterIndex)
+    {
+        waterMesh.SetChunkLevel(level);
+        riverMesh.SetChunkLevel(level, waterIndex);
     }
 
 
@@ -981,6 +989,8 @@ public class ChunkMesh : MonoBehaviour
 
     public void Apply()
     {
+        gameObject.layer = LayerMask.NameToLayer($"Layer_{chunkLevel}");
+
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.SetUVs(2, uv3);
