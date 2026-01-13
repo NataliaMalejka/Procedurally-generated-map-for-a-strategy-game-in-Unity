@@ -147,9 +147,6 @@ public class GridHex : MonoBehaviour
             (index / zChunks) * chunk.GetXCellCount() + x,
             (index % zChunks) * chunk.GetZCellCount() + z
         );
-
-        //cell.SetCoordinateText();
-        //cell.SetGlobalCoordinateText();
     }
 
     private void SetCellNeighbors(int index, HexCell cell, HexCell[] cells)
@@ -171,9 +168,7 @@ public class GridHex : MonoBehaviour
 
             int neighborIndex = MapManager.Instance.GetCellIndex(indexX, indexZ);
 
-            if (neighborIndex >= 0 &&
-                neighborIndex < cells.Length &&
-                cells[neighborIndex] != null)
+            if (neighborIndex >= 0 && neighborIndex < cells.Length && cells[neighborIndex] != null)
             {
                 cell.SetNeighbor(dir, cells[neighborIndex]);
             }

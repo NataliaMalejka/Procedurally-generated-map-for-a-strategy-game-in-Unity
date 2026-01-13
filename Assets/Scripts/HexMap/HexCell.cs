@@ -34,9 +34,6 @@ public enum Biome
 
 public class HexCell : MonoBehaviour
 {
-    [SerializeField] private TextMeshPro coordinateText;
-    [SerializeField] private SpriteRenderer hexSprite;
-
     private Chunk hexChunk;
     public Chunk HexChunk
     {
@@ -58,9 +55,22 @@ public class HexCell : MonoBehaviour
         set { layerIndex = value; }
     }
 
+    private Vector3 uiPos = Vector3.zero;
+    public Vector3 UiPos
+    {
+        get { return uiPos; }
+    }
+
+    private PathMarker marker = null;
+    public PathMarker Marker
+    {
+        get { return marker; }
+        set { marker = value; }
+    }
+
     private Biome cellBiome;
 
-    private Color[] colors = new Color[] { Color.turquoise, Color.black, Color.white, Color.yellowGreen, Color.limeGreen, Color.forestGreen, Color.darkGreen, Color.orange, Color.yellow, Color.pink};
+    private Color[] colors = new Color[] { Color.turquoise, Color.black, Color.white, Color.yellowGreen, Color.limeGreen, Color.forestGreen, Color.darkGreen, Color.orange, Color.yellow, Color.pink };
 
     private Color cellColor = Color.turquoise;
     public Color CellColor
@@ -100,7 +110,7 @@ public class HexCell : MonoBehaviour
         set { continentIndex = value; }
     }
 
-    private int terrainLevel = -4; 
+    private int terrainLevel = -4;
     public int TerrainLevel
     {
         get { return terrainLevel; }
@@ -140,6 +150,13 @@ public class HexCell : MonoBehaviour
         set { isMountain = value; }
     }
 
+    private bool isArctic = false;
+    public bool IsArctic
+    {
+        get { return isArctic; }
+        set { isArctic = value; }
+    }
+
     private float temperature = 0;
     public float Temperature
     {
@@ -169,7 +186,7 @@ public class HexCell : MonoBehaviour
     }
 
     private List<River> rivers = new List<River>();
-    
+
     public List<River> GetRivers()
     {
         return rivers;
@@ -193,7 +210,7 @@ public class HexCell : MonoBehaviour
         Edge edge = edges[index];
         if (edge == null)
         {
-           AddEdge(type, (HexDirection)index);
+            AddEdge(type, (HexDirection)index);
             return;
         }
 
@@ -246,7 +263,7 @@ public class HexCell : MonoBehaviour
 
     public void SetCellUIPos()
     {
-        var pos = coordinateText.transform.localPosition;
+        var pos = Vector3.zero;
 
         if (IsOcean)
         {
@@ -255,28 +272,6 @@ public class HexCell : MonoBehaviour
         else
             pos.y = centreTerrainlevel + 4.1f;
 
-        coordinateText.transform.localPosition = pos;
-        hexSprite.transform.localPosition = pos;
-    }
-
-
-    public void SetCoordinateText()
-    {
-        coordinateText.text = coordinates.Q.ToString() + "\n" + coordinates.R.ToString() + "\n" + coordinates.S.ToString();
-    }
-
-    public void SetGlobalCoordinateText()
-    {
-        coordinateText.text = coordinates.GlobalX.ToString() + "\n" + coordinates.GlobalZ.ToString() + "\n" + coordinates.IndexInGrid;
-    }
-
-    public void SetText(string text)
-    {
-        coordinateText.text = text;
-    }
-
-    public void SetSpriteColor(Color color)
-    {
-        hexSprite.color = color;
+        uiPos = pos;
     }
 }

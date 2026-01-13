@@ -29,7 +29,7 @@ public class MapManager : MonoBehaviour
     public int zCellCount { get; private set; } = 6;
 
     public int minXMargin { get; private set; } = 5;
-    public int minZMargin { get; private set; } = 4;
+    public int minZMargin { get; private set; } = 5;
     public int maxXMargin { get; private set; }
     public int maxZMargin { get; private set; }
 
@@ -295,9 +295,9 @@ public class MapManager : MonoBehaviour
         return size switch
         {
             MapSize.Small => (15, 10),
-            MapSize.Medium => (18, 12),
-            MapSize.Large => (21, 14),
-            _ => (18, 12)
+            MapSize.Medium => (21, 14),
+            MapSize.Large => (24, 16),
+            _ => (21, 14)
         };
     }
 
@@ -314,8 +314,8 @@ public class MapManager : MonoBehaviour
 
     private void SetMaxMargin()
     {
-        minXMargin = 3 * (int)mapSize + 1;
-        minZMargin = 4 * (int)mapSize + 1;
+        minXMargin = 5 * (int)mapSize + 1;
+        minZMargin = 5 * (int)mapSize + 1;
 
         maxXMargin = xCellCount * xChunkCount - minXMargin;
         maxZMargin = zCellCount * zChunkCount - minZMargin;
@@ -400,8 +400,8 @@ public class MapManager : MonoBehaviour
 
     private void NewMargins()
     {
-        minXMargin = 3 * ((int)mapSize + 1);
-        minZMargin = 4 * ((int)mapSize + 1);
+        minXMargin = 5 * ((int)mapSize + 1);
+        minZMargin = 5 * ((int)mapSize + 1);
 
         maxXMargin = xCellCount * xChunkCount - minXMargin;
         maxZMargin = zCellCount * zChunkCount - minZMargin;
@@ -835,6 +835,7 @@ public class MapManager : MonoBehaviour
     private void SetArcticCell(HexCell cell)
     {
         cell.IsOcean = false;
+        cell.IsArctic = true;
         cell.SetTerrainLevel(2);
         SetTemperature(cell);
     }

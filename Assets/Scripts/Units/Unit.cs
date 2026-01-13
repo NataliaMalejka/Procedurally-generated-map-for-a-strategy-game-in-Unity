@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Unit : MonoBehaviour
@@ -20,6 +21,7 @@ public class Unit : MonoBehaviour
     public readonly PathData Path = new();
     public event Action<Unit, HexCell> OnCellPassed;
 
+    public readonly List<PathMarker> PathMarkers = new();
     public bool IsMoving => isMoving;
     public int MaxMovementPoints => maxMovementPoints;
     public HexCell CurrentCell => currentCell;
@@ -135,11 +137,7 @@ public class Unit : MonoBehaviour
 
             while (Quaternion.Angle(transform.rotation, targetRot) > 0.5f)
             {
-                transform.rotation = Quaternion.RotateTowards(
-                    transform.rotation,
-                    targetRot,
-                    rotationSpeed * Time.deltaTime
-                );
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
                 yield return null;
             }
         }

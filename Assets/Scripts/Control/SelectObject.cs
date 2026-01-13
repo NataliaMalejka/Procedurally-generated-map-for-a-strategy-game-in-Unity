@@ -121,13 +121,15 @@ public class SelectObject : MonoBehaviour
             ClearUnitPathVisual(selectedUnit);
             selectedUnit.Path.Clear();
             selectedUnit.Path.Accepted = false;
-            pathVisual.Clear(currentPath);
+            pathVisual.Clear(selectedUnit);
             hoveredCell = null;
             return;
         }
         else
+        {
+            pathVisual.Clear(selectedUnit);
             selectedUnit = null;
-        pathVisual.Clear(currentPath);
+        }
     }
 
     public void UnselectUnit()
@@ -137,15 +139,10 @@ public class SelectObject : MonoBehaviour
 
         if (selectedUnit.Path.Accepted)
         {
-            //ClearUnitPathVisual(selectedUnit);
-            //selectedUnit.Path.Clear();
-
-            //pathVisual.Clear(currentPath);
             hoveredCell = null;
             return;
         }
 
-        //pathVisual.Clear(currentPath);
         selectedUnit = null;
 
     }
@@ -165,7 +162,6 @@ public class SelectObject : MonoBehaviour
         selectedUnit.Path.CommitTurn = TurnManager.Instance.CurrentTurn;
         selectedUnit.Path.Accepted = true;
 
-        //pathVisual.Clear(currentPath);
         pathVisual.DrawPreview(selectedUnit);
 
         TurnManager.Instance.RedrawAllAcceptedPaths();
@@ -175,7 +171,7 @@ public class SelectObject : MonoBehaviour
 
     private void PreviewPath(HexCell target)
     {
-        pathVisual.Clear(currentPath);
+        pathVisual.Clear(selectedUnit);
 
         HexCell start = selectedUnit.CurrentCell;
         if (start == null)
@@ -192,8 +188,12 @@ public class SelectObject : MonoBehaviour
 
     public void HandleUnitPassedCell(Unit unit, HexCell cell)
     {
-        cell.SetText("");
-        cell.SetSpriteColor(new Color(0, 0, 0, 0));
+        if (cell.Marker != null)
+        {
+            PathMarkerPool.Instance.Release(cell.Marker);
+            unit.PathMarkers.Remove(cell.Marker);
+            cell.Marker = null;
+        }
 
         unit.Path.CellTurn.Remove(cell);
 
@@ -208,8 +208,13 @@ public class SelectObject : MonoBehaviour
 
         foreach (var cell in unit.Path.FullPath)
         {
-            cell.SetText("");
-            cell.SetSpriteColor(new Color(0, 0, 0, 0));
+            if (cell.Marker != null)
+            {
+                PathMarkerPool.Instance.Release(cell.Marker);
+                unit.PathMarkers.Remove(cell.Marker);
+                cell.Marker = null;
+            }
+
         }
     }
 
@@ -393,80 +398,92 @@ public class PathData
 
 public class PathVisual
 {
-    public void Clear(IEnumerable<HexCell> path)
+    public void Clear(Unit unit)
     {
-        if (path == null) return;
+        if (unit == null || unit.PathMarkers == null || unit.PathMarkers.Count == 0)
+            return;
 
-        foreach (var cell in path)
+        foreach (var m in unit.PathMarkers)
         {
-            cell.SetText("");
-            cell.SetSpriteColor(new Color(0, 0, 0, 0));
+            if (m.Cell != null)
+                m.Cell.Marker = null;
+
+            PathMarkerPool.Instance.Release(m);
         }
+
+        unit.PathMarkers.Clear();
     }
 
     public void DrawPreview(Unit unit)
     {
+        Clear(unit);
+
         var path = unit.Path.FullPath;
         var stepCost = unit.Path.StepCost;
         var cellTurn = unit.Path.CellTurn;
 
         int mp = unit.CurrentMovementPoints;
-        bool canMoveThisTurn = true;
+        bool canMove = true;
 
         for (int i = 1; i < path.Count; i++)
         {
-            HexCell cell = path[i];
+            var cell = path[i];
+            var marker = PathMarkerPool.Instance.Get();
+            marker.Cell = cell;
+            cell.Marker = marker;
+            marker.SetWorldPosition(cell.transform.position + cell.UiPos);
 
-            cell.SetText("");
-            cell.SetSpriteColor(Color.gray5);
+            Color color = Color.gray;
+            string label = null;
 
-            if (canMoveThisTurn)
+            if (canMove)
             {
                 int cost = stepCost[cell];
-
                 if (cost <= mp)
                 {
-                    cell.SetSpriteColor(Color.gold);
                     mp -= cost;
+                    color = Color.gold;
                 }
                 else
-                {
-                    canMoveThisTurn = false;
-                }
+                    canMove = false;
             }
 
             if (cellTurn.TryGetValue(cell, out int turn) && turn > 1)
-            {
-                cell.SetText(turn.ToString());
-            }
+                label = turn.ToString();
+
+            marker.Show(color, label);
+
+            unit.PathMarkers.Add(marker);
+            cell.Marker = marker;
         }
     }
 
     public void DrawCommitted(Unit unit)
-    { 
-        var path = unit.Path.FullPath; 
-        var cellTurn = unit.Path.CellTurn; 
+    {
+        Clear(unit);
 
-        int passedTurns = TurnManager.Instance.CurrentTurn - unit.Path.CommitTurn; 
+        int passedTurns = TurnManager.Instance.CurrentTurn - unit.Path.CommitTurn;
 
-        for (int i = 0; i < path.Count; i++) 
-        { 
-            if (i > 0) 
-                path[i].SetSpriteColor(Color.gray5); 
-            
-            if (path[i] == unit.CurrentCell) 
-                continue; 
+        foreach (var cell in unit.Path.PlannedPath)
+        {
+            var marker = PathMarkerPool.Instance.Get();
+            marker.Cell = cell;
 
-            if (!cellTurn.TryGetValue(path[i], out int absoluteTurn)) 
-                continue; 
+            marker.SetWorldPosition(cell.transform.position + cell.UiPos);
 
-            int remainingTurns = absoluteTurn - passedTurns; 
+            string label = null;
 
-            if (remainingTurns <= 0) 
-                continue; 
+            if (unit.Path.CellTurn.TryGetValue(cell, out int turn))
+            {
+                int remaining = turn - passedTurns;
+                if (remaining > 0)
+                    label = remaining.ToString();
+            }
 
-            path[i].SetText(remainingTurns.ToString());
-        } 
+            marker.Show(Color.gray, label);
+
+            unit.PathMarkers.Add(marker);
+            cell.Marker = marker;
+        }
     }
 }
-

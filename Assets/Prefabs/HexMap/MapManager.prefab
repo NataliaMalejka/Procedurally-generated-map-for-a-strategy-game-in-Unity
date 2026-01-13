@@ -127,31 +127,9 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 891cf21a53b017c4aa31a18224ca1850, type: 3}
   - {fileID: 2800000, guid: d175d18e5d0e71d46a187a66db723972, type: 3}
   - {fileID: 2800000, guid: ab10f30155bf0014b923f6e02958b5d2, type: 3}
-  texturesRough:
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 930ccc8ddfb168443b2605feddce7d06, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: e072fd4ead95db341a17b8887b80c617, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
-  - {fileID: 2800000, guid: 98114cf8bb19b8c4280969d682aa6a1f, type: 3}
   snowTexture: {fileID: 2800000, guid: de0dcc3b1c573324c9fd6ff86a5eadda, type: 3}
+  terrainTextureAlbedo: {fileID: 3309022112169717114, guid: a38b8a6d31074e34589d03b46d6b552e, type: 2}
+  terrainTextureNormal: {fileID: -3669591124811956594, guid: 1b9c5c872f0a5c842a4e3ed865ab13cc, type: 2}
   waterColors:
   - {r: 0.0627451, g: 0.5647059, b: 0.8666667, a: 0}
   - {r: 0.1882353, g: 0.8156863, b: 0.81960785, a: 0}

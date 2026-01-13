@@ -43,9 +43,6 @@ public class TurnManager : MonoBehaviour
         {
             unit.OnTurnStart();
 
-            //if (unit.Path.Accepted && unit.Path.FullPath.Count > 0)
-            //    SelectObject.Instance.DrawUnitPath(unit);
-
             RedrawAllAcceptedPaths();
         }
     }
