@@ -236,6 +236,7 @@ public class Chunk : MonoBehaviour
 
         unitInstance.SetCurrentCell(cell);
         unitInstance.LayerIndex = level;
+
         TurnManager.Instance.RegisterUnit(unitInstance);
     }
 

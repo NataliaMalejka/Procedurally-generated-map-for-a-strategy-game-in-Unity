@@ -31,7 +31,15 @@ public class TurnManager : MonoBehaviour
 
     public void EndTurn()
     {
-        if(GameManager.Instance.State == GameState.Playing)
+        foreach (var unit in units)
+        {
+            if(unit.IsMoving)
+                return;
+        }
+
+        SoundsManager.Instance.PlaySounds(SoundsManager.Sounds.NextTurn);
+
+        if (GameManager.Instance.State == GameState.Playing)
             StartNextTurn();
     }
 

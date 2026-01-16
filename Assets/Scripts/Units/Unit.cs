@@ -34,6 +34,12 @@ public class Unit : MonoBehaviour
         set { layerIndex = value; }
     }
 
+
+    private void OnEnable()
+    {
+        currentMovementPoints = maxMovementPoints;
+    }
+
     public void OnTurnStart()
     {
         currentMovementPoints = maxMovementPoints;

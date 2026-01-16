@@ -45,10 +45,6 @@ public static class HexData
         HexCoordinates ca = a.Coordinates;
         HexCoordinates cb = b.Coordinates;
 
-        return Mathf.Max(
-            Mathf.Abs(ca.Q - cb.Q),
-            Mathf.Abs(ca.R - cb.R),
-            Mathf.Abs(ca.S - cb.S)
-        );
+        return Mathf.Max(Mathf.Abs(ca.Q - cb.Q), Mathf.Abs(ca.R - cb.R), Mathf.Abs(ca.S - cb.S));
     }
 }

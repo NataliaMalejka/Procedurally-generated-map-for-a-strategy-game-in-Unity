@@ -99,7 +99,7 @@ public class GridHex : MonoBehaviour
             }
         }
 
-        MapManager.Instance.GenerateMap(cells, biomelayerIndex);
+        MapManager.Instance.GenerateMap(cells, biomelayerIndex, level);
 
         foreach (Chunk chunk in chunks)
         {

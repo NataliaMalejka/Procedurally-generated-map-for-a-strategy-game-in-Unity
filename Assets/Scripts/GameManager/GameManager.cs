@@ -88,7 +88,7 @@ public class GameManager : MonoBehaviour
 
         SceneManager.UnloadSceneAsync("LoadingScene");
 
-        TurnManager.Instance.EndTurn();
+        //TurnManager.Instance.EndTurn();
     }
 
     public void QuitGame()

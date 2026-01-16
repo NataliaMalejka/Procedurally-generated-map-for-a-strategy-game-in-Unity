@@ -31,7 +31,7 @@ public class WaterMesh : MonoBehaviour
         colors.Clear();
     }
 
-    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3, bool isOcean, int level, int waterColor)
+    public void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3, bool isOcean, int waterColor)
     {
         int index = vertices.Count;
 
@@ -61,11 +61,11 @@ public class WaterMesh : MonoBehaviour
         triangles.Add(index + 2);
     }
 
-    public void CreateRectangle(Vector3 v1, Vector3 v1d, Vector3 v2, Vector3 v2d, bool isOcean, int chunkLevel, int waterColor)
+    public void CreateRectangle(Vector3 v1, Vector3 v1d, Vector3 v2, Vector3 v2d, bool isOcean, int waterColor)
     {
-        CreateTriangle(v1, v1d, v2, isOcean, chunkLevel, waterColor);
+        CreateTriangle(v1, v1d, v2, isOcean, waterColor);
 
-        CreateTriangle(v1d, v2d, v2, isOcean, chunkLevel, waterColor);
+        CreateTriangle(v1d, v2d, v2, isOcean, waterColor);
     }
 
     private Vector3 ApplyWaterLevel(Vector3 v)

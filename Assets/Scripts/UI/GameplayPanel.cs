@@ -16,8 +16,6 @@ public class GameplayPanel : MonoBehaviour
 
     public void NextTurn()
     {
-        SoundsManager.Instance.PlaySounds(SoundsManager.Sounds.NextTurn);
-
         TurnManager.Instance.EndTurn();
     }
 
@@ -30,6 +28,6 @@ public class GameplayPanel : MonoBehaviour
 
         Unit unit = TurnManager.Instance.GetUnit(index);
 
-        mapCamera.SetCameraUnitPos(unit, index);
+        mapCamera.SetCameraUnitPos(unit);
     }
 }

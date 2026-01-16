@@ -422,7 +422,7 @@ public class MapManager : MonoBehaviour
         return chunkIndex * (xCellCount * zCellCount) + localCellIndex;
     }
 
-    public void GenerateMap(HexCell[] gridCells, int biomeLayerIndex)
+    public void GenerateMap(HexCell[] gridCells, int biomeLayerIndex, int level)
     {
         BuildPaletteTexture();
 
@@ -442,7 +442,7 @@ public class MapManager : MonoBehaviour
 
         SetOceans(gridCells);
 
-        RemoveLakes(biomeLayerIndex);
+        RemoveLakes();
 
         CalculateDistancToOcean(gridCells);
 
@@ -466,7 +466,7 @@ public class MapManager : MonoBehaviour
 
         GroupSmoothEdges(gridCells);
 
-        SetTextPos(gridCells, biomeLayerIndex);
+        SetTextPos(gridCells, level);
     }
 
     private void GenerateContinents(HexCell[] gridCells)
@@ -659,7 +659,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    private void RemoveLakes(int biomeLayerIndex)
+    private void RemoveLakes()
     {    
         for (int i = 0; i < continentsCount; i++)
         {

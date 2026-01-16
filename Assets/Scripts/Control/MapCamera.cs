@@ -59,18 +59,19 @@ public class MapCamera : MonoBehaviour
             SetLayer(0);
         }
 
-       // Unit unit = TurnManager.Instance.GetUnit(GameSettings.Instance.CurrentLayer);
-       // SetCameraUnitPos(unit, GameSettings.Instance.CurrentLayer);
+        int currentlayer = GameSettings.Instance.CurrentLayer;
+        SetPos(TurnManager.Instance.GetUnit(GameSettings.Instance.CurrentLayer));
     }
 
-    public void SetCameraUnitPos(Unit unit, int index)
+    private void SetPos(Unit unit)
     {
-        if (unit == null) 
+        if (unit == null)
             return;
 
         SelectObject.Instance.UnselectUnit();
-        unitIndex = index;
+
         SetLayer(unit.LayerIndex);
+        unitIndex = unit.LayerIndex;
 
         Vector3 targetPos = new Vector3(unit.transform.position.x, transform.position.y, unit.transform.position.z);
 
@@ -78,10 +79,20 @@ public class MapCamera : MonoBehaviour
             StopCoroutine(moveCameraCoroutine);
 
         moveCameraCoroutine = StartCoroutine(MoveCameraSmooth(targetPos));
+    }
 
+    private void SelectUnit(Unit unit)
+    {
         SelectObject.Instance.SelectUnit(unit);
         TurnManager.Instance.RedrawAllAcceptedPaths();
     }
+
+    public void SetCameraUnitPos(Unit unit)
+    {
+        SetPos(unit);
+        SelectUnit(unit);
+    }
+
 
     private IEnumerator MoveCameraSmooth(Vector3 targetPosition)
     {
