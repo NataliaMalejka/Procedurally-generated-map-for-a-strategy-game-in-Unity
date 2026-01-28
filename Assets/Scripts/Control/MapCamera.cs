@@ -381,8 +381,9 @@ public class MapCamera : MonoBehaviour
         int mapLayer = LayerMask.NameToLayer($"Layer_{GameSettings.Instance.CurrentLayer}");
         int unitLayer = LayerMask.NameToLayer("Unit");
         int uiLayer = LayerMask.NameToLayer("UI");
+        int defaultlayer = LayerMask.NameToLayer("Default");
 
-        int mask = (1 << mapLayer) | (1 << unitLayer) | (1 << uiLayer);
+        int mask = (1 << mapLayer) | (1 << unitLayer) | (1 << uiLayer) | (1 << defaultlayer);
 
         mainCam.cullingMask = mask;
     }

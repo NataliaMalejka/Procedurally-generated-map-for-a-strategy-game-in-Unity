@@ -187,14 +187,10 @@ public class ChunkMesh : MonoBehaviour
 
     public void CreateHexRiver(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c, int index)
     {
-        //bool isEnd = true;
-
         for (int i = 0; i < 6; i++)
         {
             if (cell.GetEdge(i).OutRiver)
             {
-                //isEnd = false;
-
                 if (!isSmooth)
                 {
                     m1i = AddNoise(m1i, noiseStrengthNormal);
@@ -286,11 +282,6 @@ public class ChunkMesh : MonoBehaviour
                 }
             }
         }
-
-        //if (isEnd)
-        //{
-        //    //CreateRiverSourceOrEnd(m1i, m2i, cell, isSmooth, c);
-        //}
     }
 
     private void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
@@ -320,32 +311,20 @@ public class ChunkMesh : MonoBehaviour
 
         bool endmap = false;
 
-        if (cell.IsArctic || cell.IsOcean)
+        if ((cell.IsArctic || cell.IsOcean) && lastColumn)
         {
-            if (v1d.x < v1.x && lastColumn)
+            if (v1d.x < v1.x || v2d.x < v2.x || m1d.x < m1.x || m2d.x < m2.x)
             {
                 var newX = (v1.x - v1d.x) - maxPos;
                 v1d = new Vector3(v1.x - newX, v1d.y, v1d.z);
 
-                endmap = true;
-            }
-            if (v2d.x < v2.x && lastColumn)
-            {
-                var newX = (v2.x - v2d.x) - maxPos;
+                newX = (v2.x - v2d.x) - maxPos;
                 v2d = new Vector3(v2.x - newX, v2d.y, v2d.z);
 
-                endmap = true;
-            }
-            if (m1d.x < m1.x && lastColumn)
-            {
-                var newX = (m1.x - m1d.x) - maxPos;
+                newX = (m1.x - m1d.x) - maxPos;
                 m1d = new Vector3(m1.x - newX, m1d.y, m1d.z);
 
-                endmap = true;
-            }
-            if (m2d.x < m2.x && lastColumn)
-            {
-                var newX = (m2.x - m2d.x) - maxPos;
+                newX = (m2.x - m2d.x) - maxPos;
                 m2d = new Vector3(m2.x - newX, m2d.y, m2d.z);
 
                 endmap = true;
@@ -695,7 +674,7 @@ public class ChunkMesh : MonoBehaviour
             v1d1 = transform.InverseTransformPoint(v1d1);
             v1d2 = transform.InverseTransformPoint(v1d2);
 
-            if (v1d2.x < v1.x && lastColumn)
+            if (v1d2.x < v1.x && lastColumn && (cell.IsArctic || cell.IsOcean))
             {
                 var newX2 = (v1.x - v1d2.x) - maxPos;
                 v1d2 = new Vector3(v1.x - newX2, v1d2.y, v1d2.z);
@@ -705,12 +684,9 @@ public class ChunkMesh : MonoBehaviour
                     var newX = (v1.x - v1d1.x) - maxPos;
                     v1d1 = new Vector3(v1.x - newX, v1d1.y, v1d1.z);
 
-                    if (cell.IsArctic || cell.IsOcean)
-                        doubleEndmap = true;
+                    doubleEndmap = true;
                 }
-
-                if (cell.IsArctic || cell.IsOcean)
-                    endmap = true;
+                endmap = true;
             }
 
             var edge2 = neighbourCell.GetEdge(2).GetEdgeType();

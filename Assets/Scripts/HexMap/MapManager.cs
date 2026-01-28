@@ -100,8 +100,6 @@ public class MapManager : MonoBehaviour
     [SerializeField] private Material terrainMaterial;
     [SerializeField] private Material waterMaterial;
     [SerializeField] private Material riverMaterial;
-    [SerializeField] private Texture2D[] texturesColor;
-    [SerializeField] private Texture2D[] texturesNormal;
     [SerializeField] private Texture2D snowTexture;
     [SerializeField] private Texture2DArray terrainTextureAlbedo;
     [SerializeField] private Texture2DArray terrainTextureNormal;
@@ -117,6 +115,8 @@ public class MapManager : MonoBehaviour
 
     [Header("Units")]
     [SerializeField] private Unit UnitPrefab;
+
+    private const int biomesPerLayer = 7;
 
     public GameObject[] GetObjects(Biome biome)
     {
@@ -140,6 +140,9 @@ public class MapManager : MonoBehaviour
         mapSize = GameSettings.Instance.GetMapSize();
 
         (xChunkCount, zChunkCount) = SetChunkCounts(mapSize);
+
+        maxXMargin = xCellCount * xChunkCount - minXMargin;
+        maxZMargin = zCellCount * zChunkCount - minZMargin;
     }
 
     private void ApplySeed()
@@ -159,14 +162,8 @@ public class MapManager : MonoBehaviour
 
     private void SetTextures()
     {
-        //GetMaxSize(texturesColor, out int w, out int h);
-
-       // var texArrayColor = SetTex(w, h, texturesColor);
-        //texArrayColor.Apply();
         terrainMaterial.SetTexture("_TexColor", terrainTextureAlbedo);
 
-        //var texArrayNormal = SetTex(w, h, texturesNormal);
-        //texArrayNormal.Apply();
         terrainMaterial.SetTexture("_TexNormal", terrainTextureNormal);
 
         snowTexture.wrapMode = TextureWrapMode.Repeat;
@@ -175,72 +172,6 @@ public class MapManager : MonoBehaviour
 
         terrainMaterial.SetFloat("_ColdMax", coldMax);
     }
-
-    //private void GetMaxSize(Texture2D[] texs, out int maxW, out int maxH)
-    //{
-    //    maxW = 0;
-    //    maxH = 0;
-
-    //    foreach (var t in texs)
-    //    {
-    //        if (t == null) continue;
-
-    //        maxW = Mathf.Max(maxW, t.width);
-    //        maxH = Mathf.Max(maxH, t.height);
-    //    }
-
-    //    maxW = Mathf.Min(maxW, MAX_TEXTURE_SIZE);
-    //    maxH = Mathf.Min(maxH, MAX_TEXTURE_SIZE);
-    //}
-
-    //private Texture2DArray SetTex(int w, int h, Texture2D[] texs)
-    //{
-    //    var texArray = new Texture2DArray(
-    //        w,
-    //        h,
-    //        texs.Length,
-    //        TextureFormat.RGBA32,
-    //        true
-    //    );
-
-    //    texArray.wrapMode = TextureWrapMode.Repeat;
-    //    texArray.filterMode = FilterMode.Bilinear;
-
-    //    for (int i = 0; i < texs.Length; i++)
-    //    {
-    //        if (texs[i] == null) continue;
-
-    //        int targetW = Mathf.Min(texs[i].width, w);
-    //        int targetH = Mathf.Min(texs[i].height, h);
-
-    //        Texture2D resized = ResizeToRGBA32(texs[i], targetW, targetH);
-    //        Graphics.CopyTexture(resized, 0, 0, texArray, i, 0);
-    //    }
-
-    //    return texArray;
-    //}
-
-    //private Texture2D ResizeToRGBA32(Texture2D source, int targetW, int targetH)
-    //{
-    //    RenderTexture rt = RenderTexture.GetTemporary(
-    //        targetW,
-    //        targetH,
-    //        0,
-    //        RenderTextureFormat.ARGB32
-    //    );
-
-    //    Graphics.Blit(source, rt);
-
-    //    Texture2D tex = new Texture2D(targetW, targetH, TextureFormat.RGBA32, true);
-    //    RenderTexture.active = rt;
-    //    tex.ReadPixels(new Rect(0, 0, targetW, targetH), 0, 0);
-    //    tex.Apply();
-
-    //    RenderTexture.active = null;
-    //    RenderTexture.ReleaseTemporary(rt);
-
-    //    return tex;
-    //}
 
     private void BuildPaletteTexture()
     {
@@ -314,11 +245,8 @@ public class MapManager : MonoBehaviour
 
     private void SetMaxMargin()
     {
-        minXMargin = 5 * (int)mapSize + 1;
-        minZMargin = 5 * (int)mapSize + 1;
-
-        maxXMargin = xCellCount * xChunkCount - minXMargin;
-        maxZMargin = zCellCount * zChunkCount - minZMargin;
+        //maxXMargin = xCellCount * xChunkCount - minXMargin;
+        //maxZMargin = zCellCount * zChunkCount - minZMargin;
 
         regionsCount = continentsCount / 2 + continentsCount % 2;
         if (regionsCount < 2) regionsCount = 2;
@@ -398,14 +326,11 @@ public class MapManager : MonoBehaviour
         continentsCentres[index] = GetCellIndex(xPos, zPos);
     }
 
-    private void NewMargins()
-    {
-        minXMargin = 5 * ((int)mapSize + 1);
-        minZMargin = 5 * ((int)mapSize + 1);
-
-        maxXMargin = xCellCount * xChunkCount - minXMargin;
-        maxZMargin = zCellCount * zChunkCount - minZMargin;
-    }
+    //private void NewMargins()
+    //{
+    //    maxXMargin = xCellCount * xChunkCount - minXMargin;
+    //    maxZMargin = zCellCount * zChunkCount - minZMargin;
+    //}
 
     public int GetCellIndex(int xPos, int zPos)
     {
@@ -436,7 +361,7 @@ public class MapManager : MonoBehaviour
 
         SetContinentsInRegions();
 
-        NewMargins();
+        //NewMargins();
 
         GenerateContinents(gridCells);
 
@@ -503,8 +428,6 @@ public class MapManager : MonoBehaviour
                     if (IsBehindBorders(neighborCell)) continue;
 
                     if (AdjacentToOtherContinent(neighborCell, i)) continue;
-
-                    //if (NearContinentCentre(currentCell, i, gridCells)) continue;
 
                     if (CheckNoise(neighborCell, centreCell, i)) continue;
 
@@ -575,30 +498,6 @@ public class MapManager : MonoBehaviour
         }
 
         return adjacentToOtherContinent;
-    }
-
-    private bool NearContinentCentre(HexCell cell, int index, HexCell[] gridCells)
-    {
-        for (int i = 0; i < continentsCentres.Length; i++) 
-        {
-            if (i == index) continue;
-
-            HexCoordinates continentCentre = gridCells[continentsCentres[i]].Coordinates;
-
-            if (HexDistance(cell.Coordinates, continentCentre) < 10 * ((int)mapSize + 1)) 
-                return true;
-        }
-
-        return false;
-    }
-
-    private int HexDistance(HexCoordinates cell, HexCoordinates continentCentre)
-    {
-        return (
-            Mathf.Abs(cell.Q - continentCentre.Q) +
-            Mathf.Abs(cell.R - continentCentre.R) +
-            Mathf.Abs(cell.S - continentCentre.S)
-        ) / 2;
     }
 
     private bool CheckNoise(HexCell neighborCell, HexCell centreCell, int index)
@@ -1066,121 +965,50 @@ public class MapManager : MonoBehaviour
 
             AddPotencionalRiverSource(cell);
 
+            Biome baseBiome;
+
             if (cell.Temperature < coldMax)
-            {
-                if(biomeLayerIndex == (int)Layers.Earth)
-                {
-                    cell.SetBiome(Biome.Tundra);
-                }
-                else if (biomeLayerIndex == (int)Layers.Hot)
-                {
-                    cell.SetBiome(Biome.HTundra);
-                }
-                else if (biomeLayerIndex == (int)Layers.Cold)
-                {
-                    cell.SetBiome(Biome.CTundra);
-                }
-                continue;
-            }
-            if (cell.Temperature < moderateTempMax)
+                baseBiome = Biome.Tundra;
+            else if (cell.Temperature < moderateTempMax)
             {
                 if (cell.Moisture < dryMax)
-                {
-                    if (biomeLayerIndex == (int)Layers.Earth)
-                    {
-                        cell.SetBiome(Biome.Grassland);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Hot)
-                    {
-                        cell.SetBiome(Biome.HGrassland);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Cold)
-                    {
-                        cell.SetBiome(Biome.CGrassland);
-                    }
-                }
+                    baseBiome = Biome.Grassland;
                 else if (cell.Moisture < moderateMoistureMax)
-                {
-                    if (biomeLayerIndex == (int)Layers.Earth)
-                    {
-                        cell.SetBiome(Biome.ContinentalDry);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Hot)
-                    {
-                        cell.SetBiome(Biome.HContinentalDry);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Cold)
-                    {
-                        cell.SetBiome(Biome.CContinentalDry);
-                    }
-                }
+                    baseBiome = Biome.ContinentalDry;
                 else
-                {
-                    if (biomeLayerIndex == (int)Layers.Earth)
-                    {
-                        cell.SetBiome(Biome.ContinentalWet);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Hot)
-                    {
-                        cell.SetBiome(Biome.HContinentalWet);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Cold)
-                    {
-                        cell.SetBiome(Biome.CContinentalWet);
-                    }
-                }
-                continue;
+                    baseBiome = Biome.ContinentalWet;
             }
             else
             {
                 if (cell.Moisture < dryMax)
-                {
-                    if (biomeLayerIndex == (int)Layers.Earth)
-                    {
-                        cell.SetBiome(Biome.Desert);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Hot)
-                    {
-                        cell.SetBiome(Biome.HDesert);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Cold)
-                    {
-                        cell.SetBiome(Biome.CDesert);
-                    }
-                }
+                    baseBiome = Biome.Desert;
                 else if (cell.Moisture < moderateMoistureMax)
-                {
-                    if (biomeLayerIndex == (int)Layers.Earth)
-                    {
-                        cell.SetBiome(Biome.Savanna);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Hot)
-                    {
-                        cell.SetBiome(Biome.HSavanna);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Cold)
-                    {
-                        cell.SetBiome(Biome.CSavanna);
-                    }
-                }
+                    baseBiome = Biome.Savanna;
                 else
-                {
-                    if (biomeLayerIndex == (int)Layers.Earth)
-                    {
-                        cell.SetBiome(Biome.RainForest);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Hot)
-                    {
-                        cell.SetBiome(Biome.HRainForest);
-                    }
-                    else if (biomeLayerIndex == (int)Layers.Cold)
-                    {
-                        cell.SetBiome(Biome.CRainForest);
-                    }
-                }
-                continue;
+                    baseBiome = Biome.RainForest;
             }
+
+            cell.SetBiome(GetBiome(baseBiome, biomeLayerIndex));
+
         }
+    }
+
+    private Biome GetBiome(Biome baseBiome, int layer)
+    {
+        int baseIndex = (int)baseBiome - 2;
+
+        if (baseIndex < 0 || baseIndex >= biomesPerLayer)
+            return baseBiome;
+
+        //int layerOffset = layer switch
+        //{
+        //    Layers.Earth => 0,
+        //    Layers.Hot => BIOMES_PER_LAYER,
+        //    Layers.Cold => BIOMES_PER_LAYER * 2,
+        //    _ => 0
+        //};
+
+        return (Biome)(2 + baseIndex + layer * biomesPerLayer);
     }
 
     private void SmoothBiomes(HexCell[] gridCells)
