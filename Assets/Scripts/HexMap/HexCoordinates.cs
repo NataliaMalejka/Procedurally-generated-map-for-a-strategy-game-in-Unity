@@ -1,73 +1,45 @@
 using UnityEngine;
 
+// Represents hex coordinates 
 public struct HexCoordinates
 {
-    private int localX, localZ;
-
+    // Grid coordinates
     public int globalX, globalZ;
 
+    // Cube coordinates 
     private int q, r, s;
 
-    private int indexInGrid;
+    public int GlobalX => globalX;
+    public int GlobalZ => globalZ;
+    public int Q => q;
+    public int R => r;
+    public int S => s;
 
+    // Set coordinates 
     public HexCoordinates(int localX, int localZ, int globalX, int globalZ)
     {
-        this.localX = localX;
-        this.localZ = localZ;
         this.globalX = globalX;
         this.globalZ = globalZ;
 
         q = globalX - globalZ / 2;
         r = globalZ;
         s = -q - r;
-
-        indexInGrid = MapManager.Instance.GetCellIndex(globalX, globalZ);
     }
 
-    public static Vector2Int FromPosition(Vector3 position)
-    {
-        float x = position.x / (HexData.distanceToCorner * 2f);
-        float y = -x;
-
-        float offset = position.z / (HexData.distanceToEdge * 3f);
-        x -= offset;
-        y -= offset;
-
-        int iX = Mathf.RoundToInt(x);
-        int iY = Mathf.RoundToInt(y);
-        int iZ = Mathf.RoundToInt(-x - y);
-
-        if (iX + iY + iZ != 0)
-        {
-            float dX = Mathf.Abs(x - iX);
-            float dY = Mathf.Abs(y - iY);
-            float dZ = Mathf.Abs(-x - y - iZ);
-
-            if (dX > dY && dX > dZ)
-            {
-                iX = -iY - iZ;
-            }
-            else if (dZ > dY)
-            {
-                iZ = -iX - iY;
-            }
-        }
-
-        return new Vector2Int(iX, iZ);
-    }
-
+    // Converts world position to hex coordinates
     public static HexCoordinates FromWorld(Vector3 position)
     {
-        float q = (position.x / (HexData.distanceToEdge * 2f))
-                  - (position.z / (HexData.distanceToCorner * 3f));
-
+        // Convert world space to cube coordinates
+        float q = (position.x / (HexData.distanceToEdge * 2f)) - (position.z / (HexData.distanceToCorner * 3f));
         float r = position.z / (HexData.distanceToCorner * 1.5f);
         float s = -q - r;
 
+        // Round to nearest cube coordinates
         int rq = Mathf.RoundToInt(q);
         int rr = Mathf.RoundToInt(r);
         int rs = Mathf.RoundToInt(s);
 
+        // Correct rounding error by enforcing q + r + s = 0
         float dq = Mathf.Abs(q - rq);
         float dr = Mathf.Abs(r - rr);
         float ds = Mathf.Abs(s - rs);
@@ -80,6 +52,7 @@ public struct HexCoordinates
         return new HexCoordinates(rq, rr); 
     }
 
+    // Creates cube coordinates 
     public HexCoordinates(int q, int r)
     {
         this.q = q;
@@ -88,62 +61,18 @@ public struct HexCoordinates
 
         globalZ = r;
         globalX = q + r / 2;
-
-        localX = 0;
-        localZ = 0;
-
-        indexInGrid = MapManager.Instance.GetCellIndex(globalX, globalZ);
     }
 
+    // Returns cube coordinates of a neighboring cell
     public Vector3Int Neighbor(HexDirection direction)
     {
         var (dq, dr, ds) = FindHexDirection.hexDirections[(int)direction];
         return new Vector3Int(q + dq, r + dr, s + ds);
     }
 
+    // Returns grid position
     public Vector2 GetCellPos()
     {
         return new Vector2(globalX, globalZ);
     }
-
-    public int IndexInGrid
-    {
-        get { return indexInGrid; }
-    }
-
-    public int LocalX
-    {
-        get { return localX; }
-    }
-
-    public int LocalZ
-    {
-        get { return localZ; }
-    }
-
-    public int GlobalX
-    {
-        get { return globalX; }
-    }
-
-    public int GlobalZ
-    {
-        get { return globalZ; }
-    }
-
-    public int Q
-    {
-        get { return q; }
-    }
-
-    public int R
-    {
-        get { return r; }
-    }
-
-    public int S
-    {
-        get { return s; }
-    }
-
 }

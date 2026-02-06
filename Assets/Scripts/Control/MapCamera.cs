@@ -3,10 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
+// Controls the map camera:
+// - zoom in/out
+// - horizontal world wrapping
+// - changing vertical layers
 public class MapCamera : MonoBehaviour
 {
     [SerializeField] private Camera mainCam;
+    // Control camera angle
     [SerializeField] private Transform swivel;
+    // Control camera zoom
     [SerializeField] private Transform stick;
 
     [SerializeField] private GridHex gridHex;
@@ -22,14 +29,14 @@ public class MapCamera : MonoBehaviour
     [SerializeField] private float swivelMinZoom = 90;
     [SerializeField] private float swivelMaxZoom = 70;
 
-    [SerializeField] private float virtualCameraHeight = 10f;
-
     [SerializeField] private float cameraMoveSpeed = 50f;
     private Coroutine moveCameraCoroutine;
 
+    // Z-axis map limits
     private float UpBorder;
     private float downBorder;
 
+    // Used to detect horizontal movement direction
     private float lastCameraX;
 
     private int unitIndex = 0;
@@ -48,8 +55,10 @@ public class MapCamera : MonoBehaviour
         lastCameraX = transform.position.x;
     }
 
+    // Sets initial camera layer and position
     private void SetStartPos()
     {
+        // If earth biome exists, use it. Otherwise start from layer 0
         if (GameSettings.Instance.IsEarthBiome() > -1)
         {
             SetLayer(GameSettings.Instance.IsEarthBiome());
@@ -60,9 +69,11 @@ public class MapCamera : MonoBehaviour
         }
 
         int currentlayer = GameSettings.Instance.CurrentLayer;
+        // Center camera on the unit from the current layer
         SetPos(TurnManager.Instance.GetUnit(GameSettings.Instance.CurrentLayer));
     }
 
+    // Smoothly moves the camera to the unit
     private void SetPos(Unit unit)
     {
         if (unit == null)
@@ -70,9 +81,11 @@ public class MapCamera : MonoBehaviour
 
         SelectObject.Instance.UnselectUnit();
 
+        // Set camera layer to match the unit
         SetLayer(unit.LayerIndex);
         unitIndex = unit.LayerIndex;
 
+        // Keep pos Y unchanged, move only X and Z
         Vector3 targetPos = new Vector3(unit.transform.position.x, transform.position.y, unit.transform.position.z);
 
         if (moveCameraCoroutine != null)
@@ -81,6 +94,7 @@ public class MapCamera : MonoBehaviour
         moveCameraCoroutine = StartCoroutine(MoveCameraSmooth(targetPos));
     }
 
+    // Selects a unit and redraws accepted paths.
     private void SelectUnit(Unit unit)
     {
         SelectObject.Instance.SelectUnit(unit);
@@ -93,7 +107,7 @@ public class MapCamera : MonoBehaviour
         SelectUnit(unit);
     }
 
-
+    // Smooth camera movement
     private IEnumerator MoveCameraSmooth(Vector3 targetPosition)
     {
         while (Vector3.Distance(transform.position, targetPosition) > 0.01f)
@@ -106,6 +120,7 @@ public class MapCamera : MonoBehaviour
         transform.position = targetPosition;
     }
 
+    // Calculates map boundaries
     private void SetBorders()
     {
         UpBorder = MapManager.Instance.zChunkCount * MapManager.Instance.zCellCount * 1.5f * HexData.distanceToCorner - HexData.distanceToCorner;
@@ -114,35 +129,41 @@ public class MapCamera : MonoBehaviour
 
     private void LateUpdate()
     {
+        // Mouse wheel zoom
         float zoomDelta = Mouse.current.scroll.ReadValue().y * 0.01f;
         if (zoomDelta != 0f)
         {
             AdjustZoom(zoomDelta);
         }
 
+        // Mouse edge movement
         UpdatePosition();
 
+        // Horizontal infinite scrolling
         HandleHorizontalWrap();
         lastCameraX = transform.position.x;
 
+        // Layer switching input
         UpdateLayer();
     }
 
+    // Adjusts zoom level, camera angle and distance
     private void AdjustZoom(float delta)
     {
         zoom = Mathf.Clamp01(zoom + delta);
 
+        // Camera distance
         float distance = Mathf.Lerp(stickMinZoom, stickMaxZoom, zoom);
         stick.localPosition = new Vector3(0f, 0f, distance);
 
+        // Camera tilt
         float angle = Mathf.Lerp(swivelMinZoom, swivelMaxZoom, zoom);
         swivel.localRotation = Quaternion.Euler(angle, 0f, 0f);
-
-        virtualCameraHeight = -distance;
 
         EnforceZBounds();
     }
 
+    // Handles camera movement when mouse is near screen edges
     private void UpdatePosition()
     {
         Vector2 mousePos = Mouse.current.position.ReadValue();
@@ -150,6 +171,7 @@ public class MapCamera : MonoBehaviour
 
         Vector2 move2D = Vector2.zero;
 
+        // Top edge
         if (mousePos.y >= screenSize.y - edgeSize)
         {
             float t = Mathf.InverseLerp(screenSize.y - edgeSize, screenSize.y, mousePos.y);
@@ -157,6 +179,7 @@ public class MapCamera : MonoBehaviour
             move2D += new Vector2(xOffset, 1f) * t;
         }
 
+        // Bottom edge
         if (mousePos.y <= edgeSize)
         {
             float t = Mathf.InverseLerp(edgeSize, 0f, mousePos.y);
@@ -164,6 +187,7 @@ public class MapCamera : MonoBehaviour
             move2D += new Vector2(xOffset, -1f) * t;
         }
 
+        // Right edge
         if (mousePos.x >= screenSize.x - edgeSize)
         {
             float t = Mathf.InverseLerp(screenSize.x - edgeSize, screenSize.x, mousePos.x);
@@ -171,6 +195,7 @@ public class MapCamera : MonoBehaviour
             move2D += new Vector2(1f, yOffset) * t;
         }
 
+        // Left edge
         if (mousePos.x <= edgeSize)
         {
             float t = Mathf.InverseLerp(edgeSize, 0f, mousePos.x);
@@ -183,6 +208,7 @@ public class MapCamera : MonoBehaviour
 
         move2D = move2D.normalized;
 
+        // Speed depends on zoom level
         float zoomSpeed = Mathf.Lerp(moveSpeedMax, moveSpeedMin, zoom);
 
         Vector3 move3D = new Vector3(move2D.x, 0f, move2D.y);
@@ -191,6 +217,7 @@ public class MapCamera : MonoBehaviour
         EnforceZBounds();
     }
 
+    // Handles infinite horizontal scrolling of the map
     private void HandleHorizontalWrap()
     {
         float camX = transform.position.x;
@@ -230,6 +257,7 @@ public class MapCamera : MonoBehaviour
         }
     }
 
+    // Moves the leftmost column to the right side of the map
     private void MoveLeftColumnToRight()
     {
         List<Chunk> column = gridHex.columns[gridHex.LeftmostColumn];
@@ -252,6 +280,7 @@ public class MapCamera : MonoBehaviour
         gridHex.RightmostColumn = newColumnIndex;
     }
 
+    // Moves the rightmost column to the left side of the map
     private void MoveRightColumnToLeft()
     {
         List<Chunk> column = gridHex.columns[gridHex.RightmostColumn];
@@ -279,6 +308,7 @@ public class MapCamera : MonoBehaviour
         return columnIndex * gridHex.ColumnWidth;
     }
 
+    // Calculates visible Z range 
     private void GetCameraZViewRange(out float viewMinZ, out float viewMaxZ)
     {
         Plane groundPlane = new Plane(Vector3.up, new Vector3(0f, transform.position.y, 0f));
@@ -303,6 +333,7 @@ public class MapCamera : MonoBehaviour
         }
     }
 
+    // Prevents the camera from leaving Z map bounds
     private void EnforceZBounds()
     {
         GetCameraZViewRange(out float viewMinZ, out float viewMaxZ);
@@ -321,6 +352,7 @@ public class MapCamera : MonoBehaviour
         transform.position = pos;
     }
 
+    // Handles layer change input (W/S).
     private void UpdateLayer()
     {
         if (Input.GetKeyUp(KeyCode.W))
@@ -365,6 +397,7 @@ public class MapCamera : MonoBehaviour
         }
     }
 
+    // Sets camera to a specific layer index.
     private void SetLayer(int index)
     {
         GameSettings.Instance.CurrentLayer = index;
@@ -376,6 +409,7 @@ public class MapCamera : MonoBehaviour
         UpdateCullingMask();
     }
 
+    // Updates camera culling mask for current layer
     private void UpdateCullingMask()
     {
         int mapLayer = LayerMask.NameToLayer($"Layer_{GameSettings.Instance.CurrentLayer}");

@@ -1,11 +1,13 @@
-
+// Directions for a pointy-top hex grid, ordered clockwise
 public enum HexDirection
 {
     NE, E, SE, SW, W, NW
 }
 
+// Containing cube-coordinate direction vectors
 public static class FindHexDirection
 {
+    // Cube coordinate direction offsets (q, r, s)
     public static readonly (int dq, int dr, int ds)[] hexDirections = new (int, int, int)[]
     {
         ( 0, 1,  -1), // NE
@@ -16,24 +18,24 @@ public static class FindHexDirection
         ( -1, 1,  0)  // NW
     };
 
+    // Returns the opposite hex direction
     public static HexDirection Opposite(this HexDirection direction)
     {
         return (int)direction < 3 ? (direction + 3) : (direction - 3);
     }
 
-    public static HexDirection Previous(this HexDirection direction)
-    {
-        return direction == HexDirection.NE ? HexDirection.NW : (direction - 1);
-    }
-
+    // Returns the next direction clockwise
     public static HexDirection Next(this HexDirection direction)
     {
         return direction == HexDirection.NW ? HexDirection.NE : (direction + 1);
     }
 }
 
+// Utility methods related to hex direction detection
 public static class HexDirectionUtils
 {
+    // Returns the direction index from hex cell A to neighboring cell B.
+    // Returns -1 if cells are not neighbors.
     public static int GetDirectionIndex(HexCell a, HexCell b)
     {
         int dq = b.Coordinates.Q - a.Coordinates.Q;

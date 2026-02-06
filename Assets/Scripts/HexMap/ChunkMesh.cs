@@ -1,16 +1,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Responsible for generating and managing terrain mesh for a single chunk
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ChunkMesh : MonoBehaviour
 {
     private Mesh mesh;
 
+    // Mesh data 
     private List<Vector3> vertices = new List<Vector3>();
     private List<int> triangles = new List<int>();
     private List<Vector4> uv3 = new List<Vector4>();
     private List<Color> colors = new List<Color>();
 
+    // Smoothing and noise parameters
     private int iterations = 2;
     private float noiseStrengthNormal = 3f;
     private float noiseStrengthSmooth = 0.3f;
@@ -18,20 +21,26 @@ public class ChunkMesh : MonoBehaviour
     [SerializeField] private WaterMesh waterMesh;
     [SerializeField] private RiverMesh riverMesh;
 
+    // World position of the chunk
     private Vector3 chunkPos;
+    // Vertical layer index
     private int chunkLevel;
+    // Biome-based water color
     private int waterColorIndex;
 
     private float maxPos;
+    // Is this chunk in last column
     private bool lastColumn = false;
 
     private void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
         GetComponent<MeshRenderer>().sharedMaterial = MapManager.Instance.GetTerrainmaterial();
+        // Total map width in world 
         maxPos = MapManager.Instance.xChunkCount * MapManager.Instance.xCellCount * HexData.distanceToEdge * 2;
     }
 
+    // Initializes mesh parameters 
     public void SetMeshData(int level, Vector3 pos, int index, bool last)
     {
         chunkLevel = level;
@@ -42,13 +51,14 @@ public class ChunkMesh : MonoBehaviour
         ApplyChuunkLevel(chunkLevel, waterColorIndex);
     }
 
+    // Applies layer data to water and river meshes
     public void ApplyChuunkLevel(int level, int waterIndex)
     {
         waterMesh.SetChunkLevel(level);
         riverMesh.SetChunkLevel(level, waterIndex);
     }
 
-
+    // Clears all mesh data 
     public void Clear()
     {
         mesh.Clear();
@@ -61,11 +71,14 @@ public class ChunkMesh : MonoBehaviour
         riverMesh.Clear();
     }
 
+    // Creates three terrain triangles for one hex side,
+    // with optional mountain logic and water 
     public void CreateTriangleWithColor(Vector3 c, Vector3 v1, Vector3 v2, int t, HexCell cell, int index)
     {
         Vector3 m1 = cell.GetEdge(index).GetMiddle1();
         Vector3 m2 = cell.GetEdge(index).GetMiddle2();
 
+        // Apply noise to sharp edges only
         if ((cell.GetEdge((index + 5) % 6).GetEdgeType() != EdgeType.Smooth))
         {
             v1 = AddNoise(v1, noiseStrengthNormal);
@@ -76,12 +89,14 @@ public class ChunkMesh : MonoBehaviour
             v2 = AddNoise(v2, noiseStrengthNormal);
         }
 
+        // Special handling for mountains
         if (cell.IsMountain)
         {
             CreateMountainSlope(c, v1, v2, t, m1, m2, index, cell);
         }
         else
-        { 
+        {
+            // Standard hex side split into 3 triangles
             CreateTriangle(AddNoise(c, noiseStrengthNormal), v1, AddNoise(m1, noiseStrengthNormal));
             AddTexture(t, t, t, cell.Temperature);
             CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal));
@@ -90,7 +105,8 @@ public class ChunkMesh : MonoBehaviour
             AddTexture(t, t, t, cell.Temperature);       
         }
 
-        if(cell.IsOcean || cell.IsLake)
+        // Water 
+        if (cell.IsOcean || cell.IsLake)
         {
            waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), v1, AddNoise(m1, noiseStrengthNormal), cell.IsOcean, waterColorIndex);
            waterMesh.CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(m1, noiseStrengthNormal), AddNoise(m2, noiseStrengthNormal), cell.IsOcean, waterColorIndex);
@@ -98,8 +114,10 @@ public class ChunkMesh : MonoBehaviour
         }
     }
 
+    // Creates stepped geometry for mountain slopes
     private void CreateMountainSlope(Vector3 c, Vector3 v1, Vector3 v2, int t, Vector3 m1, Vector3 m2, int index, HexCell cell)
     {
+        // Interpolated points for terraced slope
         var s1v1 = Vector3.Lerp(c, v1, 1f / 3f);
         var s2v1 = Vector3.Lerp(c, v1, 2f / 3f);
         var s1v2 = Vector3.Lerp(c, v2, 1f / 3f);
@@ -109,6 +127,7 @@ public class ChunkMesh : MonoBehaviour
         var s1m2 = Vector3.Lerp(c, m2, 1f / 3f);
         var s2m2 = Vector3.Lerp(c, m2, 2f / 3f);
 
+        // Interpolated points for terraced slope
         CreateTriangle(AddNoise(c, noiseStrengthNormal), s1v1, AddNoise(s1m1, noiseStrengthNormal));
         AddTexture(t, t, t, cell.Temperature);
         CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(s1m1, noiseStrengthNormal), AddNoise(s1m2, noiseStrengthNormal));
@@ -116,11 +135,13 @@ public class ChunkMesh : MonoBehaviour
         CreateTriangle(AddNoise(c, noiseStrengthNormal), AddNoise(s1m2, noiseStrengthNormal), s1v2);
         AddTexture(t, t, t, cell.Temperature);
 
+        // Middle slope rectangles
         CreateRectangle(t,t, s1v1, s2v1, AddNoise(s1m1, noiseStrengthNormal), AddNoise(s2m1, noiseStrengthNormal), cell.Temperature);
         CreateRectangle(t, t, AddNoise(s1m1, noiseStrengthNormal), AddNoise(s2m1, noiseStrengthNormal), AddNoise(s1m2, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal), cell.Temperature);
         CreateRectangle(t, t, AddNoise(s1m2, noiseStrengthNormal), AddNoise(s2m2, noiseStrengthNormal), s1v2, s2v2, cell.Temperature);
 
-        if(cell.GetNeighbor((HexDirection)index).IsMountain)
+        // Upper slope handling depends on neighbor mountain
+        if (cell.GetNeighbor((HexDirection)index).IsMountain)
         {
             CreateTriangle(s2v1, v1, AddNoise(s2m1, noiseStrengthNormal));
             AddTexture(t, t, t, cell.Temperature);
@@ -136,29 +157,33 @@ public class ChunkMesh : MonoBehaviour
 
     }
 
+    // Create smooth terrain triangles
     public void CreateSmoothTriangleWithColor(Vector3 c, Vector3 v1, Vector3 v2, Vector3 m1, Vector3 m2, int t, HexCell cell)
     {
         c = AddNoise(c, noiseStrengthNormal);
 
-        List<Vector3> verticles = new List<Vector3>()
+        // List for new vertices
+        List<Vector3> vertices = new List<Vector3>()
         {
             (v1), AddNoise(m1,  noiseStrengthSmooth), AddNoise(m2, noiseStrengthSmooth), (v2)
         };
 
-        verticles = ChaikinSmooth(verticles);
+        vertices = ChaikinSmooth(vertices);
 
-        for(int i = 0; i < verticles.Count-1; i++)
+        for(int i = 0; i < vertices.Count-1; i++)
         {
-            CreateTriangle(c, verticles[i], verticles[i + 1]);
+            CreateTriangle(c, vertices[i], vertices[i + 1]);
             AddTexture(t, t, t, cell.Temperature);
 
+            // Water
             if (cell.IsOcean || cell.IsLake)
             {
-                waterMesh.CreateTriangle(c, verticles[i], verticles[i + 1], cell.IsOcean, waterColorIndex);
+                waterMesh.CreateTriangle(c, vertices[i], vertices[i + 1], cell.IsOcean, waterColorIndex);
             }
         }
     }
 
+    // Create triangle river
     public void CreateRiverSourceOrEnd(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c)
     {
         if (!isSmooth)
@@ -174,6 +199,7 @@ public class ChunkMesh : MonoBehaviour
 
         c = AddNoise(c, noiseStrengthNormal);
 
+        // Offset y
         m1i.y += 0.1f;
         m2i.y += 0.1f;
         c.y += 0.1f;
@@ -185,8 +211,10 @@ public class ChunkMesh : MonoBehaviour
         riverMesh.AddUV(new Vector2(1, 0));
     }
 
+    // Create river part
     public void CreateHexRiver(Vector3 m1i, Vector3 m2i, HexCell cell, bool isSmooth, Vector3 c, int index)
     {
+        // Try find OutRiver Edge
         for (int i = 0; i < 6; i++)
         {
             if (cell.GetEdge(i).OutRiver)
@@ -218,46 +246,48 @@ public class ChunkMesh : MonoBehaviour
                     m2o = AddNoise(m2o, noiseStrengthSmooth);
                 }
 
+                // Offset Y
                 m1i.y += 0.1f;
                 m2i.y += 0.1f;
                 m1o.y += 0.1f;
                 m2o.y += 0.1f;
 
-                if ((index + 1) %6 == i || (index + 5) %6 == i || (index + 2) % 6 == i || (index + 4) % 6 == i)
+                // Bend connection between InRiver and OutRiver
+                if ((index + 1) % 6 == i || (index + 5) % 6 == i || (index + 2) % 6 == i || (index + 4) % 6 == i) 
                 {
-                    List<Vector3> verticlesE = new List<Vector3>();
-                    List<Vector3> verticlesC = new List<Vector3>();
+                    List<Vector3> verticesE = new List<Vector3>();
+                    List<Vector3> verticesC = new List<Vector3>();
 
                     var betweenEdges = Vector3.Lerp(m2i, m1o, 0.5f);
                     var betweenCentre = Vector3.Lerp(c, betweenEdges, 0.5f);
 
                     if ((index + 1) % 6 == i || (index + 2) % 6 == i)
                     {
-                        verticlesE.Add(m1i);
-                        verticlesE.Add(c);
-                        verticlesE.Add(m2o);
+                        verticesE.Add(m1i);
+                        verticesE.Add(c);
+                        verticesE.Add(m2o);
 
-                        verticlesC.Add(m2i);
-                        verticlesC.Add(betweenCentre);
-                        verticlesC.Add(m1o);
+                        verticesC.Add(m2i);
+                        verticesC.Add(betweenCentre);
+                        verticesC.Add(m1o);
                     }
                     else
                     {
-                        verticlesE.Add(m1i);
-                        verticlesE.Add(betweenCentre);
-                        verticlesE.Add(m2o);
+                        verticesE.Add(m1i);
+                        verticesE.Add(betweenCentre);
+                        verticesE.Add(m2o);
 
-                        verticlesC.Add(m2i);
-                        verticlesC.Add(c);
-                        verticlesC.Add(m1o);
+                        verticesC.Add(m2i);
+                        verticesC.Add(c);
+                        verticesC.Add(m1o);
                     }
                         
-                    verticlesE = ChaikinSmooth(verticlesE);
-                    verticlesC = ChaikinSmooth(verticlesC);
+                    verticesE = ChaikinSmooth(verticesE);
+                    verticesC = ChaikinSmooth(verticesC);
 
-                    for (int j = 0; j < verticlesE.Count - 1; j++)
+                    for (int j = 0; j < verticesE.Count - 1; j++)
                     {
-                        riverMesh.CreateRectangle(verticlesE[j], verticlesC[j], verticlesE[j + 1], verticlesC[j + 1], waterColorIndex);
+                        riverMesh.CreateRectangle(verticesE[j], verticesC[j], verticesE[j + 1], verticesC[j + 1], waterColorIndex);
 
                         riverMesh.AddUV(new Vector2(1, 1));
                         riverMesh.AddUV(new Vector2(0, 0));
@@ -267,8 +297,8 @@ public class ChunkMesh : MonoBehaviour
                         riverMesh.AddUV(new Vector2(0, 0));
                         riverMesh.AddUV(new Vector2(1, 1));
                     }
-                }               
-                else
+                }
+                else // Straight connection between InRiver and OutRiver
                 {
                     riverMesh.CreateRectangle(m2o, m1i, m1o, m2i, waterColorIndex);
 
@@ -284,6 +314,7 @@ public class ChunkMesh : MonoBehaviour
         }
     }
 
+    // Create geometry triangle
     private void CreateTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
     {
         int index = vertices.Count;
@@ -297,6 +328,7 @@ public class ChunkMesh : MonoBehaviour
         triangles.Add(index + 2);
     }
 
+    // Create rectanglke between cells
     public void CreateRectangularCellsConnection(Vector3 v1, Vector3 v2, int index, int t, HexCell neighbourCell, Vector3 m1, Vector3 m2, HexCell cell)
     {
         Vector3 v1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV2());
@@ -311,6 +343,7 @@ public class ChunkMesh : MonoBehaviour
 
         bool endmap = false;
 
+        // Possible elast column
         if ((cell.IsArctic || cell.IsOcean) && lastColumn)
         {
             if (v1d.x < v1.x || v2d.x < v2.x || m1d.x < m1.x || m2d.x < m2.x)
@@ -351,12 +384,14 @@ public class ChunkMesh : MonoBehaviour
                 v2d = AddNoise(v2d, noiseStrengthNormal, endmap);
         }
 
+        // Texture if cliff or mountain
         if(cell.GetEdge(index).GetEdgeType() == EdgeType.Cliff || cell.GetEdge(index).GetEdgeType() == EdgeType.Mountain)
         {
             t = 1;
             t2 = 1;
         }
 
+        // Analyze temperature (neighbours)
         var temp = cell.Temperature;
 
         if(cell.TerrainLevel > neighbourCell.TerrainLevel)
@@ -371,6 +406,7 @@ public class ChunkMesh : MonoBehaviour
                 temp = neighbourCell.Temperature;
         }
 
+        // If connection is between two mountains
         if (cell.IsMountain && neighbourCell.IsMountain)
         {
             CreateMountainRectangleConnection(t, v1, v2, v1d, v2d, m1, m2, m1d, m2d, cell, neighbourCell);
@@ -382,6 +418,8 @@ public class ChunkMesh : MonoBehaviour
             CreateRectangle(t, t2, AddNoise(m2, noiseStrengthNormal), AddNoise(m2d, noiseStrengthNormal, endmap), v2, v2d, temp);
         }
 
+
+        // If cells contains river
         if ((cell.GetEdge(index).InRiver && neighbourCell.GetEdge((index + 3) % 6).OutRiver) || (cell.GetEdge(index).OutRiver && neighbourCell.GetEdge((index + 3) % 6).InRiver))
         {
             foreach(var river in cell.GetRivers())
@@ -419,6 +457,8 @@ public class ChunkMesh : MonoBehaviour
             }        
         }
 
+
+        // Create water part
         if (cell.IsOcean || cell.IsLake || neighbourCell.IsOcean || neighbourCell.IsLake)
         {
             bool isOcean = cell.IsOcean || neighbourCell.IsOcean;
@@ -428,6 +468,7 @@ public class ChunkMesh : MonoBehaviour
             m1d = AddNoise(m1d, noiseStrengthNormal, endmap);
             m2d = AddNoise(m2d, noiseStrengthNormal, endmap);
 
+            // Calculate coast
             var coastV1 = v1;
             var coastV2 = v2;
 
@@ -478,6 +519,7 @@ public class ChunkMesh : MonoBehaviour
         }
     }
 
+    // If rectangle connects two mountains
     private void CreateMountainRectangleConnection(int t, Vector3 v1, Vector3 v2, Vector3 v1d, Vector3 v2d, Vector3 m1, Vector3 m2, Vector3 m1d, Vector3 m2d, HexCell cell, HexCell neighbourCell)
     {
         Vector3 c = new Vector3(
@@ -524,6 +566,7 @@ public class ChunkMesh : MonoBehaviour
 
     }
 
+    // Create rectangle connection if edge type == smooth 
     public void CreateSmoothConnection(Vector3 v1, Vector3 v2, int index, int t, HexCell cell, HexCell neighbourCell, Vector3 m1, Vector3 m2)
     {
         Vector3 v1d = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge((index + 3) % 6).GetLocalV2());
@@ -536,19 +579,20 @@ public class ChunkMesh : MonoBehaviour
         m1d = transform.InverseTransformPoint(m1d);
         m2d = transform.InverseTransformPoint(m2d);
 
-        List<Vector3> verticles = new List<Vector3>()
+        List<Vector3> vertices = new List<Vector3>()
         {
             (v1), AddNoise(m1, noiseStrengthSmooth), AddNoise(m2, noiseStrengthSmooth), (v2)
         };
 
-        List<Vector3> verticlesD = new List<Vector3>()
+        List<Vector3> verticesD = new List<Vector3>()
         {
             (v1d), AddNoise(m1d, noiseStrengthSmooth), AddNoise(m2d, noiseStrengthSmooth), (v2d)
         };
 
-        verticles = ChaikinSmooth(verticles);
-        verticlesD = ChaikinSmooth(verticlesD);
+        vertices = ChaikinSmooth(vertices);
+        verticesD = ChaikinSmooth(verticesD);
 
+        // Calculate temperature
         var temp = cell.Temperature;
 
         if (cell.TerrainLevel > neighbourCell.TerrainLevel)
@@ -565,14 +609,15 @@ public class ChunkMesh : MonoBehaviour
 
         bool isOcean = cell.IsOcean && neighbourCell.IsOcean;
 
-        for (int i = 0; i < verticles.Count - 1; i++)
+        for (int i = 0; i < vertices.Count - 1; i++)
         {
+            // If one or two of connected cells is water
             if (cell.IsOcean || cell.IsLake || neighbourCell.IsOcean || neighbourCell.IsLake)
             {
-                var ov1 = verticles[i];
-                var ov2 = verticles[i + 1];
-                var ov1d = verticlesD[i];
-                var ov2d = verticlesD[i + 1];
+                var ov1 = vertices[i];
+                var ov2 = vertices[i + 1];
+                var ov1d = verticesD[i];
+                var ov2d = verticesD[i + 1];
 
                 var coastO1 = ov1;
                 var coastO2 = ov2;
@@ -594,9 +639,10 @@ public class ChunkMesh : MonoBehaviour
                 waterMesh.CreateRectangle(coastO1, coastO1d, coastO2, coastO2d, isOcean, waterColorIndex);
             }
 
-            CreateRectangle(t, neighbourCell.TextureIndex, verticles[i], verticlesD[i], verticles[i + 1], verticlesD[i + 1], temp);
+            CreateRectangle(t, neighbourCell.TextureIndex, vertices[i], verticesD[i], vertices[i + 1], verticesD[i + 1], temp);
         }
 
+        // If is river
         if ((cell.GetEdge(index).InRiver && neighbourCell.GetEdge((index + 3) % 6).OutRiver) || (cell.GetEdge(index).OutRiver && neighbourCell.GetEdge((index + 3) % 6).InRiver))
         {
             foreach (var river in cell.GetRivers())
@@ -635,6 +681,7 @@ public class ChunkMesh : MonoBehaviour
         }
     }
 
+    // Create rectangle by two triangles
     private void CreateRectangle(int t, int neighbourT, Vector3 v1, Vector3 v1d, Vector3 v2, Vector3 v2d, float temp)
     { 
         CreateTriangle(v1, v1d, v2); 
@@ -644,6 +691,7 @@ public class ChunkMesh : MonoBehaviour
         AddTexture(neighbourT, neighbourT, t, temp); 
     }
 
+    // Traingle connection between three cells
     public void CreateTriangleCellsConnection(Vector3 v1, int index, int t, HexCell cell ,HexCell neighbourCell, HexCell nextNeighbourCell)
     {
         var cellEdge = cell.GetEdge((index) % 6).GetEdgeType();
@@ -660,13 +708,14 @@ public class ChunkMesh : MonoBehaviour
         int t2 = neighbourCell.TextureIndex;
         int t3 = nextNeighbourCell.TextureIndex;
 
+        // Texture if cliff or mountains
         if (cellEdge == EdgeType.Cliff || cellEdge2 == EdgeType.Cliff || cellEdge == EdgeType.Mountain|| cellEdge2 == EdgeType.Mountain)
             t = 1;
 
         bool endmap = false;
         bool doubleEndmap = false;
 
-        if (index == 0) 
+        if (index == 0)  //variant 1
         {
             v1d1 = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge(3).GetLocalV1());
             v1d2 = nextNeighbourCell.HexChunk.transform.TransformPoint(nextNeighbourCell.GetEdge(5).GetLocalV1());
@@ -674,6 +723,7 @@ public class ChunkMesh : MonoBehaviour
             v1d1 = transform.InverseTransformPoint(v1d1);
             v1d2 = transform.InverseTransformPoint(v1d2);
 
+            // If last column
             if (v1d2.x < v1.x && lastColumn && (cell.IsArctic || cell.IsOcean))
             {
                 var newX2 = (v1.x - v1d2.x) - maxPos;
@@ -711,7 +761,7 @@ public class ChunkMesh : MonoBehaviour
             if (edge4 == EdgeType.Cliff || edge5 == EdgeType.Cliff || edge4 == EdgeType.Mountain || edge5 == EdgeType.Mountain)
                 t3 = 1;
         }
-        else 
+        else //variant 2
         {
             v1d1 = neighbourCell.HexChunk.transform.TransformPoint(neighbourCell.GetEdge(3).GetLocalV2());
             v1d2 = nextNeighbourCell.HexChunk.transform.TransformPoint(nextNeighbourCell.GetEdge(5).GetLocalV2());
@@ -719,6 +769,7 @@ public class ChunkMesh : MonoBehaviour
             v1d1 = transform.InverseTransformPoint(v1d1);
             v1d2 = transform.InverseTransformPoint(v1d2);
 
+            // If last column
             if (v1d1.x < v1.x && lastColumn)
             {
                 var newX = (v1.x - v1d1.x) - maxPos;
@@ -759,6 +810,7 @@ public class ChunkMesh : MonoBehaviour
                 t3 = 1;
         }
 
+        // Calculate temperature and highestTerrain
         var temp = cell.Temperature;
         var highestTerrain = cell.TerrainLevel;
 
@@ -787,18 +839,21 @@ public class ChunkMesh : MonoBehaviour
         CreateTriangle(v1, v1d1, v1d2);
         AddTexture(t, t2, t3, temp);
 
+        // If water
         if(cell.IsOcean || cell.IsLake || neighbourCell.IsOcean || neighbourCell.IsLake || nextNeighbourCell.IsOcean || nextNeighbourCell.IsLake)
         {
             CreateTriangleWaterConnection(v1, v1d1, v1d2, cell, neighbourCell, nextNeighbourCell);
         }
     }
 
+    // Cteare ocean or lake triangle 
     private void CreateTriangleWaterConnection(Vector3 v1, Vector3 v1d1, Vector3 v1d2, HexCell cell, HexCell neighbourCell, HexCell nextNeighbourCell)
     {
         var coastV1 = v1;
         var coastV1d1 = v1d1;
         var coastV1d2 = v1d2;
 
+        // Calculate coast
         if (cell.IsOcean || cell.IsLake)
         {
             if (!neighbourCell.IsOcean && !neighbourCell.IsLake && !nextNeighbourCell.IsOcean && !nextNeighbourCell.IsLake)
@@ -913,18 +968,19 @@ public class ChunkMesh : MonoBehaviour
         }
     }
 
-    private List<Vector3> ChaikinSmooth(List<Vector3> verticles)
+    //Soooth edges is edge type == Sommoth
+    private List<Vector3> ChaikinSmooth(List<Vector3> vertices)
     {
         for (int i = 0; i < iterations; i++)
         {
             List<Vector3> outPts = new List<Vector3>();
 
-            outPts.Add(verticles[0]);
+            outPts.Add(vertices[0]);
 
-            for (int j = 0; j < verticles.Count - 1; j++)
+            for (int j = 0; j < vertices.Count - 1; j++)
             {
-                Vector3 p0 = verticles[j];
-                Vector3 p1 = verticles[j + 1];
+                Vector3 p0 = vertices[j];
+                Vector3 p1 = vertices[j + 1];
 
                 Vector3 Q = 0.75f * p0 + 0.25f * p1;
                 Vector3 R = 0.25f * p0 + 0.75f * p1;
@@ -933,14 +989,15 @@ public class ChunkMesh : MonoBehaviour
                 outPts.Add(R);
             }
 
-            outPts.Add(verticles[verticles.Count - 1]);
+            outPts.Add(vertices[vertices.Count - 1]);
 
-            verticles = outPts;
+            vertices = outPts;
         }
 
-        return verticles;
+        return vertices;
     }
 
+    // Applies data for terrain Shader
     private void AddTexture(int t1, int t2, int t3, float temp)
     {
         colors.Add(new Color(1f, 0f, 0f, temp));
@@ -953,11 +1010,12 @@ public class ChunkMesh : MonoBehaviour
         uv3.Add(new Vector4(t1, t2, t3, chunkLevel));
     }
 
+    // Adds procedural noise to vertex position
     public Vector3 AddNoise(Vector3 v, float noiseStrength, bool endMap = false)
     {
         Vector4 noise;
 
-        if (endMap)
+        if (endMap)//if last column
         {
             noise = MapManager.Instance.GetHexMeshNoise().GetPixelBilinear(v.x - HexData.distanceToEdge * 2 * MapManager.Instance.xCellCount, v.z);
         }
@@ -970,6 +1028,7 @@ public class ChunkMesh : MonoBehaviour
         return v;
     }
 
+    // Applies mesh data 
     public void Apply()
     {
         gameObject.layer = LayerMask.NameToLayer($"Layer_{chunkLevel}");

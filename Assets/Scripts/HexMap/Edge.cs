@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Types of terrain transitions between hex cells
 public enum EdgeType
 {
     Flat,
@@ -9,22 +10,25 @@ public enum EdgeType
     None
 }
 
+// Represents a single edge of a hex cell
 public class Edge
 {
     EdgeType edgeType;
 
+    // Solid edge vertices
     private Vector3 v1Global;
     private Vector3 v2Global;
 
+    // Full edge vertices 
     private Vector3 v1GlobalFull;
     private Vector3 v2GlobalFull;
 
     private HexDirection hexDirection;
     private HexCell cell;
 
-    private Vector3 centre;
     private Vector3 chunkPos;
 
+    // Ocean and river flags
     private bool isOceanEdge = false;
     public bool IsOceanEdge => isOceanEdge;
 
@@ -42,6 +46,7 @@ public class Edge
         set { outRiver = value; }
     }
 
+    // Initializes edge geometry and data
     public void SetData(EdgeType edgeType, HexDirection hexDirection, int terrainLevel, Vector3 hexPos, Vector3 chunkPos, HexCell cell)
     {
         Vector3 centre = new Vector3(
@@ -49,8 +54,6 @@ public class Edge
            terrainLevel,
            hexPos.z + chunkPos.z
         );
-
-        this.centre = centre;
 
         this.edgeType = edgeType;
 
@@ -71,6 +74,7 @@ public class Edge
         return v1Global;
     }
 
+    // Sets vertex and updates neighboring edge
     public void SetGlobalV1(Vector3 newV1Global)
     {
         v1Global = newV1Global;
@@ -132,11 +136,13 @@ public class Edge
         return v2GlobalFull;
     }
 
+    // First interpolation point along the edge
     public Vector3 GetMiddle1()
     {
         return Vector3.Lerp(GetLocalV1(), GetLocalV2(), 1f / 3f);
     }
 
+    // Second interpolation point along the edge
     public Vector3 GetMiddle2()
     {
         return Vector3.Lerp(GetLocalV1(), GetLocalV2(), 2f / 3f);

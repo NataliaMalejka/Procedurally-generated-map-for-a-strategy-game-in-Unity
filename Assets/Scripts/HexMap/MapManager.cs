@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Map size
 public enum MapSize
 {
     Small,
@@ -16,23 +17,28 @@ public class BiomeObjects
     public GameObject[] objects;
 }
 
+// Generate map
 public class MapManager : MonoBehaviour
 {
     public static MapManager Instance { get; private set; }
 
     private MapSize mapSize;
 
+    // Chunks inn layer
     public int xChunkCount { get; private set; }
     public int zChunkCount { get; private set; }
 
+    // Cells in chunk
     public int xCellCount { get; private set; } = 6;
     public int zCellCount { get; private set; } = 6;
 
+    // Map margin
     public int minXMargin { get; private set; } = 5;
     public int minZMargin { get; private set; } = 5;
     public int maxXMargin { get; private set; }
     public int maxZMargin { get; private set; }
 
+    // Continennts region
     private int regionsCount;
 
     private Continent[] continents;
@@ -41,20 +47,25 @@ public class MapManager : MonoBehaviour
     private int[] continentsCentres;
     private int contonentCentreMargin = 7;
 
+    // Max cell count in continent
     private int[] maxContinentsCellsAmound;
 
+    // Continent direction (for continent growth)
     private Vector2[] continentDir;
 
+    // Wind direction (for calculate climate)
     private HexDirection windDirection;
 
+    // For create rivers
     private List<HexCell> potencionalRiverSources = new List<HexCell>();
 
+    // Parameters for map generation
     [Header("Continent Shape")]
     [SerializeField] private float perlinScale = 0.15f;
     [SerializeField] private float distWeight = 0.3f;
     [SerializeField] private float perlinWeight = 0.5f;
     [SerializeField] private float dirWeight = 0.3f;
-    [SerializeField] private float minScore = 0.7f;
+    [SerializeField] private float maxScore = 0.7f;
     [SerializeField] private float minCoastNoise = 0.8f;
     [SerializeField] private float maxCoastNoise = 1.2f;
     [SerializeField] private float growthBonusFactor = 2.5f;
@@ -104,10 +115,10 @@ public class MapManager : MonoBehaviour
     [SerializeField] private Texture2DArray terrainTextureAlbedo;
     [SerializeField] private Texture2DArray terrainTextureNormal;
 
+    // Diffrent water color for each layer
     [SerializeField] private Color[] waterColors;
     private Texture2D paletteTex;
     private int paletteCount;
-    private const int MAX_TEXTURE_SIZE = 256;
 
     [Header("Structures")]
     public BiomeObjects[] biomeObjects;
@@ -118,6 +129,7 @@ public class MapManager : MonoBehaviour
 
     private const int biomesPerLayer = 7;
 
+    // Get object from dictionary
     public GameObject[] GetObjects(Biome biome)
     {
         foreach (var group in biomeObjects)
@@ -141,10 +153,13 @@ public class MapManager : MonoBehaviour
 
         (xChunkCount, zChunkCount) = SetChunkCounts(mapSize);
 
+        //calculate margin based by map size
         maxXMargin = xCellCount * xChunkCount - minXMargin;
         maxZMargin = zCellCount * zChunkCount - minZMargin;
     }
 
+    // Seed from GameSettings 
+    // Random if missing
     private void ApplySeed()
     {
         int seed = UnityEngine.Random.Range(0, int.MaxValue);
@@ -160,6 +175,7 @@ public class MapManager : MonoBehaviour
         UnityEngine.Random.InitState(seed);
     }
 
+    // Set Shader data
     private void SetTextures()
     {
         terrainMaterial.SetTexture("_TexColor", terrainTextureAlbedo);
@@ -173,6 +189,7 @@ public class MapManager : MonoBehaviour
         terrainMaterial.SetFloat("_ColdMax", coldMax);
     }
 
+    // Water color texture
     private void BuildPaletteTexture()
     {
         paletteCount = waterColors.Length / 2;
@@ -221,6 +238,7 @@ public class MapManager : MonoBehaviour
         return UnitPrefab;
     }
 
+    // Chunk count (map size)
     private (int x, int z) SetChunkCounts(MapSize size)
     {
         return size switch
@@ -232,6 +250,7 @@ public class MapManager : MonoBehaviour
         };
     }
 
+    // Continents count (map size)
     private int SetContinentsCount(MapSize size)
     {
         return size switch
@@ -243,11 +262,9 @@ public class MapManager : MonoBehaviour
         };
     }
 
+    // Regions count (continent count)
     private void SetMaxMargin()
     {
-        //maxXMargin = xCellCount * xChunkCount - minXMargin;
-        //maxZMargin = zCellCount * zChunkCount - minZMargin;
-
         regionsCount = continentsCount / 2 + continentsCount % 2;
         if (regionsCount < 2) regionsCount = 2;
 
@@ -255,6 +272,7 @@ public class MapManager : MonoBehaviour
         continentDir = new Vector2[continentsCount];
     }
 
+    // Max cell per continent
     private void SetContinentCellsAmound()
     {
         maxContinentsCellsAmound = new int[continentsCount];
@@ -270,6 +288,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Set start continents cells in diffrent regions 
     private void SetContinentsInRegions()
     {
         int localXMin = minXMargin + contonentCentreMargin;
@@ -318,6 +337,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Random continent centres (in region)
     private void SetContinentsCentres(int localXMin, int localXMax, int localZMin, int localZMax, int index)
     {
         int xPos = UnityEngine.Random.Range(localXMin, localXMax);
@@ -326,12 +346,7 @@ public class MapManager : MonoBehaviour
         continentsCentres[index] = GetCellIndex(xPos, zPos);
     }
 
-    //private void NewMargins()
-    //{
-    //    maxXMargin = xCellCount * xChunkCount - minXMargin;
-    //    maxZMargin = zCellCount * zChunkCount - minZMargin;
-    //}
-
+    // Get cell index in grid
     public int GetCellIndex(int xPos, int zPos)
     {
         int chunkX = xPos / xCellCount;
@@ -347,6 +362,7 @@ public class MapManager : MonoBehaviour
         return chunkIndex * (xCellCount * zCellCount) + localCellIndex;
     }
 
+    // Map generation process
     public void GenerateMap(HexCell[] gridCells, int biomeLayerIndex, int level)
     {
         BuildPaletteTexture();
@@ -361,8 +377,6 @@ public class MapManager : MonoBehaviour
 
         SetContinentsInRegions();
 
-        //NewMargins();
-
         GenerateContinents(gridCells);
 
         SetOceans(gridCells);
@@ -375,7 +389,7 @@ public class MapManager : MonoBehaviour
 
         CalculateMoisture(gridCells);
 
-        SetBiomes(gridCells, biomeLayerIndex);
+        SetBiome(gridCells, biomeLayerIndex);
 
         SmoothBiomes(gridCells);
 
@@ -394,6 +408,7 @@ public class MapManager : MonoBehaviour
         SetTextPos(gridCells, level);
     }
 
+    // Continenst growth
     private void GenerateContinents(HexCell[] gridCells)
     {
         for (int i = 0; i < continentsCentres.Length; i++)
@@ -411,6 +426,7 @@ public class MapManager : MonoBehaviour
             cellsToCheck.Enqueue(centreCell);
             cellsCreated++;
 
+            // Add all neighbour start cells
             cellsCreated += AddCloseNeighborCells(centreCell, i, cellsToCheck);
 
             while (cellsToCheck.Count > 0 && cellsCreated < maxContinentsCellsAmound[Array.IndexOf(continentsCentres, centreIndex)])
@@ -431,6 +447,7 @@ public class MapManager : MonoBehaviour
 
                     if (CheckNoise(neighborCell, centreCell, i)) continue;
 
+                    // Add cell to continent
                     SetContinentPart(neighborCell, i);
                     cellsToCheck.Enqueue(neighborCell);
 
@@ -440,6 +457,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Add cell and chunk to continent
     private void SetContinentPart(HexCell cell, int continentIndex)
     {
         cell.SetContinent(continentIndex);
@@ -450,6 +468,7 @@ public class MapManager : MonoBehaviour
         continents[continentIndex].AddChunk(cell.HexChunk);
     }
 
+    // Add neighbours of start cell to continent
     private int AddCloseNeighborCells(HexCell centreCell, int continentIndex, Queue<HexCell> cellsToCheck)
     {
         int addedCells = 0;
@@ -470,6 +489,7 @@ public class MapManager : MonoBehaviour
         return addedCells;
     }
 
+    // Is cell behind map border
     private bool IsBehindBorders(HexCell cell)
     {
         if (cell.Coordinates.globalX < minXMargin || cell.Coordinates.globalX >= maxXMargin ||
@@ -481,6 +501,7 @@ public class MapManager : MonoBehaviour
             return false;
     }
 
+    // Is cell near to other continent
     private bool AdjacentToOtherContinent(HexCell neighborCell, int currentContinentIndex)
     {
         bool adjacentToOtherContinent = false;
@@ -502,30 +523,32 @@ public class MapManager : MonoBehaviour
 
     private bool CheckNoise(HexCell neighborCell, HexCell centreCell, int index)
     {
+        // Distance-based factor (limits continent growth range)
         float dist = Vector2.Distance(neighborCell.Coordinates.GetCellPos(), centreCell.Coordinates.GetCellPos());
         float distFactor = Mathf.Clamp01(1f - dist / (zCellCount * zChunkCount / 2));
 
-        float noiseFactor = Mathf.PerlinNoise(
-        neighborCell.Coordinates.globalX * perlinScale,
-        neighborCell.Coordinates.globalZ * perlinScale
-        );
+        // Perlin noise factor for irregular continent shape
+        float noiseFactor = Mathf.PerlinNoise(neighborCell.Coordinates.globalX * perlinScale, neighborCell.Coordinates.globalZ * perlinScale);
 
+        // Directional growth factor (preferred expansion direction)
         Vector2 toHex = (neighborCell.Coordinates.GetCellPos() - centreCell.Coordinates.GetCellPos()).normalized;
         float dirFactor = Vector2.Dot(toHex, continentDir[index].normalized) * 0.5f + 0.5f;
 
+        // Random coastline variation
         float coastNoise = UnityEngine.Random.Range(minCoastNoise, maxCoastNoise);
 
+        // Growth bonus based on current continent fill
         float cellsFill = (float)continents[index].GetContinentCells().Count / maxContinentsCellsAmound[index];
         float growthBonus = 1f + growthBonusFactor * (1f - cellsFill * cellsFill);
 
-        float score =
-            distFactor * distWeight +
-            noiseFactor * perlinWeight +
-            dirFactor * dirWeight;
+        // Final combining all weighted factors
+        float score = distFactor * distWeight + noiseFactor * perlinWeight + dirFactor * dirWeight;
 
-        return score * coastNoise * growthBonus < minScore;
+        // Cell is added to continent if score is below maxScore
+        return score * coastNoise * growthBonus < maxScore;
     }
 
+    // Set ocean data is cell is not in any continent
     private void SetOceans(HexCell[] gridCells)
     {
         var cellsToCheck = new Queue<HexCell>();
@@ -558,6 +581,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Remove water cell inside continent
     private void RemoveLakes()
     {    
         for (int i = 0; i < continentsCount; i++)
@@ -575,6 +599,7 @@ public class MapManager : MonoBehaviour
         }       
     }
 
+    // Distance ro ocean (for calculate climate)
     private void CalculateDistancToOcean(HexCell[] gridCells)
     {
         Queue<HexCell> queue = new Queue<HexCell>();
@@ -607,6 +632,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Climate data
     private void CalculateBiomesData(HexCell[] gridCells)
     {
         foreach (var cell in gridCells)
@@ -629,9 +655,10 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // terrain level = base level (ocenat distance) + noise highlands + hill noise + mountains noise
     private void SetTerrainLevel(HexCell cell)
     {
-        int heightDistanceToOcean = CalculateDictanceToOceanHeight(cell) * HexData.oceanDistanceLevelStep;
+        int heightDistanceToOcean = CalculateDictanceToOceanHeight(cell);
 
         int distanceNoiseHeight = SetDistanceNoise(cell);
         int terrainLevel = distanceNoiseHeight + heightDistanceToOcean;
@@ -650,12 +677,13 @@ public class MapManager : MonoBehaviour
             terrainLevel += hillHeight;
         }
 
-        if(SetMountains(cell) > 0)
+        if(SetMountains(cell) > 0) // if mountain
             cell.IsMountain = true;
 
         cell.SetTerrainLevel(terrainLevel);
     }
 
+    // Temperature based on latitude and terrain level
     private void SetTemperature(HexCell cell)
     {
         float latitude = (float)cell.Coordinates.GlobalZ / (zCellCount * zChunkCount);
@@ -678,6 +706,7 @@ public class MapManager : MonoBehaviour
         cell.Temperature = temperature;
     }
 
+    // Set mountain terrain level
     private void CreateMountain(HexCell cell)
     {
         int baseMountainLevel = 3;
@@ -702,6 +731,7 @@ public class MapManager : MonoBehaviour
         cell.CentreTerrainLevel += UnityEngine.Random.Range(7f, 13f);
     }
 
+    // Arctic on map borders
     private void SetArctic(HexCell cell, HexCell[] gridCells)
     {
         if (cell.Coordinates.GlobalZ == 0 || cell.Coordinates.GlobalZ == (zCellCount * zChunkCount - 1))
@@ -731,6 +761,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Arctic cell data
     private void SetArcticCell(HexCell cell)
     {
         cell.IsOcean = false;
@@ -739,11 +770,13 @@ public class MapManager : MonoBehaviour
         SetTemperature(cell);
     }
 
+    // Heigh based on distance to ocean
     private int CalculateDictanceToOceanHeight(HexCell cell)
     {
-        return (int)(cell.DistanceFromOcean * distanceWeight);
+        return (int)(cell.DistanceFromOcean * distanceWeight * HexData.oceanDistanceLevelStep);
     }
 
+    // Highlands noise
     private int SetDistanceNoise(HexCell cell)
     {
         float distanceNoise = Mathf.PerlinNoise(
@@ -756,6 +789,7 @@ public class MapManager : MonoBehaviour
         return (int)(distanceNoise);
     }
 
+    // Hill noise
     private int SetHillNoise(HexCell cell)
     {
         float hillsNoise = Mathf.PerlinNoise(
@@ -769,6 +803,7 @@ public class MapManager : MonoBehaviour
         return (int)(hillsNoise);
     }
 
+    // Mountains noise
     private int SetMountains(HexCell cell)
     {
         float mountainsNoise = Mathf.PerlinNoise(
@@ -782,6 +817,7 @@ public class MapManager : MonoBehaviour
         return (int)mountainsNoise;
     }
 
+    // MOisture for calculate climate
     private void CalculateMoisture(HexCell[] gridCells)
     {
         SetWind();
@@ -791,11 +827,13 @@ public class MapManager : MonoBehaviour
         ApplyMountainsRain(gridCells);
     }
 
+    // Random wind direction
     private void SetWind()
     {
         windDirection = (HexDirection)UnityEngine.Random.Range(0, 6);
     }
 
+    // Moisture based on ocean distance
     private void ApplyOceanMoisture(HexCell[] gridCells)
     {
         foreach (var cell in gridCells)
@@ -807,6 +845,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Applies wind-based moisture transport 
     private void ApplyWind(HexCell[] gridCells)
     {
         Dictionary<HexCell, float> newMoisture = new Dictionary<HexCell, float>();
@@ -827,6 +866,7 @@ public class MapManager : MonoBehaviour
             kv.Key.Moisture = kv.Value;
     }
 
+    // Finds the upwind moisture source 
     private HexCell FindMoistureSource(HexCell start)
     {
         Queue<(HexCell cell, int dist)> q = new Queue<(HexCell, int)>();
@@ -856,6 +896,7 @@ public class MapManager : MonoBehaviour
         return result;
     }
 
+    // Applies drying effect caused by mountains on the downwind side
     private void ApplyMountainsDry(HexCell[] gridCells)
     {
         foreach (var cell in gridCells)
@@ -902,6 +943,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Applies increased rainfall on the windward side of mountains
     private void ApplyMountainsRain(HexCell[] gridCells)
     {
         foreach (var cell in gridCells)
@@ -948,7 +990,8 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    private void SetBiomes(HexCell[] gridCells, int biomeLayerIndex)
+    // Set climate
+    private void SetBiome(HexCell[] gridCells, int biomeLayerIndex)
     {
         foreach (var cell in gridCells)
         {
@@ -989,10 +1032,10 @@ public class MapManager : MonoBehaviour
             }
 
             cell.SetBiome(GetBiome(baseBiome, biomeLayerIndex));
-
         }
     }
 
+    // Climate based on layer
     private Biome GetBiome(Biome baseBiome, int layer)
     {
         int baseIndex = (int)baseBiome - 2;
@@ -1000,17 +1043,10 @@ public class MapManager : MonoBehaviour
         if (baseIndex < 0 || baseIndex >= biomesPerLayer)
             return baseBiome;
 
-        //int layerOffset = layer switch
-        //{
-        //    Layers.Earth => 0,
-        //    Layers.Hot => BIOMES_PER_LAYER,
-        //    Layers.Cold => BIOMES_PER_LAYER * 2,
-        //    _ => 0
-        //};
-
         return (Biome)(2 + baseIndex + layer * biomesPerLayer);
     }
 
+    // Correct biomes
     private void SmoothBiomes(HexCell[] gridCells)
     {
         Dictionary<HexCell, Biome> newBiomes = new Dictionary<HexCell, Biome>();
@@ -1072,6 +1108,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Potenciona river source based on terrain level nad moisture
     private void AddPotencionalRiverSource(HexCell cell)
     {
         if (cell.TerrainLevelIndex >= riverSuorceMinLevel && cell.Moisture >= riverSuorceMinMoisture && cell.Temperature > coldMax && cell.Temperature < moderateTempMax)
@@ -1102,6 +1139,7 @@ public class MapManager : MonoBehaviour
         return Mathf.Clamp01((value - min) / (max - min));
     }
 
+    // Detects and assigns edge types for all cells in the grid
     private void DetectEdgeType(HexCell[] gridCells)
     {
         for (int i = 0; i < gridCells.Length; i++)
@@ -1112,6 +1150,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Determines edge type between a cell and each of its neighbours
     private void ChcekNeighbourEdges(HexCell cell)
     {
         for (int j = 0; j < 6; j++)
@@ -1144,6 +1183,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Collects all edges marked as Smooth
     private List<Edge> FindSmoothEdges(HexCell[] gridCells)
     {
         List<Edge> smoothEdges = new List<Edge>();
@@ -1170,6 +1210,7 @@ public class MapManager : MonoBehaviour
         return smoothEdges;
     }
 
+    // Groups connected smooth edges into continuous chains and smooths them
     private void GroupSmoothEdges(HexCell[] gridCells)
     {
         List<List<Edge>> groupsSmoothEdges = new List<List<Edge>>();
@@ -1188,6 +1229,7 @@ public class MapManager : MonoBehaviour
             chain.Add(e);
             used.Add(e);
 
+            // Extend chain forward
             Vector3 end = e.GetFullV2();
             bool extended = true;
             while (extended)
@@ -1224,6 +1266,7 @@ public class MapManager : MonoBehaviour
                 }
             }
 
+            // Extend chain forward
             Vector3 start = e.GetFullV1();
             extended = true;
             while (extended)
@@ -1264,6 +1307,7 @@ public class MapManager : MonoBehaviour
             groupTouchesOcean.Add(touchesOcean);
         }
 
+        // Smooth all detected chains
         SmoothEdges(groupsSmoothEdges, groupTouchesOcean);
     }
 
@@ -1272,6 +1316,7 @@ public class MapManager : MonoBehaviour
         return (a - b).sqrMagnitude < 0.0001f;
     }
 
+    // Applies Chaikin smoothing to groups of edges
     private void SmoothEdges(List<List<Edge>> groupsSmoothEdges, List<bool> groupTouchesOcean)
     {
         for (int i = 0; i < groupsSmoothEdges.Count; i++)
@@ -1280,14 +1325,15 @@ public class MapManager : MonoBehaviour
 
             if (group.Count <= 1) continue;
 
-            List<Vector3> verticles = FindChainStart(group);
+            List<Vector3> vertices = FindChainStart(group);
 
-            bool isLoop = IsLoop(verticles);
+            bool isLoop = IsLoop(vertices);
 
+            // Remove duplicate vertices to avoid over-smoothing corners
             List<int> map;
+            List<Vector3> unique = RemoveDuplicates(vertices, out map);
 
-            List<Vector3> unique = RemoveDuplicates(verticles, out map);
-
+            // Ocean edges get more smoothing
             int iterations = groupTouchesOcean[i] ? 3 : 1;   
             List<Vector3> smoothUnique = ChaikinSmoothSameCount(unique, isLoop, iterations);
 
@@ -1297,6 +1343,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Builds an ordered list of vertices from an edge chain
     private List<Vector3> FindChainStart(List<Edge> group)
     {
         if (group.Count <= 1)
@@ -1329,22 +1376,24 @@ public class MapManager : MonoBehaviour
         return v;
     }
 
+    // Checks if the chain forms a closed loop
     private bool IsLoop(List<Vector3> v)
     {
         return SamePoint(v[0], v[v.Count - 1]);
     }
 
-    private List<Vector3> RemoveDuplicates(List<Vector3> baseVerticles, out List<int> mapToUnique)
+    // Removes duplicate vertices and builds a mapping to unique list
+    private List<Vector3> RemoveDuplicates(List<Vector3> baseVertices, out List<int> mapToUnique)
     {
         mapToUnique = new List<int>();
         List<Vector3> unique = new List<Vector3>();
 
-        for (int i = 0; i < baseVerticles.Count; i++)
+        for (int i = 0; i < baseVertices.Count; i++)
         {
             bool found = false;
             for (int j = 0; j < unique.Count; j++)
             {
-                if (SamePoint(baseVerticles[i], unique[j]))
+                if (SamePoint(baseVertices[i], unique[j]))
                 {
                     mapToUnique.Add(j);
                     found = true;
@@ -1354,13 +1403,14 @@ public class MapManager : MonoBehaviour
             if (!found)
             {
                 mapToUnique.Add(unique.Count);
-                unique.Add(baseVerticles[i]);
+                unique.Add(baseVertices[i]);
             }
         }
 
         return unique;
     }
 
+    // Smooths vertices
     private List<Vector3> ChaikinSmoothSameCount(List<Vector3> pts, bool loop, int iterations)
     {
         if (pts.Count < 3)
@@ -1404,6 +1454,9 @@ public class MapManager : MonoBehaviour
         return current;
     }
 
+
+    // Resamples (it contains targetCount points)
+    // If loop == true, the line is treated as closed
     private List<Vector3> Resample(List<Vector3> subdiv, int targetCount, bool loop)
     {
         int m = subdiv.Count;
@@ -1462,6 +1515,7 @@ public class MapManager : MonoBehaviour
         return result;
     }
 
+    // Restores duplicate vertices after smoothing unique points
     private List<Vector3> ReapplyDuplicates(List<Vector3> uniqueSmoothed, List<int> mapToUnique)
     {
         List<Vector3> result = new List<Vector3>(mapToUnique.Count);
@@ -1475,6 +1529,7 @@ public class MapManager : MonoBehaviour
         return result;
     }
 
+    // Writes smoothed vertex positions back to the corresponding edges
     private void WriteBackToEdges(List<Edge> edges, List<Vector3> newPts)
     {
         int p = 0;
@@ -1486,6 +1541,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Creates rivers for each continent independently
     private void CreateRivers()
     {
         var sourcesByContinent = GroupSourcesByContinent();
@@ -1520,6 +1576,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Creates rivers for each continent independently
     private bool CreateRiverFromSource(HexCell startCell)
     {
         HashSet<HexCell> visited = new HashSet<HexCell>();
@@ -1610,6 +1667,7 @@ public class MapManager : MonoBehaviour
         return true;
     }
 
+    // Selects the next river cell based on downhill flow and proximity to ocean
     private HexCell GetNextRiverCell(HexCell cell, HashSet<HexCell> visited)
     {
         List<HexCell> candidates = new List<HexCell>();
@@ -1645,6 +1703,7 @@ public class MapManager : MonoBehaviour
         return candidates[UnityEngine.Random.Range(0, bestCount)];
     }
 
+    // Groups potential river source cells by continent index
     private Dictionary<int, List<HexCell>> GroupSourcesByContinent()
     {
         Dictionary<int, List<HexCell>> grouped = new Dictionary<int, List<HexCell>>();
@@ -1662,6 +1721,7 @@ public class MapManager : MonoBehaviour
         return grouped;
     }
 
+    // Checks whether any neighboring cell already contains a river
     private bool HasRiverSourceNeighbour(HexCell cell)
     {
         for (int i = 0; i < 6; i++)
@@ -1678,6 +1738,7 @@ public class MapManager : MonoBehaviour
         return false;
     }
 
+    // Checks whether any neighboring cell already contains a river
     private void SetRiverEdge(HexCell from, HexCell to)
     {
         int dir = GetDirectionIndex(from, to);
@@ -1697,6 +1758,7 @@ public class MapManager : MonoBehaviour
         inEdge.InRiver = true;
     }
 
+    // Returns the hex direction index from one cell to another
     private int GetDirectionIndex(HexCell from, HexCell to)
     {
         for (int i = 0; i < 6; i++)
@@ -1707,6 +1769,7 @@ public class MapManager : MonoBehaviour
         return -1;
     }
 
+    // Connects a newly generated river into an existing river system
     private void ConnectIntoExistingRiver(HexCell from, HexCell to)
     {
         int dir = GetDirectionIndex(from, to);
@@ -1730,6 +1793,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Correct neighbour edges
     private void SetNeighbourEdges(HexCell cell, int terrainLevel)
     {
         cell.SetTerrainLevel(terrainLevel);
@@ -1747,6 +1811,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Create lake if river did not find ocean
     private void CreateLakes(HexCell lake)
     {
         int lakeTerrainIndex = lake.TerrainLevelIndex;
@@ -1786,6 +1851,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Oceant deep and coast deep
     private void SetOceanDeep(HexCell[] gridCells)
     {
         foreach(var cell in gridCells)
@@ -1816,6 +1882,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Set random structure on cell based on climate
     private void RandomStructures(HexCell[] gridCells)
     {
         foreach (var cell in gridCells)
@@ -1858,6 +1925,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
+    // Unit on random cell
     private void RandomUnits(HexCell[] gridCells)
     {
         List<HexCell> potentialCells = new List<HexCell>();
@@ -1874,6 +1942,7 @@ public class MapManager : MonoBehaviour
         potentialCells[index].IsUnit = true;
     }
 
+    // Cell UI pos based on layer
     private void SetTextPos(HexCell[] gridCells, int biomeLayerIndex)
     {
         foreach (var cell in gridCells)

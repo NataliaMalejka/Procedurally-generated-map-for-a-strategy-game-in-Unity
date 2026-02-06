@@ -1,17 +1,17 @@
 using UnityEngine;
 
+// Handles playing global game sounds
 public class SoundsManager : MonoBehaviour
 {
     public static SoundsManager Instance { get; private set; }
 
-    [SerializeField] private AudioClip backgroundMusic;
+    // Audio clip played when a new turn starts
     [SerializeField] private AudioClip nextTurn;
 
     [SerializeField] private AudioSource audioSource;
 
     public enum Sounds
     {
-        BackgroundMusic,
         NextTurn
     }
 
@@ -29,16 +29,15 @@ public class SoundsManager : MonoBehaviour
 
     private void Start()
     {
+        // Start background audio
         audioSource.Play();
     }
 
+    // Plays a selected sound effect
     public void PlaySounds(Sounds sounds)
     {
         switch (sounds)
         {
-            case Sounds.BackgroundMusic:
-                audioSource.PlayOneShot(backgroundMusic);
-                break;
             case Sounds.NextTurn:
                 audioSource.PlayOneShot(nextTurn);
                 break;

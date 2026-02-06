@@ -1,6 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Defines all biome types used by hex cells
+// Prefixes:
+// H = Hot biome
+// C = Cold biome
 public enum Biome
 {
     Ocean,
@@ -31,8 +35,10 @@ public enum Biome
     CDesert
 }
 
+// Represents a single hex tile in the map
 public class HexCell : MonoBehaviour
 {
+    // Chunk this hex belongs to
     private Chunk hexChunk;
     public Chunk HexChunk
     {
@@ -40,6 +46,7 @@ public class HexCell : MonoBehaviour
         set { hexChunk = value; }
     }
 
+    // Cube/grid coordinates of the hex
     private HexCoordinates coordinates;
     public HexCoordinates Coordinates
     {
@@ -47,6 +54,7 @@ public class HexCell : MonoBehaviour
         set { coordinates = value; }
     }
 
+    // Layer index
     private int layerIndex = -1;
     public int LayerIndex
     {
@@ -54,12 +62,14 @@ public class HexCell : MonoBehaviour
         set { layerIndex = value; }
     }
 
+    // Offset for UI elements above the hex
     private Vector3 uiPos = Vector3.zero;
     public Vector3 UiPos
     {
         get { return uiPos; }
     }
 
+    // Pathfinding marker displayed on this cell
     private PathMarker marker = null;
     public PathMarker Marker
     {
@@ -67,17 +77,10 @@ public class HexCell : MonoBehaviour
         set { marker = value; }
     }
 
+    // Biome assigned to this cell
     private Biome cellBiome;
 
-    private Color[] colors = new Color[] { Color.turquoise, Color.black, Color.white, Color.yellowGreen, Color.limeGreen, Color.forestGreen, Color.darkGreen, Color.orange, Color.yellow, Color.pink };
-
-    private Color cellColor = Color.turquoise;
-    public Color CellColor
-    {
-        get { return cellColor; }
-        set { cellColor = value; }
-    }
-
+    // Texture index for rendering
     private int textureIndex = -1;
     public int TextureIndex
     {
@@ -85,9 +88,12 @@ public class HexCell : MonoBehaviour
         set { textureIndex = value; }
     }
 
+    // Neighboring cells 
     private HexCell[] neighbors = new HexCell[6];
+    // Edge data 
     private Edge[] edges = new Edge[6];
 
+    // Flags describing terrain type
     private bool isOcean = false;
     public bool IsOcean
     {
@@ -109,6 +115,7 @@ public class HexCell : MonoBehaviour
         set { continentIndex = value; }
     }
 
+    // Terrain height data
     private int terrainLevel = -4;
     public int TerrainLevel
     {
@@ -128,6 +135,7 @@ public class HexCell : MonoBehaviour
         get { return terrainLevelIndex; }
     }
 
+    // Structure placed on this cell
     private int structureIndex = -1;
     public int StructureIndex
     {
@@ -135,6 +143,7 @@ public class HexCell : MonoBehaviour
         set { structureIndex = value; }
     }
 
+    // Gameplay flags
     private bool isUnit = false;
     public bool IsUnit
     {
@@ -156,6 +165,7 @@ public class HexCell : MonoBehaviour
         set { isArctic = value; }
     }
 
+    // Climate simulation values
     private float temperature = 0;
     public float Temperature
     {
@@ -170,6 +180,7 @@ public class HexCell : MonoBehaviour
         set { moisture = value; }
     }
 
+    // Water features
     private bool isLake = false;
     public bool IsLake
     {
@@ -184,6 +195,7 @@ public class HexCell : MonoBehaviour
         set { isRiver = value; }
     }
 
+    // Rivers passing through this cell
     private List<River> rivers = new List<River>();
 
     public List<River> GetRivers()
@@ -191,12 +203,14 @@ public class HexCell : MonoBehaviour
         return rivers;
     }
 
+    // Adds a river reference to this cell
     public void AddRiver(River river)
     {
         if (!rivers.Contains(river))
             rivers.Add(river);
     }
 
+    // Creates a new edge 
     public void AddEdge(EdgeType edgeType, HexDirection direction)
     {
         Edge edge = new Edge();
@@ -204,6 +218,7 @@ public class HexCell : MonoBehaviour
         edges[(int)direction] = edge;
     }
 
+    // Updates an existing edge or creates it if missing
     public void UpdateEdge(int index, EdgeType type)
     {
         Edge edge = edges[index];
@@ -226,11 +241,7 @@ public class HexCell : MonoBehaviour
         return neighbors[(int)direction];
     }
 
-    public HexCell[] GetNeighbors()
-    {
-        return neighbors;
-    }
-
+    // Sets a neighbor relationship in both directions
     public void SetNeighbor(HexDirection direction, HexCell cell)
     {
         neighbors[(int)direction] = cell;
@@ -242,6 +253,7 @@ public class HexCell : MonoBehaviour
         continentIndex = index;
     }
 
+    // Sets terrain height
     public void SetTerrainLevel(int level)
     {
         terrainLevelIndex = level;
@@ -249,6 +261,7 @@ public class HexCell : MonoBehaviour
         centreTerrainlevel = terrainLevel;
     }
 
+    // Set biome and texture index
     public void SetBiome(Biome biome)
     {
         cellBiome = biome;
@@ -260,6 +273,7 @@ public class HexCell : MonoBehaviour
         return cellBiome;
     }
 
+    // Calculates vertical offset for UI elements above the cell
     public void SetCellUIPos()
     {
         var pos = Vector3.zero;

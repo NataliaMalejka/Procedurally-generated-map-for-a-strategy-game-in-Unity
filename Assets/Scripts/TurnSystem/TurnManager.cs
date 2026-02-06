@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Manages turn-based system
 public class TurnManager : MonoBehaviour
 {
     public static TurnManager Instance { get; private set; }
 
     public int CurrentTurn { get; private set; } = 0;
 
+    // All registered units in the game
     private readonly List<Unit> units = new List<Unit>();
 
     private void Awake()
@@ -20,6 +22,7 @@ public class TurnManager : MonoBehaviour
         Instance = this;
     }
 
+    // Registers a unit and subscribes to its events
     public void RegisterUnit(Unit unit)
     {
         if (!units.Contains(unit))
@@ -29,6 +32,8 @@ public class TurnManager : MonoBehaviour
         }
     }
 
+    // Attempts to end the current turn
+    // Will not proceed if any unit is still moving
     public void EndTurn()
     {
         foreach (var unit in units)
@@ -43,6 +48,7 @@ public class TurnManager : MonoBehaviour
             StartNextTurn();
     }
 
+    // Starts a new turn and updates all units
     private void StartNextTurn()
     {
         CurrentTurn++;
@@ -55,6 +61,7 @@ public class TurnManager : MonoBehaviour
         }
     }
 
+    // Redraws committed paths for all units
     public void RedrawAllAcceptedPaths()
     {
         foreach (var unit in units)
@@ -66,6 +73,7 @@ public class TurnManager : MonoBehaviour
         }
     }
 
+    // Returns a unit by index
     public Unit GetUnit(int index)
     {
         if (index < 0 || index >= units.Count) 
@@ -74,6 +82,7 @@ public class TurnManager : MonoBehaviour
         return units[index];
     }
 
+    // Returns total number of registered units
     public int GetUnitCount()
     {
         return units.Count;

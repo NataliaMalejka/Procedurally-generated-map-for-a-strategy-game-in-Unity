@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Represents a unit on the hex grid.
 public class Unit : MonoBehaviour
 {
     [SerializeField] private Animator unitAnimator;
 
+    // MOdel used when unit is on land or ocean
     [SerializeField] private GameObject LandPart;
     [SerializeField] private GameObject OceanPart;
 
@@ -14,19 +16,25 @@ public class Unit : MonoBehaviour
     [SerializeField] private float moveSpeed = 3f;
     [SerializeField] private float rotationSpeed = 720f;
 
+    // Current cell the unit occupies
     private HexCell currentCell;
+    // Remaining movement points for the current turn
     private int currentMovementPoints;
+    // Indicates whether the unit is currently moving
     private bool isMoving;
 
+    // Path data assigned to this unit
     public readonly PathData Path = new();
+    // Event whenever the unit passes a cell
     public event Action<Unit, HexCell> OnCellPassed;
-
+    // Visual markers used to display the path
     public readonly List<PathMarker> PathMarkers = new();
     public bool IsMoving => isMoving;
     public int MaxMovementPoints => maxMovementPoints;
     public HexCell CurrentCell => currentCell;
     public int CurrentMovementPoints => currentMovementPoints;
 
+    // Layer index 
     private int layerIndex = 0;
     public int LayerIndex
     {
@@ -34,12 +42,13 @@ public class Unit : MonoBehaviour
         set { layerIndex = value; }
     }
 
-
     private void OnEnable()
     {
+        // Set movement points
         currentMovementPoints = maxMovementPoints;
     }
 
+    // Resets movement points and starts movement if a path is accepted
     public void OnTurnStart()
     {
         currentMovementPoints = maxMovementPoints;
@@ -47,6 +56,7 @@ public class Unit : MonoBehaviour
         StartMove();
     }
 
+    // Starts unit movement along the planned path
     public void StartMove()
     {
         if (isMoving)
@@ -58,11 +68,13 @@ public class Unit : MonoBehaviour
         StartCoroutine(MoveRoutine());
     }
 
+    // Sets the cell currently occupied by the unit
     public void SetCurrentCell(HexCell cell)
     {
         currentCell = cell;
     }
 
+    // Handling step-by-step movement along the path.
     private IEnumerator MoveRoutine()
     {
         isMoving = true;
@@ -74,6 +86,7 @@ public class Unit : MonoBehaviour
             HexCell next = Path.PlannedPath.Peek();
             int stepCost = SelectObject.Instance.GetMoveCost(currentCell, next);
 
+            // Stop if not enough movement points
             if (stepCost > currentMovementPoints)
                 break;
 
@@ -92,16 +105,19 @@ public class Unit : MonoBehaviour
         unitAnimator.SetBool("Walk", false);
         isMoving = false;
 
+        // Stop if not enough movement points
         if (Path.PlannedPath.Count == 0)
             Path.Clear();
     }
 
+    // Updates unit state after entering a new cell
     private void FinalizeCellChange(HexCell next)
     {
         if (currentCell != null)
             currentCell.IsUnit = false;
 
-        if(!currentCell.IsOcean && next.IsOcean)
+        // Switch model depending on terrain type
+        if (!currentCell.IsOcean && next.IsOcean)
         {
             OceanPart.SetActive(true);
             LandPart.SetActive(false);
@@ -117,6 +133,7 @@ public class Unit : MonoBehaviour
 
         transform.SetParent(next.transform, true);
 
+        // Adjust vertical position based on terrain
         var pos = Vector3.zero;
 
         if (next.IsOcean)
@@ -129,11 +146,13 @@ public class Unit : MonoBehaviour
         transform.localPosition = pos;
     }
 
+    // Smoothly rotates and moves the unit to the target cell
     private IEnumerator MoveToCell(HexCell target)
     {
         Vector3 start = transform.position;
         Vector3 end = target.transform.position;
 
+        // Rotate towards movement direction
         Vector3 dir = end - start;
         dir.y = 0f;
 
@@ -148,11 +167,13 @@ public class Unit : MonoBehaviour
             }
         }
 
+        // Adjust target height based on terrain
         if (target.IsOcean)
             end.y += HexData.waterLevel + 1f;
         else
             end.y += target.CentreTerrainLevel + 4f;
 
+        // Smooth movement interpolation
         float t = 0f;
         while (t < 1f)
         {
