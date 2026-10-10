@@ -1,30 +1,89 @@
-using System;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
+// Main hex grid controller
 public class GridHex : MonoBehaviour
 {
     [SerializeField] private Chunk chunkPrefab;
+    // All chunks
     private Chunk[] chunks;
-    private int xChunks;
-    private int zChunks;
+    public int xChunks { get; private set; }
+    public int zChunks { get; private set; }
 
-    public HexCell[] cells { get; private set; }
+    // Cell arrays for different biome layers
+    public HexCell[] cellsEarth { get; private set; }
+    public HexCell[] cellsCold { get; private set; }
+    public HexCell[] cellsHot { get; private set; }
+
+    // All active grid layers (order matches Layers enum)
+    private List<HexCell[]> gridLayers = new List<HexCell[]>();
+
+    // Chunks grouped by column index (used for wrapping)
+    public Dictionary<int, List<Chunk>> columns = new Dictionary<int, List<Chunk>>();
+
+    private int leftmostColumn;
+    public int LeftmostColumn
+    {
+        get { return leftmostColumn; }
+        set { leftmostColumn = value; }
+    }
+
+    private int rightmostColumn;
+    public int RightmostColumn
+    {
+        get { return rightmostColumn; }
+        set { rightmostColumn = value; }
+    }
+
+    public float ColumnWidth { get; private set; }
 
     private void Start()
     {
-        xChunks = MapManager.Instance.xChunkCount;
-        zChunks = MapManager.Instance.zChunkCount;
-        CreateChunks();
+        // Initialize all grid layers at startup
+        GenerateLayers();
     }
 
-    private void CreateChunks()
+    // Creates grid layers based on enabled biomes
+    private void GenerateLayers()
+    {
+        xChunks = MapManager.Instance.xChunkCount;
+        zChunks = MapManager.Instance.zChunkCount;
+
+        leftmostColumn = 0;
+        rightmostColumn = xChunks - 1;
+
+        // Width of one column in world units
+        ColumnWidth = MapManager.Instance.xCellCount * HexData.distanceToEdge * 2f;
+
+        // Create biome layers only if enabled in game settings
+        if (GameSettings.Instance.IsHotBiome() > -1)
+        {
+            cellsHot = CreateChunks(GameSettings.Instance.IsHotBiome(), (int)Layers.Hot);
+            gridLayers.Add(cellsHot);
+        }
+        if (GameSettings.Instance.IsEarthBiome() > -1)
+        {
+            cellsEarth = CreateChunks(GameSettings.Instance.IsEarthBiome(), (int)Layers.Earth);
+            gridLayers.Add(cellsEarth);
+        }
+        if (GameSettings.Instance.IsColdBiome() > -1)
+        {
+            cellsCold = CreateChunks(GameSettings.Instance.IsColdBiome(), (int)Layers.Cold);
+            gridLayers.Add(cellsCold);
+        }
+    }
+
+    // Creates all chunks and cells for a single biome layer
+    private HexCell[] CreateChunks(int level, int biomelayerIndex)
     {
         chunks = new Chunk[xChunks * zChunks];
-        cells = new HexCell[xChunks * zChunks * MapManager.Instance.xCellCount * MapManager.Instance.zCellCount];
+        // Array containing all cells in this layer
+        HexCell[] cells = new HexCell[xChunks * zChunks * MapManager.Instance.xCellCount * MapManager.Instance.zCellCount];
 
         int index = 0;
 
+        // Create chunks in grid layout
         for (int x = 0; x < xChunks; x++) 
         {
             for (int z = 0; z < zChunks; z++) 
@@ -32,34 +91,52 @@ public class GridHex : MonoBehaviour
                 Chunk chunk = Instantiate(chunkPrefab);
                 chunk.transform.SetParent(transform);
                 chunks[index] = chunk;
-                SetChunkPosition(chunk, index);
-                chunk.SetGridCoords(x, z, index);
 
-                AddCells(chunk, index);
+                SetChunkPosition(chunk, index, level);
+                chunk.SetLevel(level);
+                chunk.SetWaterColorIndex(biomelayerIndex);
+
+                AddCells(chunk, index, cells);
                 index++;
+
+                // Register chunk in column dictionary
+                if (!columns.TryGetValue(x, out List<Chunk> column))
+                {
+                    column = new List<Chunk>();
+                    columns.Add(x, column);
+                }
+
+                column.Add(chunk);
+                chunk.SetColumnIndex(x);
             }
         }
 
-        MapManager.Instance.GenerateMap(cells);
+        // Generate terrain, rivers, and data for this layer
+        MapManager.Instance.GenerateMap(cells, biomelayerIndex, level);
 
+        // Build mesh for all chunks
         foreach (Chunk chunk in chunks)
         {
             chunk.RefreshChunk();
         }
+
+        return cells;
     }
 
-    private void SetChunkPosition(Chunk chunk, int index)
+    // Sets world-space position of a chunk based on its index
+    private void SetChunkPosition(Chunk chunk, int index, int level)
     {
         Vector3 position;
 
         position.x = (index / zChunks) * HexData.distanceToEdge * 2 * chunk.GetXCellCount();
-        position.y = 0f;
+        position.y = level * 1000f;
         position.z = (index % zChunks) * HexData.distanceToCorner * 1.5f * chunk.GetZCellCount();
 
         chunk.transform.position = position;
     }
 
-    private void AddCells(Chunk chunk, int index)
+    // Creates all cells inside a chunk and assigns neighbors
+    private void AddCells(Chunk chunk, int index, HexCell[] cells)
     {
         int cellIndex = 0;
 
@@ -73,42 +150,81 @@ public class GridHex : MonoBehaviour
                 cells[cellGlobalIndex] = cell;
 
                 SetCellCoordinates(cell, x, z, index, chunk);
-                SetCellNeighbors(cellGlobalIndex, cell);
+                SetCellNeighbors(cellGlobalIndex, cell, cells);
 
                 cellIndex++;
             }
         }
     }
 
+    // Assigns coordinates to a cell
     private void SetCellCoordinates(HexCell cell, int x, int z, int index, Chunk chunk)
     {
         cell.Coordinates = new HexCoordinates(x, z,
             (index / zChunks) * chunk.GetXCellCount() + x,
             (index % zChunks) * chunk.GetZCellCount() + z
         );
-
-        //cell.SetCoordinateText();
-        //cell.SetGlobalCoordinateText();
     }
 
-    private void SetCellNeighbors(int index, HexCell cell)
+    // Sets neighbor references for a cell 
+    private void SetCellNeighbors(int index, HexCell cell, HexCell[] cells)
     {
-        foreach (HexDirection dir in Enum.GetValues(typeof(HexDirection))) 
+        foreach (HexDirection dir in Enum.GetValues(typeof(HexDirection)))
         {
-            Vector3Int neighborCoordinates = cell.Coordinates.Neighbor(dir);
-            int nq = neighborCoordinates[0];
-            int nr = neighborCoordinates[1];
-            int ns = neighborCoordinates[2];
+            Vector3Int n = cell.Coordinates.Neighbor(dir);
+
+            int nq = n.x;
+            int nr = n.y;
 
             int indexZ = nr;
             int indexX = nq + indexZ / 2;
 
+            if (indexZ < 0 || indexZ >= MapManager.Instance.zChunkCount * MapManager.Instance.zCellCount)
+                continue;
+
+            indexX = WrapX(indexX);
+
             int neighborIndex = MapManager.Instance.GetCellIndex(indexX, indexZ);
 
-            if (neighborIndex >= 0 && neighborIndex<cells.Count() && cells[neighborIndex] != null && indexX >= 0 && indexZ >= 0) 
+            if (neighborIndex >= 0 && neighborIndex < cells.Length && cells[neighborIndex] != null)
             {
-               cell.SetNeighbor(dir, cells[neighborIndex]);
+                cell.SetNeighbor(dir, cells[neighborIndex]);
             }
-        }     
+        }
+    }
+
+    // Wraps X coordinate to allow infinite horizontal map scrolling
+    private int WrapX(int x)
+    {
+        int width = MapManager.Instance.xChunkCount * MapManager.Instance.xCellCount;
+        return (x % width + width) % width;
+    }
+
+    // Returns a cell at the given world position
+    public HexCell GetCell(Vector3 worldPos)
+    {
+        Vector3 pos = transform.InverseTransformPoint(worldPos);
+        pos.y = 0f;
+
+        HexCoordinates cube = HexCoordinates.FromWorld(pos);
+
+        int globalZ = cube.R;
+
+        int maxZ = MapManager.Instance.zChunkCount * MapManager.Instance.zCellCount;
+        if (globalZ < 0 || globalZ >= maxZ)
+            return null;
+
+        int globalX = cube.Q + globalZ / 2;
+
+        int mapWidth = MapManager.Instance.xChunkCount * MapManager.Instance.xCellCount;
+        globalX = ((globalX % mapWidth) + mapWidth) % mapWidth;
+
+        int index = MapManager.Instance.GetCellIndex(globalX, globalZ);
+
+        var grid = gridLayers[GameSettings.Instance.CurrentLayer];
+        if (index < 0 || index >= grid.Length)
+            return null;
+
+        return grid[index];
     }
 }
