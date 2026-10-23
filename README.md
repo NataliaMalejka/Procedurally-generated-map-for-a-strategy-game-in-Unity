@@ -1,5 +1,5 @@
 # Procedurally-generated-map-for-a-strategy-game-in-Unity
-
+![App Screenshot](Procedurally-generated-map.png)
 A procedural world generation system for a turn-based strategy game inspired by Civilization VI and Humankind.<br>
 The project focuses on generating diverse, replayable hex-based worlds with interconnected terrain, climate, and biome systems.
 
